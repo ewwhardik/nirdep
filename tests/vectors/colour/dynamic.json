@@ -1,0 +1,49 @@
+{
+  "note": "Downsampling and composition. The point of the level column is that the same call must produce a different, correct sequence for each terminal depth. <ESC> stands for U+001B.",
+  "cases": [
+    { "ops": [{ "m": "hex", "a": ["#ff8800"] }], "level": 3, "in": "x", "out": "<ESC>[38;2;255;136;0mx<ESC>[39m" },
+    { "ops": [{ "m": "hex", "a": ["#ff8800"] }], "level": 2, "in": "x", "out": "<ESC>[38;5;214mx<ESC>[39m" },
+    { "ops": [{ "m": "hex", "a": ["#ff8800"] }], "level": 1, "in": "x", "out": "<ESC>[93mx<ESC>[39m" },
+    { "ops": [{ "m": "hex", "a": ["#ff8800"] }], "level": 0, "in": "x", "out": "x" },
+
+    { "ops": [{ "m": "hex", "a": ["#f80"] }], "level": 3, "in": "x", "out": "<ESC>[38;2;255;136;0mx<ESC>[39m" },
+    { "ops": [{ "m": "hex", "a": ["ff8800"] }], "level": 3, "in": "x", "out": "<ESC>[38;2;255;136;0mx<ESC>[39m" },
+
+    { "ops": [{ "m": "rgb", "a": [0, 0, 0] }], "level": 3, "in": "x", "out": "<ESC>[38;2;0;0;0mx<ESC>[39m" },
+    { "ops": [{ "m": "rgb", "a": [0, 0, 0] }], "level": 2, "in": "x", "out": "<ESC>[38;5;16mx<ESC>[39m" },
+    { "ops": [{ "m": "rgb", "a": [0, 0, 0] }], "level": 1, "in": "x", "out": "<ESC>[30mx<ESC>[39m" },
+
+    { "ops": [{ "m": "rgb", "a": [255, 255, 255] }], "level": 2, "in": "x", "out": "<ESC>[38;5;231mx<ESC>[39m" },
+    { "ops": [{ "m": "rgb", "a": [255, 255, 255] }], "level": 1, "in": "x", "out": "<ESC>[97mx<ESC>[39m" },
+
+    { "ops": [{ "m": "rgb", "a": [128, 128, 128] }], "level": 2, "in": "x", "out": "<ESC>[38;5;244mx<ESC>[39m" },
+    { "ops": [{ "m": "rgb", "a": [128, 128, 128] }], "level": 1, "in": "x", "out": "<ESC>[37mx<ESC>[39m" },
+
+    { "ops": [{ "m": "bgRgb", "a": [255, 136, 0] }], "level": 3, "in": "x", "out": "<ESC>[48;2;255;136;0mx<ESC>[49m" },
+    { "ops": [{ "m": "bgRgb", "a": [255, 136, 0] }], "level": 2, "in": "x", "out": "<ESC>[48;5;214mx<ESC>[49m" },
+    { "ops": [{ "m": "bgRgb", "a": [255, 136, 0] }], "level": 1, "in": "x", "out": "<ESC>[103mx<ESC>[49m" },
+    { "ops": [{ "m": "bgHex", "a": ["#ff8800"] }], "level": 2, "in": "x", "out": "<ESC>[48;5;214mx<ESC>[49m" },
+
+    { "ops": [{ "m": "ansi256", "a": [196] }], "level": 2, "in": "x", "out": "<ESC>[38;5;196mx<ESC>[39m" },
+    { "ops": [{ "m": "ansi256", "a": [196] }], "level": 1, "in": "x", "out": "<ESC>[91mx<ESC>[39m" },
+    { "ops": [{ "m": "ansi256", "a": [3] }], "level": 1, "in": "x", "out": "<ESC>[33mx<ESC>[39m" },
+    { "ops": [{ "m": "ansi256", "a": [8] }], "level": 1, "in": "x", "out": "<ESC>[90mx<ESC>[39m" },
+    { "ops": [{ "m": "bgAnsi256", "a": [21] }], "level": 2, "in": "x", "out": "<ESC>[48;5;21mx<ESC>[49m" },
+    { "ops": [{ "m": "bgAnsi256", "a": [21] }], "level": 1, "in": "x", "out": "<ESC>[104mx<ESC>[49m" },
+
+    { "ops": ["red", "bold"], "level": 1, "in": "x", "out": "<ESC>[31m<ESC>[1mx<ESC>[22m<ESC>[39m" },
+    { "ops": ["bold", "red"], "level": 1, "in": "x", "out": "<ESC>[1m<ESC>[31mx<ESC>[39m<ESC>[22m" },
+    { "ops": ["red", "bold", "underline"], "level": 1, "in": "x", "out": "<ESC>[31m<ESC>[1m<ESC>[4mx<ESC>[24m<ESC>[22m<ESC>[39m" },
+    { "ops": ["bgBlue", "yellow", "bold"], "level": 1, "in": "x", "out": "<ESC>[44m<ESC>[33m<ESC>[1mx<ESC>[22m<ESC>[39m<ESC>[49m" },
+    { "ops": ["red", "bold"], "level": 0, "in": "x", "out": "x" },
+
+    { "ops": ["red"], "level": 1, "in": "a<ESC>[32mb<ESC>[39mc", "out": "<ESC>[31ma<ESC>[32mb<ESC>[31mc<ESC>[39m" },
+    { "ops": ["red"], "level": 1, "in": "<ESC>[31mx<ESC>[39m", "out": "<ESC>[31m<ESC>[31mx<ESC>[31m<ESC>[39m" },
+    { "ops": ["bold"], "level": 1, "in": "a<ESC>[2mb<ESC>[22mc", "out": "<ESC>[1ma<ESC>[2mb<ESC>[1mc<ESC>[22m" },
+    { "ops": ["bgBlue"], "level": 1, "in": "one\ntwo", "out": "<ESC>[44mone<ESC>[49m\n<ESC>[44mtwo<ESC>[49m" },
+    { "ops": ["bgBlue"], "level": 1, "in": "one\r\ntwo", "out": "<ESC>[44mone<ESC>[49m\r\n<ESC>[44mtwo<ESC>[49m" },
+    { "ops": ["red", "bold"], "level": 1, "in": "a\nb", "out": "<ESC>[31m<ESC>[1ma<ESC>[22m<ESC>[39m\n<ESC>[31m<ESC>[1mb<ESC>[22m<ESC>[39m" },
+    { "ops": ["bgBlue"], "level": 1, "in": "\n", "out": "<ESC>[44m<ESC>[49m\n<ESC>[44m<ESC>[49m" },
+    { "ops": ["red"], "level": 1, "in": "", "out": "<ESC>[31m<ESC>[39m" }
+  ]
+}

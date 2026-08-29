@@ -1,0 +1,176 @@
+{
+  "note": "Conformance table for runtime/args, the parser layer. Written against the documented behaviour of minimist, yargs-parser and getopt, with every deliberate divergence marked in the case name. Specs are named once and reused so a case is one line and adding one costs nothing. A case checks only the keys it lists; JSON null means the key must be absent from the result, since JSON cannot carry undefined.",
+  "specs": {
+    "flags": {
+      "options": {
+        "verbose": { "type": "count", "short": "v" },
+        "output": { "type": "string", "short": "o" },
+        "colour": { "type": "boolean", "default": true },
+        "force": { "type": "boolean", "short": "f" },
+        "level": { "type": "number", "short": "l" },
+        "include": { "type": "string", "multiple": true, "short": "i" },
+        "dryRun": { "type": "boolean", "short": "n" }
+      }
+    },
+    "loose": {
+      "strict": false,
+      "options": { "force": { "type": "boolean", "short": "f" } }
+    },
+    "typed": {
+      "options": {
+        "level": { "type": "number", "choices": [0, 1, 2, 3], "default": 1 },
+        "mode": { "type": "string", "choices": ["fast", "safe"], "required": true },
+        "tag": { "type": "string", "multiple": true, "choices": ["a", "b"] }
+      }
+    },
+    "linked": {
+      "options": {
+        "json": { "type": "boolean" },
+        "pretty": { "type": "boolean", "implies": ["json"] },
+        "quiet": { "type": "boolean", "conflicts": ["verbose"] },
+        "verbose": { "type": "boolean" }
+      }
+    },
+    "environment": {
+      "options": {
+        "output": { "type": "string", "env": "NIRDEP_OUT" },
+        "colour": { "type": "boolean", "env": ["NIRDEP_COLOUR", "FORCE_COLOUR"] },
+        "jobs": { "type": "number", "env": "NIRDEP_JOBS", "default": 1 },
+        "paths": { "type": "string", "multiple": true, "env": "NIRDEP_PATHS" }
+      }
+    },
+    "words": {
+      "options": { "force": { "type": "boolean", "short": "f" } },
+      "positionals": [
+        { "name": "target", "required": true },
+        { "name": "count", "type": "number" },
+        { "name": "rest", "variadic": true }
+      ]
+    },
+    "onlyRequired": {
+      "options": {},
+      "positionals": [{ "name": "target", "required": true }]
+    },
+    "variadicRequired": {
+      "options": {},
+      "positionals": [{ "name": "files", "variadic": true, "required": true }]
+    },
+    "noPositionals": { "options": { "force": { "type": "boolean" } } },
+    "literalNo": {
+      "options": {
+        "cache": { "type": "boolean", "default": true },
+        "noCache": { "type": "boolean", "flag": "no-cache" }
+      }
+    },
+    "unnegatable": {
+      "options": { "colour": { "type": "boolean", "default": true, "negatable": false } }
+    }
+  },
+  "cases": [
+    { "name": "a long boolean", "spec": "flags", "argv": ["--force"], "values": { "force": true } },
+    { "name": "a long boolean is not set when absent", "spec": "flags", "argv": [], "values": { "force": null } },
+    { "name": "a short boolean", "spec": "flags", "argv": ["-f"], "values": { "force": true } },
+    { "name": "an explicit false", "spec": "flags", "argv": ["--force=false"], "values": { "force": false } },
+    { "name": "an explicit no", "spec": "flags", "argv": ["--force=no"], "values": { "force": false } },
+    { "name": "an explicit on", "spec": "flags", "argv": ["--force=on"], "values": { "force": true } },
+    { "name": "a nonsense boolean value is refused", "spec": "flags", "argv": ["--force=maybe"], "throws": "INVALID_VALUE" },
+
+    { "name": "negation of a default-true boolean", "spec": "flags", "argv": ["--no-colour"], "values": { "colour": false } },
+    { "name": "the default survives when the flag is absent", "spec": "flags", "argv": [], "values": { "colour": true } },
+    { "name": "negation of a camelCase key uses the kebab flag", "spec": "flags", "argv": ["--no-dry-run"], "values": { "dryRun": false } },
+    { "name": "the camelCase spelling is accepted too", "spec": "flags", "argv": ["--dryRun"], "values": { "dryRun": true } },
+    { "name": "the kebab spelling is the canonical flag", "spec": "flags", "argv": ["--dry-run"], "values": { "dryRun": true } },
+    { "name": "negation can itself be negated with a value", "spec": "flags", "argv": ["--no-colour=false"], "values": { "colour": true } },
+    { "name": "a literal --no-cache beats the negation of --cache", "spec": "literalNo", "argv": ["--no-cache"], "values": { "noCache": true, "cache": true } },
+    { "name": "negation can be switched off", "spec": "unnegatable", "argv": ["--no-colour"], "throws": "UNKNOWN_OPTION" },
+
+    { "name": "a detached value", "spec": "flags", "argv": ["--output", "out.txt"], "values": { "output": "out.txt" } },
+    { "name": "an attached value", "spec": "flags", "argv": ["--output=out.txt"], "values": { "output": "out.txt" } },
+    { "name": "the split is at the first equals sign", "spec": "flags", "argv": ["--output=a=b"], "values": { "output": "a=b" } },
+    { "name": "an attached empty value is an empty string", "spec": "flags", "argv": ["--output="], "values": { "output": "" } },
+    { "name": "an attached value may look like a flag", "spec": "flags", "argv": ["--output=--verbose"], "values": { "output": "--verbose" } },
+    { "name": "a missing value at the end is refused", "spec": "flags", "argv": ["--output"], "throws": "MISSING_VALUE" },
+    { "name": "a following flag is not swallowed as the value", "spec": "flags", "argv": ["--output", "--force"], "throws": "MISSING_VALUE" },
+    { "name": "a following terminator is not swallowed either", "spec": "flags", "argv": ["--output", "--"], "throws": "MISSING_VALUE" },
+    { "name": "a negative number is a value, not a flag", "spec": "flags", "argv": ["--level", "-5"], "values": { "level": -5 } },
+    { "name": "a lone dash is a value", "spec": "flags", "argv": ["--output", "-"], "values": { "output": "-" } },
+
+    { "name": "a short option with an attached value", "spec": "flags", "argv": ["-oout.txt"], "values": { "output": "out.txt" } },
+    { "name": "a short option with an equals sign", "spec": "flags", "argv": ["-o=out.txt"], "values": { "output": "out.txt" } },
+    { "name": "a short option with a detached value", "spec": "flags", "argv": ["-o", "out.txt"], "values": { "output": "out.txt" } },
+    { "name": "a cluster of booleans", "spec": "flags", "argv": ["-fn"], "values": { "force": true, "dryRun": true } },
+    { "name": "a cluster ending in a value taker", "spec": "flags", "argv": ["-fo", "out.txt"], "values": { "force": true, "output": "out.txt" } },
+    { "name": "a cluster with the value attached", "spec": "flags", "argv": ["-foout.txt"], "values": { "force": true, "output": "out.txt" } },
+    { "name": "a repeated short counts", "spec": "flags", "argv": ["-vvv"], "values": { "verbose": 3 } },
+    { "name": "a count is zero by default", "spec": "flags", "argv": [], "values": { "verbose": 0 } },
+    { "name": "separate repeats count the same", "spec": "flags", "argv": ["-v", "-v", "--verbose"], "values": { "verbose": 3 } },
+    { "name": "a count refuses a value", "spec": "flags", "argv": ["--verbose=3"], "throws": "UNEXPECTED_VALUE" },
+    { "name": "a number attached to its short flag", "spec": "flags", "argv": ["-l3"], "values": { "level": 3 } },
+
+    { "name": "a number", "spec": "flags", "argv": ["--level", "3"], "values": { "level": 3 } },
+    { "name": "a negative number", "spec": "flags", "argv": ["--level=-2"], "values": { "level": -2 } },
+    { "name": "a decimal", "spec": "flags", "argv": ["--level=1.5"], "values": { "level": 1.5 } },
+    { "name": "an exponent", "spec": "flags", "argv": ["--level=1e3"], "values": { "level": 1000 } },
+    { "name": "a leading dot", "spec": "flags", "argv": ["--level=.5"], "values": { "level": 0.5 } },
+    { "name": "hexadecimal is refused, not silently converted", "spec": "flags", "argv": ["--level=0x10"], "throws": "INVALID_VALUE" },
+    { "name": "an infinity is refused", "spec": "flags", "argv": ["--level=Infinity"], "throws": "INVALID_VALUE" },
+    { "name": "a trailing unit is refused", "spec": "flags", "argv": ["--level=3px"], "throws": "INVALID_VALUE" },
+    { "name": "an empty number is refused", "spec": "flags", "argv": ["--level="], "throws": "INVALID_VALUE" },
+    { "name": "a zero-padded string keeps its padding", "spec": "flags", "argv": ["--output=0123"], "values": { "output": "0123" } },
+
+    { "name": "repeats collect when multiple is declared", "spec": "flags", "argv": ["--include", "a", "--include=b", "-ic"], "values": { "include": ["a", "b", "c"] } },
+    { "name": "one repeat is still an array", "spec": "flags", "argv": ["--include=a"], "values": { "include": ["a"] } },
+    { "name": "a repeat without multiple is last-wins", "spec": "flags", "argv": ["--output=a", "--output=b"], "values": { "output": "b" } },
+
+    { "name": "choices accept a member", "spec": "typed", "argv": ["--mode=fast"], "values": { "mode": "fast" } },
+    { "name": "choices refuse a stranger", "spec": "typed", "argv": ["--mode=quick"], "throws": "INVALID_CHOICE" },
+    { "name": "choices are checked after typing", "spec": "typed", "argv": ["--mode=fast", "--level=2"], "values": { "level": 2 } },
+    { "name": "a number outside its choices is refused", "spec": "typed", "argv": ["--mode=fast", "--level=9"], "throws": "INVALID_CHOICE" },
+    { "name": "choices apply to every member of an array", "spec": "typed", "argv": ["--mode=fast", "--tag=a", "--tag=c"], "throws": "INVALID_CHOICE" },
+    { "name": "a required option that is absent is reported", "spec": "typed", "argv": [], "throws": "MISSING_REQUIRED" },
+    { "name": "a default is not enough to satisfy required", "spec": "typed", "argv": ["--level=0"], "throws": "MISSING_REQUIRED" },
+
+    { "name": "implies is satisfied", "spec": "linked", "argv": ["--pretty", "--json"], "values": { "pretty": true, "json": true } },
+    { "name": "implies is enforced", "spec": "linked", "argv": ["--pretty"], "throws": "MISSING_REQUIRED" },
+    { "name": "conflicts are refused", "spec": "linked", "argv": ["--quiet", "--verbose"], "throws": "CONFLICT" },
+    { "name": "conflicts are one-directional in the message only", "spec": "linked", "argv": ["--verbose", "--quiet"], "throws": "CONFLICT" },
+    { "name": "either alone is fine", "spec": "linked", "argv": ["--quiet"], "values": { "quiet": true } },
+
+    { "name": "an unknown long option is refused in strict mode", "spec": "flags", "argv": ["--nope"], "throws": "UNKNOWN_OPTION" },
+    { "name": "an unknown short option is refused in strict mode", "spec": "flags", "argv": ["-z"], "throws": "UNKNOWN_OPTION" },
+    { "name": "an unknown option inside a cluster is refused", "spec": "flags", "argv": ["-fz"], "throws": "UNKNOWN_OPTION" },
+    { "name": "an unknown option is collected in loose mode", "spec": "loose", "argv": ["-f", "--nope"], "values": { "force": true }, "unknown": ["--nope"] },
+    { "name": "an unknown short is collected whole in loose mode", "spec": "loose", "argv": ["-z"], "unknown": ["-z"] },
+    { "name": "a prototype key is unknown, never assigned", "spec": "loose", "argv": ["--__proto__=polluted"], "unknown": ["--__proto__=polluted"] },
+    { "name": "a dotted prototype key is unknown too", "spec": "loose", "argv": ["--__proto__.x=1"], "unknown": ["--__proto__.x=1"] },
+    { "name": "dot notation is not a feature, so it is just unknown", "spec": "loose", "argv": ["--a.b=1"], "unknown": ["--a.b=1"] },
+
+    { "name": "the environment fills an absent flag", "spec": "environment", "argv": [], "env": { "NIRDEP_OUT": "from-env" }, "values": { "output": "from-env" } },
+    { "name": "the command line beats the environment", "spec": "environment", "argv": ["--output=explicit"], "env": { "NIRDEP_OUT": "from-env" }, "values": { "output": "explicit" } },
+    { "name": "the first named variable that exists wins", "spec": "environment", "argv": [], "env": { "FORCE_COLOUR": "1" }, "values": { "colour": true } },
+    { "name": "the earlier name takes precedence", "spec": "environment", "argv": [], "env": { "NIRDEP_COLOUR": "0", "FORCE_COLOUR": "1" }, "values": { "colour": false } },
+    { "name": "an environment boolean reads the falsy table", "spec": "environment", "argv": [], "env": { "NIRDEP_COLOUR": "false" }, "values": { "colour": false } },
+    { "name": "an unrecognised environment boolean is taken as true", "spec": "environment", "argv": [], "env": { "NIRDEP_COLOUR": "always" }, "values": { "colour": true } },
+    { "name": "an environment number is typed", "spec": "environment", "argv": [], "env": { "NIRDEP_JOBS": "8" }, "values": { "jobs": 8 } },
+    { "name": "a bad environment number is refused", "spec": "environment", "argv": [], "env": { "NIRDEP_JOBS": "lots" }, "throws": "INVALID_VALUE" },
+    { "name": "an environment list splits on commas", "spec": "environment", "argv": [], "env": { "NIRDEP_PATHS": "a, b ,c" }, "values": { "paths": ["a", "b", "c"] } },
+    { "name": "the default applies when the environment is empty", "spec": "environment", "argv": [], "env": {}, "values": { "jobs": 1 } },
+
+    { "name": "positionals bind in order", "spec": "words", "argv": ["./project", "7"], "positionals": { "target": "./project", "count": 7, "rest": [] } },
+    { "name": "a variadic takes the remainder", "spec": "words", "argv": ["./p", "1", "a", "b"], "positionals": { "target": "./p", "count": 1, "rest": ["a", "b"] } },
+    { "name": "options may be interleaved with positionals", "spec": "words", "argv": ["./p", "-f", "2"], "positionals": { "target": "./p", "count": 2, "rest": [] }, "values": { "force": true } },
+    { "name": "an optional positional may be omitted", "spec": "words", "argv": ["./p"], "positionals": { "target": "./p", "rest": [] } },
+    { "name": "a required positional is enforced", "spec": "words", "argv": [], "throws": "MISSING_POSITIONAL" },
+    { "name": "a mistyped positional is refused", "spec": "words", "argv": ["./p", "seven"], "throws": "INVALID_VALUE" },
+    { "name": "a required variadic needs one value", "spec": "variadicRequired", "argv": [], "throws": "MISSING_POSITIONAL" },
+    { "name": "a required variadic is happy with one", "spec": "variadicRequired", "argv": ["a"], "positionals": { "files": ["a"] } },
+    { "name": "an extra word is refused when nothing declares it", "spec": "onlyRequired", "argv": ["a", "b"], "throws": "UNEXPECTED_POSITIONAL" },
+    { "name": "a word is refused when no positionals are declared", "spec": "noPositionals", "argv": ["a"], "throws": "UNEXPECTED_POSITIONAL" },
+    { "name": "loose mode collects words under an underscore", "spec": "loose", "argv": ["a", "b"], "positionals": { "_": ["a", "b"] } },
+
+    { "name": "the terminator ends interpretation", "spec": "words", "argv": ["./p", "--", "--force", "-x"], "rest": ["--force", "-x"], "values": { "force": null } },
+    { "name": "the terminator itself is not a positional", "spec": "onlyRequired", "argv": ["./p", "--"], "positionals": { "target": "./p" }, "rest": [] },
+    { "name": "a second terminator is just text", "spec": "onlyRequired", "argv": ["./p", "--", "--", "x"], "rest": ["--", "x"] },
+    { "name": "an empty string argument is a positional", "spec": "onlyRequired", "argv": [""], "positionals": { "target": "" } }
+  ]
+}

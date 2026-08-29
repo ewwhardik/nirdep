@@ -1,0 +1,6 @@
+import a from "one";
+import "two";
+const c = await import("three");
+export { d } from "four";
+const e = require("five");
+const f = createRequire(import.meta.url)("six");

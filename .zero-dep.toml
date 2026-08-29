@@ -1,0 +1,29 @@
+# Track letter and pitch for the Zero Dependency Hackathon submission.
+#
+# This file is parsed at runtime by src/meta/toml.mjs -- a deliberately small
+# subset reader we wrote because Node ships no TOML parser at all. It is not a
+# toml-test-passing implementation and does not claim to be; see STDLIB.md for
+# exactly which slice of TOML 1.0 it covers. The submission metadata reading
+# itself with our own answer to the missing parser felt like the right joke.
+
+track = "A"
+pitch = "Deletes your dependencies: a scope-aware JS codemod plus a stdlib runtime that replaces chalk, commander and semver."
+
+[team]
+name = "Nastik AI"
+members = ["Hardik"]
+solo = true
+
+[artifact]
+language = "JavaScript"
+runtime = "Node"
+node_floor = "22.17.0"
+manifest = "package.json"
+build = "make build"
+
+[bonuses]
+package_killer = true
+stdlib_log = true
+reproducible_build = true
+single_file = false
+single_file_declined_because = "The bonus asks for one file a person could read top to bottom. This project cannot honestly claim that, and compressing it would trade against Code Quality at 25% to gain 5%."

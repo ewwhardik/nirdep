@@ -1,0 +1,298 @@
+{
+  "note": "Hand-written expectations for src/lex/bindings.mjs. Each case names its input and what the analysis must say about it: `bindings` as name:kind in declaration order, `refs` as name->index where the index is into that binding list and `free` means the reference resolved to nothing, `deps` as specifier|form|bindings, and `unresolved` as the deduplicated global names. Fields left out are not checked, so a row can be about one thing. Like the token table next door this lives in JSON because many of its cases are import statements and tools/verify.mjs reads .mjs files looking for exactly that shape.",
+  "cases": [
+    {
+      "why": "the plain case: one name in, one use of it",
+      "in": "const a = 1;\na;\n",
+      "bindings": ["a:const"],
+      "refs": ["a->0"],
+      "deps": []
+    },
+    {
+      "why": "a default import is a binding that carries its specifier",
+      "in": "import chalk from 'chalk';\nchalk.red('x');\n",
+      "bindings": ["chalk:import"],
+      "refs": ["chalk->0"],
+      "deps": ["chalk|import|0"]
+    },
+    {
+      "why": "a renamed named import binds the local name and remembers the exported one",
+      "in": "import { red as r, blue } from 'chalk';\nr(blue);\n",
+      "bindings": ["r:import", "blue:import"],
+      "refs": ["r->0", "blue->1"],
+      "deps": ["chalk|import|0,1"]
+    },
+    {
+      "why": "a namespace import, where `as` is grammar and not a reference",
+      "in": "import * as path from 'node:path';\npath.join(a);\n",
+      "bindings": ["path:import"],
+      "refs": ["path->0", "a->free"],
+      "deps": ["node:path|import|0"],
+      "unresolved": ["a"]
+    },
+    {
+      "why": "a bare import introduces no name and is still a dependency",
+      "in": "import 'polyfill';\n",
+      "bindings": [],
+      "refs": [],
+      "deps": ["polyfill|bare-import|"]
+    },
+    {
+      "why": "an import attribute clause is data, so `with` and `type` read nothing",
+      "in": "import data from './x.json' with { type: 'json' };\ndata.a;\n",
+      "bindings": ["data:import"],
+      "refs": ["data->0"],
+      "deps": ["./x.json|import|0"]
+    },
+    {
+      "why": "a dynamic import binds nothing, and the specifier is still a rewrite target",
+      "in": "const m = await import('chalk');\n",
+      "bindings": ["m:const"],
+      "refs": [],
+      "deps": ["chalk|dynamic-import|"]
+    },
+    {
+      "why": "import.meta is not an import statement",
+      "in": "const u = import.meta.url;\n",
+      "bindings": ["u:const"],
+      "refs": [],
+      "deps": []
+    },
+    {
+      "why": "a re-export names the other module's exports, which are nobody's references here",
+      "in": "export { a, b as c } from './b.mjs';\n",
+      "bindings": [],
+      "refs": [],
+      "deps": ["./b.mjs|export-from|"]
+    },
+    {
+      "why": "an export clause with no `from` does mention local names",
+      "in": "const a = 1;\nexport { a };\n",
+      "bindings": ["a:const"],
+      "refs": ["a->0"],
+      "deps": []
+    },
+    {
+      "why": "the loader call, whose binding carries the specifier the same way an import's does",
+      "in": "const c = require('chalk');\nc.red();\n",
+      "bindings": ["c:require"],
+      "refs": ["c->0"],
+      "deps": ["chalk|require|0"]
+    },
+    {
+      "why": "a destructured loader call binds each name to the same specifier",
+      "in": "const { red, blue } = require('chalk');\nred(blue);\n",
+      "bindings": ["red:require", "blue:require"],
+      "refs": ["red->0", "blue->1"],
+      "deps": ["chalk|require|0,1"]
+    },
+    {
+      "why": "a loader call nobody assigned is taken for its side effect and binds nothing",
+      "in": "require('./register.js');\n",
+      "bindings": [],
+      "refs": [],
+      "deps": ["./register.js|require|"]
+    },
+    {
+      "why": "a parameter shadows an outer name, so the two mentions mean different things",
+      "in": "const a = 1;\nfunction f(a) { return a; }\nf(a);\n",
+      "bindings": ["a:const", "f:function", "a:param"],
+      "refs": ["a->2", "f->1", "a->0"],
+      "deps": []
+    },
+    {
+      "why": "a parameter and a body declaration share one scope, so the first wins the slot",
+      "in": "function f(a) { let b = a; return b; }\n",
+      "bindings": ["f:function", "a:param", "b:let"],
+      "refs": ["a->1", "b->2"],
+      "deps": []
+    },
+    {
+      "why": "a var reaches the whole function, not the block it was written in",
+      "in": "function f() { if (x) { var v = 1; } return v; }\n",
+      "bindings": ["f:function", "v:var"],
+      "refs": ["x->free", "v->1"],
+      "unresolved": ["x"]
+    },
+    {
+      "why": "a let does not leave its block, so the mention after it resolves to nothing",
+      "in": "{ let b = 1; b; }\nb;\n",
+      "bindings": ["b:let"],
+      "refs": ["b->0", "b->free"],
+      "unresolved": ["b"]
+    },
+    {
+      "why": "an arrow's parameters are its own, and the walk saw them before the arrow said so",
+      "in": "const f = (a, b) => a + b;\nf(1);\n",
+      "bindings": ["f:const", "a:param", "b:param"],
+      "refs": ["a->1", "b->2", "f->0"],
+      "deps": []
+    },
+    {
+      "why": "a single unparenthesised parameter",
+      "in": "const f = a => a;\n",
+      "bindings": ["f:const", "a:param"],
+      "refs": ["a->1"]
+    },
+    {
+      "why": "a concise body ends at the comma that belongs to the call around it",
+      "in": "g(a => a, a);\n",
+      "bindings": ["a:param"],
+      "refs": ["g->free", "a->0", "a->free"],
+      "unresolved": ["a", "g"]
+    },
+    {
+      "why": "curried arrows nest their scopes",
+      "in": "const f = a => b => a + b;\n",
+      "bindings": ["f:const", "a:param", "b:param"],
+      "refs": ["a->1", "b->2"]
+    },
+    {
+      "why": "an async arrow: `async` is a modifier even though the tokens start like a call",
+      "in": "const f = async (a) => a;\n",
+      "bindings": ["f:const", "a:param"],
+      "refs": ["a->1"],
+      "unresolved": []
+    },
+    {
+      "why": "a default value is an expression, so its names are references and not bindings",
+      "in": "function f(a = b, { c = d } = {}) { return a + c; }\n",
+      "bindings": ["f:function", "a:param", "c:param"],
+      "refs": ["b->free", "d->free", "a->1", "c->2"],
+      "unresolved": ["b", "d"]
+    },
+    {
+      "why": "a renamed destructuring binds the value name, not the key",
+      "in": "const { a: b, ...rest } = o;\nb; rest;\n",
+      "bindings": ["b:const", "rest:const"],
+      "refs": ["o->free", "b->0", "rest->1"],
+      "unresolved": ["o"]
+    },
+    {
+      "why": "an array pattern with a hole and a default",
+      "in": "const [x, , y = 2] = list;\nx; y;\n",
+      "bindings": ["x:const", "y:const"],
+      "refs": ["list->free", "x->0", "y->1"],
+      "unresolved": ["list"]
+    },
+    {
+      "why": "a catch parameter binds in a scope of its own",
+      "in": "try { x(); } catch (e) { e.message; }\n",
+      "bindings": ["e:catch"],
+      "refs": ["x->free", "e->0"],
+      "unresolved": ["x"]
+    },
+    {
+      "why": "a for head binds into the loop, including a body with no braces",
+      "in": "for (const item of list) item.x;\n",
+      "bindings": ["item:const"],
+      "refs": ["list->free", "item->0"],
+      "unresolved": ["list"]
+    },
+    {
+      "why": "a braced loop body sees the head's binding and nothing after the loop does",
+      "in": "for (let n = 0; n < 3; n += 1) { f(n); }\nn;\n",
+      "bindings": ["n:let"],
+      "refs": ["n->0", "n->0", "f->free", "n->0", "n->free"],
+      "unresolved": ["f", "n"]
+    },
+    {
+      "why": "object keys are not references and shorthand values are",
+      "in": "const o = { a: 1, b() {}, c };\no.a;\n",
+      "bindings": ["o:const"],
+      "refs": ["c->free", "o->0"],
+      "unresolved": ["c"]
+    },
+    {
+      "why": "an accessor named after its own modifier word",
+      "in": "const o = { get get() { return 1; }, set set(v) {} };\n",
+      "bindings": ["o:const", "v:param"],
+      "refs": [],
+      "unresolved": []
+    },
+    {
+      "why": "a computed key is an expression, so the name in it is read",
+      "in": "const k = 1;\nconst o = { [k]: 2 };\n",
+      "bindings": ["k:const", "o:const"],
+      "refs": ["k->0"]
+    },
+    {
+      "why": "class members, private fields and `this` are not references to anything",
+      "in": "class A { #p = 1; m() { return this.#p; } static s = 2; }\nnew A();\n",
+      "bindings": ["A:class"],
+      "refs": ["A->0"]
+    },
+    {
+      "why": "a heritage clause reads a name",
+      "in": "class A extends B {}\n",
+      "bindings": ["A:class"],
+      "refs": ["B->free"],
+      "unresolved": ["B"]
+    },
+    {
+      "why": "a method's parameters belong to the method",
+      "in": "class A { m(a) { return a; } }\n",
+      "bindings": ["A:class", "a:param"],
+      "refs": ["a->1"]
+    },
+    {
+      "why": "a label is not a name in use, at either end",
+      "in": "outer: for (;;) break outer;\n",
+      "bindings": [],
+      "refs": [],
+      "unresolved": []
+    },
+    {
+      "why": "a property access is not a reference, through an optional chain either",
+      "in": "a.b.c; a?.b?.(c);\n",
+      "bindings": [],
+      "refs": ["a->free", "a->free", "c->free"],
+      "unresolved": ["a", "c"]
+    },
+    {
+      "why": "a name inside a template substitution is read",
+      "in": "const s = `${f(a)}`;\n",
+      "bindings": ["s:const"],
+      "refs": ["f->free", "a->free"],
+      "unresolved": ["a", "f"]
+    },
+    {
+      "why": "a function expression's body is a scope even without a name",
+      "in": "(function () { const a = 1; return a; })();\n",
+      "bindings": ["a:const"],
+      "refs": ["a->0"]
+    },
+    {
+      "why": "two uses of one dependency are two references to one binding",
+      "in": "import chalk from 'chalk';\nchalk.red(chalk.bold('a'));\n",
+      "bindings": ["chalk:import"],
+      "refs": ["chalk->0", "chalk->0"],
+      "deps": ["chalk|import|0"]
+    },
+    {
+      "why": "a local name shadows an imported one, which is why a rename needs the scope tree",
+      "in": "import { join } from 'node:path';\nfunction f() { const join = 1; return join; }\njoin('a');\n",
+      "bindings": ["join:import", "f:function", "join:const"],
+      "refs": ["join->2", "join->0"],
+      "deps": ["node:path|import|0"]
+    },
+    {
+      "why": "several specifiers in one file, in source order",
+      "in": "import a from 'one';\nimport b from 'two';\nconst c = require('three');\n",
+      "bindings": ["a:import", "b:import", "c:require"],
+      "deps": ["one|import|0", "two|import|1", "three|require|2"]
+    }
+  ],
+  "unanalysable": [
+    { "why": "a loader call with a computed specifier", "in": "const m = require(name);\n", "form": "require" },
+    { "why": "a loader call with a template", "in": "require(`./${name}.js`);\n", "form": "require" },
+    { "why": "a dynamic import with a variable", "in": "await import(name);\n", "form": "dynamic-import" },
+    { "why": "a dynamic import with a joined string", "in": "await import('./' + name);\n", "form": "dynamic-import" }
+  ],
+  "fixtures": {
+    "note": "Sources the helper tests need by name. Here rather than inline in the test file for the reason given at the top: an import statement written in a .mjs file is what the dependency proof looks for.",
+    "rename": "import { red as r } from 'chalk';\nr(1);\n{ const r = 2; r; }\n",
+    "twoUses": "import chalk from 'chalk';\nchalk.red(chalk.bold('a'));\n",
+    "shadowedParameter": "const a = 1;\nfunction f(a) { return a; }\n"
+  }
+}
