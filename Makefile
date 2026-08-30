@@ -5,7 +5,7 @@
 NODE ?= node
 DIST ?= dist
 
-.PHONY: all build test verify repro conformance clean help
+.PHONY: all build test verify repro conformance stdlibmd clean help
 
 all: verify test build
 
@@ -28,6 +28,13 @@ repro:
 ## conformance: pass/fail/skip table for every runtime module
 conformance:
 	@$(NODE) bin/nirdep.mjs conformance
+
+## stdlibmd: print the document this tool would generate about itself
+# Prints rather than writes. STDLIB.md here is a hand-written disclosure with
+# paragraphs no generator produced, and --write would refuse to touch it -- as
+# it should. Redirect it somewhere else if you want the file.
+stdlibmd:
+	@$(NODE) bin/nirdep.mjs stdlibmd .
 
 clean:
 	@rm -rf $(DIST)

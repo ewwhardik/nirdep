@@ -11,7 +11,7 @@ PASS  no node_modules directory in the repository
 PASS  no lockfile entries beyond the root package
 
 2. Every import in the artifact resolves to a Node builtin or a relative path
-PASS  101 import specifiers checked across 26 files
+PASS  385 import specifiers checked across 82 files
 
 3. The standard library we actually use
       node:assert/strict
@@ -24,7 +24,8 @@ PASS  101 import specifiers checked across 26 files
       node:test
       node:url
       node:util
+      node:vm
       node:zlib
-      11 builtin modules, 0 packages
+      12 builtin modules, 0 packages
 
 RESULT: zero third-party runtime dependencies.

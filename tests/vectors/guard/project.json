@@ -1,0 +1,13 @@
+{
+  "note": "The project tests/cli/guard.test.mjs plants. Kept as JSON because a real specifier in a .mjs file under tests/ is a third-party dependency as far as tools/verify.mjs can tell -- the same reason tests/vectors/scan/tree.json exists. The lockfile lists a semver nobody declared, which is the phantom-dependency case: installed, arriving through somebody else's tree, and invisible to package.json.",
+  "project": {
+    "package.json": "{\n  \"name\": \"painted\",\n  \"version\": \"1.0.0\",\n  \"type\": \"module\",\n  \"dependencies\": {\n    \"chalk\": \"^5.3.0\"\n  },\n  \"devDependencies\": {\n    \"minimist\": \"^1.2.8\"\n  }\n}\n",
+    "package-lock.json": "{\n  \"name\": \"painted\",\n  \"version\": \"1.0.0\",\n  \"lockfileVersion\": 3,\n  \"requires\": true,\n  \"packages\": {\n    \"\": {\n      \"name\": \"painted\",\n      \"version\": \"1.0.0\",\n      \"dependencies\": { \"chalk\": \"^5.3.0\" },\n      \"devDependencies\": { \"minimist\": \"^1.2.8\" }\n    },\n    \"node_modules/chalk\": {\n      \"version\": \"5.3.0\",\n      \"integrity\": \"sha512-chalk\"\n    },\n    \"node_modules/minimist\": {\n      \"version\": \"1.2.8\",\n      \"dev\": true,\n      \"integrity\": \"sha512-minimist\"\n    },\n    \"node_modules/semver\": {\n      \"version\": \"7.6.0\",\n      \"integrity\": \"sha512-semver\"\n    }\n  }\n}\n",
+    "src/paint.mjs": "import chalk from 'chalk';\n\nexport const shout = (text) => chalk.bold(chalk.red(text));\n",
+    "src/args.mjs": "import minimist from 'minimist';\n\nexport const flags = () => minimist(process.argv.slice(2));\n"
+  },
+  "policies": {
+    "written": "{\n  \"guard\": {\n    \"signals\": [\"imported\"],\n    \"allow\": {\n      \"minimist\": \"DEP-14: the flag parser moves with the next release\"\n    }\n  }\n}\n",
+    "broken": "{\n  \"guard\": {\n    \"signal\": [\"imported\"],\n    \"max\": -1\n  }\n}\n"
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "note": "Hand-written expectations for src/rules/rewrite.mjs. Each case gives a source file and either the text it must become (`out`) or the reasons it must be refused (`declined`, as code|specifier|line). `changes` is specifier|target when a rewrite happens. Every case is an import statement, which is why the table is JSON: tools/verify.mjs reads .mjs files looking for exactly that shape and would count these as real dependencies. The refusals outnumber the rewrites on purpose -- that ratio is the claim the tool makes about itself.",
+  "adviceTemplate": "import x from '{package}';\nx();\n",
+  "cases": [
+    {
+      "why": "a default chalk import with covered members: the one rewrite everybody wants",
+      "in": "import chalk from 'chalk';\nconsole.log(chalk.red('hi'), chalk.bold.cyan('x'));\n",
+      "out": "import chalk from 'nirdep/runtime/colour';\nconsole.log(chalk.red('hi'), chalk.bold.cyan('x'));\n",
+      "changes": ["chalk|nirdep/runtime/colour"]
+    },
+    {
+      "why": "the quote style of the file is kept, because a codemod is not a formatter",
+      "in": "import chalk from \"chalk\";\nchalk.red('a');\n",
+      "out": "import chalk from \"nirdep/runtime/colour\";\nchalk.red('a');\n"
+    },
+    {
+      "why": "the local name is kept when it was renamed at the import",
+      "in": "import c from 'chalk';\nc.green('a');\n",
+      "out": "import c from 'nirdep/runtime/colour';\nc.green('a');\n"
+    },
+    {
+      "why": "a chained style is checked link by link, and every link here is in the table",
+      "in": "import chalk from 'chalk';\nchalk.bold.underline.bgRgb(1, 2, 3)('a');\n",
+      "out": "import chalk from 'nirdep/runtime/colour';\nchalk.bold.underline.bgRgb(1, 2, 3)('a');\n"
+    },
+    {
+      "why": "optional access reaches a member too, so ?. must not hide one",
+      "in": "import chalk from 'chalk';\nchalk?.red?.('a');\n",
+      "out": "import chalk from 'nirdep/runtime/colour';\nchalk?.red?.('a');\n"
+    },
+    {
+      "why": "level and enabled are read off chalk in the wild and both exist here",
+      "in": "import chalk from 'chalk';\nchalk.level = 2;\nif (chalk.enabled) chalk.dim('a');\n",
+      "out": "import chalk from 'nirdep/runtime/colour';\nchalk.level = 2;\nif (chalk.enabled) chalk.dim('a');\n"
+    },
+    {
+      "why": "a member the replacement does not have stops the whole statement, with the line",
+      "in": "import chalk from 'chalk';\nconsole.log(chalk.rainbow('hi'));\n",
+      "declined": ["member|chalk|2"]
+    },
+    {
+      "why": "a bad link late in a chain is still a bad link",
+      "in": "import chalk from 'chalk';\nchalk.bold.sparkle('a');\n",
+      "declined": ["member|chalk|2"]
+    },
+    {
+      "why": "passed as a value, so no list of member names describes what the call site needs",
+      "in": "import chalk from 'chalk';\nuse(chalk);\n",
+      "declined": ["shape|chalk|1"]
+    },
+    {
+      "why": "one value use is enough to refuse, even beside a member access that would pass",
+      "in": "import semver from 'semver';\nsemver.gt(a, b);\nsend(semver);\n",
+      "declined": ["shape|semver|1"]
+    },
+    {
+      "why": "chalk's named exports are a class and per-stream instances; this runtime has neither",
+      "in": "import chalk, { Chalk } from 'chalk';\nconst c = new Chalk();\nchalk.red('a');\n",
+      "declined": ["shape|chalk|1"]
+    },
+    {
+      "why": "one function in, one named function out, under the local name already in use",
+      "in": "import stripAnsi from 'strip-ansi';\nconsole.log(stripAnsi(text));\n",
+      "out": "import { strip as stripAnsi } from 'nirdep/runtime/colour';\nconsole.log(stripAnsi(text));\n",
+      "changes": ["strip-ansi|nirdep/runtime/colour"]
+    },
+    {
+      "why": "and no pointless alias when the local name already matches the export",
+      "in": "import strip from 'strip-ansi';\nstrip(a);\n",
+      "out": "import { strip } from 'nirdep/runtime/colour';\nstrip(a);\n"
+    },
+    {
+      "why": "named semver imports are checked against what the module actually exports",
+      "in": "import { satisfies, major } from 'semver';\nsatisfies(a, b) && major(a);\n",
+      "out": "import { satisfies, major } from 'nirdep/runtime/semver';\nsatisfies(a, b) && major(a);\n",
+      "changes": ["semver|nirdep/runtime/semver"]
+    },
+    {
+      "why": "a named import of something unimplemented is a build break, not a warning",
+      "in": "import { Range } from 'semver';\nnew Range(a);\n",
+      "declined": ["member|semver|1"]
+    },
+    {
+      "why": "a namespace import, where every member reached has to be in the table",
+      "in": "import * as semver from 'semver';\nsemver.gt(a, b) || semver.lte(c, d);\n",
+      "out": "import * as semver from 'nirdep/runtime/semver';\nsemver.gt(a, b) || semver.lte(c, d);\n"
+    },
+    {
+      "why": "semver's classes are reached as members too, and they are not implemented",
+      "in": "import semver from 'semver';\nnew semver.Comparator(a);\n",
+      "declined": ["member|semver|2"]
+    },
+    {
+      "why": "a dynamic import of chalk survives because the default export is still the default",
+      "in": "const chalk = (await import('chalk')).default;\n",
+      "out": "const chalk = (await import('nirdep/runtime/colour')).default;\n",
+      "changes": ["chalk|nirdep/runtime/colour"]
+    },
+    {
+      "why": "a dynamic import of strip-ansi does not, because the shape moved to a named export",
+      "in": "const s = await import('strip-ansi');\n",
+      "declined": ["shape|strip-ansi|1"]
+    },
+    {
+      "why": "a loader call reads the value differently, so the file is converted first or not at all",
+      "in": "const chalk = require('chalk');\nchalk.red('x');\n",
+      "declined": ["form|chalk|1"]
+    },
+    {
+      "why": "a bare import is here for a side effect the replacement does not have",
+      "in": "import 'chalk';\n",
+      "declined": ["form|chalk|1"]
+    },
+    {
+      "why": "a re-export passes names through without naming them, so there is nothing to check",
+      "in": "export { red } from 'chalk';\n",
+      "declined": ["form|chalk|1"]
+    },
+    {
+      "why": "an advise-only package is reported and never rewritten, however easy it looks",
+      "in": "import minimist from 'minimist';\nconst a = minimist(argv);\n",
+      "declined": ["advice|minimist|1"]
+    },
+    {
+      "why": "supports-color asks the same question through a different shape",
+      "in": "import supportsColor from 'supports-color';\nif (supportsColor.stdout) go();\n",
+      "declined": ["advice|supports-color|1"]
+    },
+    {
+      "why": "eval can reach any name, so nothing static about a binding holds and nothing is touched",
+      "in": "import chalk from 'chalk';\neval(code);\nchalk.red('x');\n",
+      "declined": ["unsafe|null|2"]
+    },
+    {
+      "why": "a package we do not replace is not our business",
+      "in": "import express from 'express';\nexpress();\n",
+      "out": "import express from 'express';\nexpress();\n",
+      "changes": []
+    },
+    {
+      "why": "two statements in one file, both rewritten, offsets still right for the second",
+      "in": "import chalk from 'chalk';\nimport { gt } from 'semver';\nchalk.red(gt(a, b));\n",
+      "out": "import chalk from 'nirdep/runtime/colour';\nimport { gt } from 'nirdep/runtime/semver';\nchalk.red(gt(a, b));\n",
+      "changes": ["chalk|nirdep/runtime/colour", "semver|nirdep/runtime/semver"]
+    },
+    {
+      "why": "a file with no trailing newline keeps not having one",
+      "in": "import chalk from 'chalk';\nchalk.red('a')",
+      "out": "import chalk from 'nirdep/runtime/colour';\nchalk.red('a')"
+    },
+    {
+      "why": "the same name shadowed inside a function is a different binding, and its members are not ours",
+      "in": "import chalk from 'chalk';\nchalk.red('a');\nfunction f() { const chalk = { rainbow: 1 }; return chalk.rainbow; }\n",
+      "out": "import chalk from 'nirdep/runtime/colour';\nchalk.red('a');\nfunction f() { const chalk = { rainbow: 1 }; return chalk.rainbow; }\n"
+    },
+    {
+      "why": "a specifier inside a string is text, which is the difference between a lexer and a regex",
+      "in": "const s = 'import chalk from \"chalk\"';\nimport chalk from 'chalk';\nchalk.red(s);\n",
+      "out": "const s = 'import chalk from \"chalk\"';\nimport chalk from 'nirdep/runtime/colour';\nchalk.red(s);\n",
+      "changes": ["chalk|nirdep/runtime/colour"]
+    },
+    {
+      "why": "and so is one inside a comment",
+      "in": "// import chalk from \"chalk\"\nimport chalk from 'chalk';\nchalk.red('a');\n",
+      "out": "// import chalk from \"chalk\"\nimport chalk from 'nirdep/runtime/colour';\nchalk.red('a');\n"
+    },
+    {
+      "why": "a deep path into a package is a different entry point with a different surface",
+      "in": "import source from 'chalk/source';\nsource.red('a');\n",
+      "out": "import source from 'chalk/source';\nsource.red('a');\n",
+      "changes": []
+    }
+  ]
+}

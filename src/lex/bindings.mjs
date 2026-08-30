@@ -375,9 +375,13 @@ export function analyse(input, options = {}) {
       declared.add(at - 1);
     }
     // The parameters were walked before the `=>` said what they were, so they are in
-    // the reference list by mistake. Take exactly those entries back.
+    // the reference list by mistake. Take exactly those entries back. What is left in
+    // that span is a default value -- `(count, one, many = `${one}s`) => ...` -- and it
+    // is evaluated in the parameter scope, so those references move into the scope that
+    // has only just come into existence. Leaving them outside it loses the name.
     for (let n = references.length - 1; n >= 0 && references[n].token >= from; n -= 1) {
       if (declared.has(references[n].token)) references.splice(n, 1);
+      else if (references[n].token < at) references[n].scope = scope.id;
     }
     const body = at + 1;
     if (isPunct(tokens[body], '{')) {

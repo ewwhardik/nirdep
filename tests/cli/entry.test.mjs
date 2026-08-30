@@ -62,10 +62,16 @@ test('an unknown command goes to stderr with a non-zero exit', () => {
   assert.match(stderr, /unknown command "nope"/);
 });
 
-test('a known but unfinished command says so plainly instead of pretending', () => {
-  const { code, stderr } = run(['scan']);
-  assert.equal(code, 3);
-  assert.match(stderr, /not implemented yet/);
+test('nothing in the table is pending, and the help text no longer says otherwise', () => {
+  // This used to be a loop over the unfinished commands, asserting exit 3 and a stderr line.
+  // The list is empty now, and an empty loop is a test that passes by doing nothing -- so it
+  // asserts the opposite instead: every command in the table runs, and the footer that used
+  // to explain the exit-3 rows is gone. The mechanism itself is still covered, against a
+  // synthetic table, in tests/runtime/cli.test.mjs.
+  const { stdout } = run(['help']);
+  assert.equal(/\(pending\)/.test(stdout), false);
+  assert.equal(/not implemented yet/.test(stdout), false);
+  assert.match(stdout, /^Every command above is implemented\./m);
 });
 
 test('help lists every command in the table', () => {
@@ -88,8 +94,12 @@ test('piped output carries no escape sequences', () => {
 test('FORCE_COLOR styles a pipe, and the sequences close correctly', () => {
   const { stdout } = run(['help'], { FORCE_COLOR: '3' });
   assert.ok(stdout.includes(`${ESC}[1mnirdep${ESC}[22m`), 'the name is bold and bold closes with 22');
-  assert.ok(stdout.includes(`${ESC}[36m`), 'ready commands are cyan');
-  assert.ok(stdout.includes(`${ESC}[33m(pending)${ESC}[39m`), 'pending markers are yellow');
+  assert.ok(stdout.includes(`${ESC}[36mscan${ESC}[39m`), 'commands are cyan and cyan closes with 39');
+  // The yellow marker was asserted here, on the (pending) rows. There are none left to paint,
+  // so the dim footer stands in as the third sequence; yellow itself is still covered, against
+  // a table with an unfinished row in it, in tests/runtime/args.test.mjs.
+  assert.ok(stdout.includes(`${ESC}[2mPublished by Nastik AI. Developed by Hardik.${ESC}[22m`),
+    'the attribution is dim and dim closes with 22');
 });
 
 test('NO_COLOR silences a forced terminal claim', () => {

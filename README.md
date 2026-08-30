@@ -42,21 +42,21 @@ and the commands are listed in the Makefile.
 ## Status
 
 This is a hackathon entry under active construction, so the honest table is the
-useful one. Commands marked *pending* exit with code 3 and say so rather than
-pretending to have worked.
+useful one. Every command in it runs; `make conformance` is the receipt for the
+runtime modules underneath them.
 
 | Command       | State   | What it does                                        |
 | ------------- | ------- | --------------------------------------------------- |
 | `about`       | works   | attribution, licence, live dependency count          |
 | `help`        | works   | the command table                                    |
-| `scan`        | pending | find every replaceable dependency and its call sites |
-| `plan`        | pending | show the diff nirdep would apply, and apply nothing   |
-| `apply`       | pending | rewrite the call sites, with a syntax gate           |
-| `eject`       | pending | copy a runtime module into your tree, unbranded      |
-| `guard`       | pending | fail a build if a banned package comes back          |
-| `conformance` | pending | pass/fail/skip table for every runtime module        |
-| `stdlibmd`    | pending | generate the STDLIB log from the code, not by hand   |
-| `explain`     | pending | why a given rewrite is safe, or why it was refused   |
+| `scan`        | works   | what is replaceable, what would leave with it, what is wrong |
+| `plan`        | works   | show the diff nirdep would apply, and apply nothing   |
+| `apply`       | works   | rewrite the call sites, with a syntax gate           |
+| `eject`       | works   | copy a runtime module into your tree, licence header intact |
+| `guard`       | works   | fail a build if a banned package comes back          |
+| `conformance` | works   | pass/fail/skip table for every runtime module        |
+| `stdlibmd`    | works   | generate the STDLIB log from the code, not by hand   |
+| `explain`     | works   | why a given rewrite is safe, or why it was refused   |
 
 The runtime modules declared in `package.json` are being written in that order.
 `nirdep/runtime/colour`, `nirdep/runtime/args` and `nirdep/runtime/semver` are
@@ -66,6 +66,23 @@ replacement for commander, the colour is the replacement for chalk, and the
 decision to use colour at all is made by the replacement for supports-color.
 `bin/nirdep.mjs` contains no help string and no argument parsing — if either
 module were wrong, the binary would be visibly wrong too.
+
+`scan` is the one to run first, and the only one that is safe to point at a
+repository you do not own: it reads and writes nothing.
+
+```
+nirdep scan .
+```
+
+It reads `package.json`, whichever lockfile is committed — npm v1/v2/v3, yarn
+classic, yarn berry, pnpm 5 or 9 — and every source file, then reports where the
+three disagree. The number it exists to produce is the blast radius: for each
+replaceable dependency, how much of the installed tree is reachable only through
+it, computed from the lockfile's own edges rather than from a table somebody
+typed. Findings do not fail the build; the only non-zero exit is a file it was
+asked to read and could not. The last block of the report says what the scan did
+*not* check, which includes the fact that it makes no network request and so is
+not a substitute for `npm audit`.
 
 ## What the runtime replaces
 

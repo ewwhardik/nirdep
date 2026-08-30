@@ -7,11 +7,14 @@ we reached for in `node:*`, what it gave us, and what it would not give us.
 It is written to be read by someone deciding whether to delete a dependency of
 their own, so the interesting entries are the ones where the answer was *no*.
 
-`nirdep stdlibmd` will regenerate the machine-checkable half of this file from the
-source tree so the two cannot drift. Until that command lands, this file is
-maintained by hand and dated.
+`nirdep stdlibmd .` generates the machine-checkable half of a document like this
+one — the claim, the tables, the per-module sections — from package.json, the
+lockfile and the imports, so those parts cannot drift from the code. `make
+stdlibmd` prints what it says about this repository. It is a separate file on
+purpose: the command refuses to overwrite a document that says something else,
+and the paragraphs below are the half no generator can write.
 
-Last updated by hand: 29 August 2026, against Node v22.23.2. 136 tests passing.
+Last updated by hand: 30 August 2026, against Node v22.23.2. 499 tests passing.
 
 ## The rules I held myself to
 
@@ -341,10 +344,408 @@ Two checks are worth more than the rest. Every specifier the analyser reports
 must also be found by the blunt scanner in `src/audit/imports.mjs`, so the
 grammar-aware layer is provably a subset of the one the dependency proof uses —
 if they ever disagreed about what a dependency is, the proof would stop being a
-proof. And every unresolved name across all 25 `.mjs` files in this repository
+proof. And every unresolved name across all 41 `.mjs` files in this repository
 must be a real global: `JSON`, `Object`, `process`, `Math` and friends, nothing
 else. A local name that leaked into that list would be a reference resolved to
 nothing, which is precisely the failure that breaks a build after a rename.
+
+### Applying a rewrite: `src/patch/` — no stdlib answer, and three npm answers
+
+Node has no diff. It has no patcher either. The packages that fill the gap are
+`jscodeshift` and `recast` for the rewriting, `magic-string` for the splicing and
+`diff` for the display, and between them they are the reason a codemod is usually
+a heavier install than the code it edits.
+
+`src/patch/edits.mjs` is the splicing, and it is the dullest module in the
+project on purpose: it takes byte ranges and replacement text, applies them right
+to left so no offset is ever stale, and knows nothing about JavaScript. Nothing
+goes through a printer, which is the whole point — a printer hands back your file
+with its blank lines rearranged and its comments moved, and then a two-line
+change is a two-hundred-line diff nobody reads. Two refusals earn their keep.
+Every edit must carry a reason, because `plan` prints reasons and an edit nobody
+can explain has no business in a patch. And two edits that want the same bytes
+are a bug in the caller rather than a merge to attempt: whichever one lost would
+be dropped silently, which is how a rewrite half-happens.
+
+`src/patch/diff.mjs` is Myers 1986, the greedy edit-graph walk git uses, in about
+120 lines. Its shape suits the job: O((N+M)D) in the size of the edit script, and
+a codemod changes a handful of lines in a large file, so D stays small and the
+file's size barely matters. The matching head and tail are trimmed before the
+search, D is capped, and past the cap the whole middle becomes one
+delete-then-insert — a correct patch, just an unhelpful one to read, and it says
+so with `truncated`. Lines carry their terminators through the comparison, which
+is how `"a"` and `"a\n"` come out as a change instead of vanishing, and how
+`\ No newline at end of file` lands in the right place.
+
+Two checks stand behind it. The hunks are compared byte for byte against what GNU
+`diff -u` prints for the same inputs, headers included. And on 320 seeded random
+pairs, the edit script Myers finds is checked for length against an independent
+shortest-edit-distance table written by dynamic programming in the test file — if
+the clever algorithm ever finds a longer script than the boring one, the clever
+one is wrong.
+
+`src/patch/gate.mjs` is the part that stops a bad rewrite reaching the disk, and
+it is where the standard library needed the most reading. A codemod that writes
+broken JavaScript is worse than one that does nothing. So every patch is parsed
+by Node's own parser before it is written — not by our lexer, which is
+token-level and forgiving by design. Getting at that parser without a dependency
+took three attempts, all measured on Node v22.23.2: `vm.Script` only knows script
+grammar and rejects the word export outright; `vm.SourceTextModule` is
+module-aware but locked unless the process was started with
+`--experimental-vm-modules`, so the handle is tried and the failure treated as
+"not available"; and what remains is `node --check --input-type=module` over
+stdin. That last one is a subprocess, and it is worth being precise about why it
+is allowed: it spawns `process.execPath`, the running interpreter, not a tool
+somebody had to install. It costs about 19ms a file, against 0.025ms when the vm
+door is open, and the lexer runs first as a free filter — a file it cannot
+tokenise is broken already and needs no second opinion. When the fast path does
+report a failure it carries no position at all, so that one case is handed to
+`node --check` purely to find the line.
+
+The gate checks both sides of a patch and reports **blame**. A file that did not
+parse before we touched it is not evidence against the rewrite, and reporting it
+as one sends the user hunting for a bug in the wrong place. Both sides are
+checked even when the first fails, because a second 19ms is cheaper than a wrong
+accusation. Every `.mjs` file in this repository goes through the gate on every
+test run: the check that guards other people's code is held to the same standard
+by our own.
+
+### Deciding what may be rewritten: `src/rules/` — a judgement, not a table
+
+The npm answer here is `jscodeshift`, and it is the wrong shape for the question.
+A codemod framework will happily map one specifier onto another; what it will not
+do is tell you that the mapping is a lie. The interesting content of this layer is
+therefore not the rewriting. It is the refusing.
+
+`src/rules/registry.mjs` splits the packages into two actions and only two.
+A **rewrite** rule claims the replacement takes the same calls in the same shape,
+so a machine may edit the file: `chalk`, `strip-ansi`, `semver`. An **advise** rule
+says the shapes differ and a person has to look: `supports-color`, `ansi-styles`,
+`minimist`, `commander`, `yargs`. The temptation is to file `minimist` as a rewrite
+— `src/runtime/args.mjs` replaces it and the specifier swap is one line — and the
+result would be green output and a broken program, because minimist returns a bag
+of parsed values and `parse` wants a declared spec. The tool would have been more
+impressive and less true. There are more advise rules than rewrite rules, and a
+test fails if that ever stops being so.
+
+A rewrite rule also has to answer for each of the three ways a binding can arrive.
+`chalk` answers for the default binding and refuses the named one, because chalk's
+named exports are a class and per-stream instances and this runtime has neither.
+`strip-ansi` answers for the default binding by renaming it: one function in, one
+named export out, aliased to whatever local name the file already uses. Each
+refusal carries the sentence the report will print, and a test rejects any refusal
+short enough to be a code word rather than an explanation.
+
+The member lists are not written down. They are read off the runtime modules at
+load — `Object.keys(colour.styles)` for the style names, the keys of semver's
+default export for the range surface — so a rule cannot claim a member the module does not have, and a test checks the
+correspondence in both directions so a newly implemented member cannot be quietly
+left out of the rules either. semver's surface legitimately includes constants as
+well as functions, `MAX_LENGTH` and `RELEASE_TYPES` among them, because call sites
+read those.
+
+`src/rules/rewrite.mjs` is where the binding analyser from `src/lex/` earns its
+keep. For each import of a replaceable package it collects every member reached
+through the local name — including through `?.`, through an assignment target, and
+link by link along a chain like `chalk.bold.underline.bgRgb` — and checks each one
+against the covered set. A name used as a value rather than as an object is refused
+outright under `shape`, because no list of member names describes what a call site
+does with the whole thing. Refusals come back as one of six codes, each with a
+line number: `unreadable`, `unsafe` (the file calls `eval`, so nothing static about
+a binding holds), `shape`, `member`, `form` (a `require` call, a bare side-effect
+import, a re-export: forms where the names are not visible to check) and `advice`.
+
+The rule that costs the most and matters the most is that a rewrite is all of a
+statement or none of it. A statement whose default binding is fine and whose named
+binding is not would end up pointing half its names at a module that lacks them,
+so a declining binding takes the specifier edit down with it. Two tests hold the
+line: one asserts a declined file's text is byte-identical afterwards, another
+asserts a file that reports a refusal never also reports a change.
+
+### Running it over a project: `src/apply/` — two passes, and blame
+
+`src/apply/project.mjs` walks the tree, and the cheap parts are deliberate. Only
+`.mjs`, `.cjs`, `.js` and `.jsx` are opened. Before the lexer sees a file, a
+substring test asks whether any replaceable package name appears in it at all;
+that filter over-accepts by design, so a package named in a comment costs one
+lex and is then correctly left alone, and it never under-accepts. On this
+repository it reads 21 of 41 files and rewrites none of them, which is the answer
+you want from a tool whose whole claim is that it has no dependencies.
+
+Writing happens in two passes because a half-migrated repository is worse than an
+unmigrated one. Every patch is applied in memory and put through `src/patch/gate.mjs`
+first; only when every gate has passed does a single byte reach the disk. If a
+patch would not parse, the run halts having written nothing.
+
+That is where blame does real work. A file that was already broken before the
+codemod ran is not evidence against the rewrite, and treating it as such would
+mean one unparseable file in a large repository could block the migration of every
+other. So `blame: 'patch'` — we broke it — rejects and halts, while
+`blame: 'source'` reports that file as `was broken`, skips it, and lets the rest
+proceed. The distinction is tested from both directions, including with a
+deliberately corrupted patch, which is the only way to prove the halt is real.
+
+Without `--runtime`, imports are rewritten to the package subpath
+`nirdep/runtime/colour`. With it, they are rewritten to a relative path into the
+directory the runtime was ejected into, computed per file: `../nirdep/runtime/colour.mjs`
+one level down, `../../nirdep/runtime/colour.mjs` two, `./colour.mjs` for a file
+sitting beside it. That is the difference between a tool that assumes it will be
+installed and one that can hand a project its own copy and leave.
+
+`src/apply/report.mjs` prints. The diff carries `a/` and `b/` prefixes and real
+hunk ranges, on stdout, so `nirdep plan | git apply` is a workflow rather than a
+claim; a test asserts the header format for exactly that reason. Reasons are
+folded at 76 columns rather than truncated, since a refusal you cannot finish
+reading is a refusal you cannot act on. Exit codes say what happened: a project
+with nothing to replace is a success, not a usage error, so it exits 0; a rejected
+patch or an unreadable file exits 1; and a path that does not exist exits 2 with a
+message naming it, because the walker swallows `ENOENT` at every level and a typo
+would otherwise print the same spotless report as a clean repository.
+
+### Reading a project: `src/scan/` — three readers, and their disagreements
+
+`nirdep scan` answers one question — what would it cost to stop depending on
+this? — from three sources that each know a different part of the answer.
+`package.json` says what was promised. The lockfile says what actually arrives.
+The project's own source says what is really used. Most of what the command
+reports is a disagreement between them: a package imported but declared nowhere,
+a package declared but imported nowhere and named in no script, a range that
+promises less than the lock delivers.
+
+The lockfile reader in `src/scan/lockfile.mjs` handles five formats with no
+parser dependency, because three of them are JSON and Node parses JSON.
+`package-lock.json` v1 nests, v2 and v3 key by install path, and both shapes are
+reduced to the same record; `pnpm-lock.yaml` and yarn's two formats are read by a
+small line-oriented scanner rather than a YAML parser, which is honest about its
+own limits — it reads the two-space block structure those files actually use and
+would not survive an arbitrary YAML document. Every entry ends up with the same
+fifteen fields, so nothing downstream has to know which package manager it is
+looking at. Reading a file that `npm` wrote is reading a file, not running a
+package manager, and when no lockfile is committed the command says so and
+reports the smaller set of things `package.json` alone can support.
+
+The blast radius is the number the command exists to produce, and it is a
+subtraction rather than a sum. For one direct dependency, `strandedBy` computes
+everything reachable from all roots minus everything reachable from the roots
+that remain. Summing per-package counts gets the interesting case wrong: two
+packages that share a child each own nothing, and removing both takes three
+packages out. The walk is iterative because peer-dependency cycles are ordinary
+in real lockfiles, and a recursive version is a stack overflow waiting for a
+user with a large project.
+
+Source is read twice, in order of trust. `src/audit/imports.mjs` is a regex
+scanner that over-accepts — it will find a specifier mentioned in a comment — and
+it runs first because it is cheap, and a file it finds nothing in cannot contain
+an import the lexer would find either. When it does find something, the real
+lexer runs and its answer replaces the guess. A file the lexer refuses is named
+in the report and its blunt answer is kept rather than dropped, tagged
+`read: 'scanned'` so that nothing downstream can present it as a parsed result.
+
+The report ends with a block headed *what this scan did not check*, and it is
+printed even when nothing was found, because "nothing found" means very little
+without "and here is what I could not have found". Four limits are stated there
+and are worth repeating here. There is no vulnerability check: that needs an
+advisory database and a network request, and this tool makes neither, so a clean
+`nirdep scan` is not a clean `npm audit`. The dependency graph is keyed by package
+name rather than by name and version, so a package installed at two versions is
+one node, which makes every "would leave with it" count an **upper bound** — the
+alternative needs each edge's resolved range, which two of the three lockfile
+formats do not write down. Every number comes from the files as committed rather
+than from `node_modules` as installed. And only the root `package.json` is read,
+so a monorepo has to be scanned one package at a time; workspace roots declared
+in npm's and pnpm's lockfiles are picked up, but a workspace member's own
+dependency fields are not.
+
+One field is less tidy than the rest and should be said out loud rather than
+discovered: `source.packages[].forms` mixes the lexer's names for a statement
+shape with the blunt scanner's names, for the files where the scanner had the
+last word. The counts and the package names are unaffected; the form label is
+descriptive only, and nothing reads it to make a decision.
+
+Exit codes follow from what the command is for. A scan reports; it does not judge.
+Findings do not fail, because a command that exits 1 on a deprecation notice gets
+wrapped in `|| true` within a week and then never fails again — `guard` is the
+command that fails, on rules a person chose. The one non-zero case is a file we
+were asked to read and could not, which is a question about the report's own
+completeness rather than about the project.
+
+### Taking the runtime with you: `src/eject/` — a copy, and a reason to trust it
+
+A codemod that swaps eight dependencies for one is a smaller number and the same
+problem, so `nirdep eject` writes a runtime module into the target tree as a plain
+file and `apply --runtime` points the rewritten imports at it. The standard
+library supplies all of this — `readFileSync`, `writeFileSync`, `mkdirSync` with
+`{ recursive: true }`, and `path` — and every one of them is injected rather than
+imported at the call site, which is why the eject tests never touch a disk.
+
+What the stdlib does not supply is the reason to trust the copy. Three rules
+carry that. The module list is derived from this project's own `exports` map
+rather than typed out, because a hand-written list disagrees with `package.json`
+the first time somebody adds a module, and it disagrees by offering a subpath that
+does not resolve. The output is deterministic — no timestamp, no username, no
+"generated on" line — which is what makes the second run able to compare bytes and
+say *up to date* instead of writing again. And the six-line banner at the top of
+the file names where it came from, which version wrote it, and what it replaces,
+because a reviewer finding nine hundred unfamiliar lines in a diff deserves a
+first line that explains them. MIT asks for the notice; nothing asks for an
+advertisement.
+
+The refusals are the interesting part of the exit code. A destination that is
+byte-identical is skipped, not failed, so re-running is free. A destination that
+differs is somebody's edit, and it is refused with the suggestion to diff it —
+clobbering an edit is how a tool loses the benefit of the doubt. A destination
+that exists and cannot be read is refused even under `--force`, because a file we
+cannot compare is not a file to overwrite on a hunch. All of those are exit 2
+rather than 1: the user resolves them, with `--force` or by moving their file.
+Exit 1 is reserved for a write that we attempted and lost. The directory is
+created lazily, once, at the first real write, because a dry run that leaves an
+empty directory behind has written to a tree it promised not to touch.
+
+One limit, admitted rather than discovered: the banner carries the version, so a
+version bump makes every previously ejected file *differ*. The report says exactly
+that — already there, and not what this version writes — and leaves the choice
+alone.
+
+### Keeping it out: `src/guard/` — strict enough to fail on its own typos
+
+`nirdep guard` is the CI half: it re-runs the scan and fails the build if a
+package on the deny list has come back. The policy is JSON, read either from
+`.nirdeprc.json` or from a `nirdep.guard` object inside `package.json`, and JSON
+is where the standard library ends. There is no schema validator in `node:*`, so
+`validatePolicy` is eighty lines of hand-written type checking that returns a list
+of problems rather than throwing on the first one, because a config with three
+mistakes in it should produce three lines and not one line three runs in a row.
+
+That validator is strict on purpose, and the strictness is the design. An unknown
+key is an error with a did-you-mean, not a shrug: a typo in a CI config that
+silently disables the check is worse than no check at all, because the build stays
+green and the dependency comes back anyway. An empty `signals` array is rejected,
+since a guard watching for nothing passes on everything. A policy that cannot be
+read at all exits 2 and refuses to scan — guarding against half a policy is the
+same class of mistake as the typo that produced it. Exemptions may be written as
+an array of names, but the object form takes a reason per package, and that is the
+form the code argues for: an exemption with no reason beside it is the one that is
+still there two years later and nobody remembers why.
+
+Absent a policy file, the default denies every replaceable package, and the report
+labels the source — `default`, `file`, `manifest` or `flags` — because no policy on
+disk is not the same as no opinion, and a policy printed as "from .nirdeprc.json"
+when a flag overrode half of it would be a lie with a receipt. Three signals stay
+separate rather than collapsing into a boolean: declared but not installed,
+installed but not declared (a phantom arriving through somebody else's tree), and
+imported while being neither, are three different conversations.
+
+What guard deliberately does not check is whether the replacement is being used. A
+project can pass with none of nirdep in it, which is correct: the policy is about
+what is absent, and "you must depend on us instead" is not a guard, it is a
+lock-in. Two limits are stated in the output rather than here: `deny` has no
+pattern matching, it is a sorted list of names; and when no lockfile was
+understood, installed-but-undeclared packages cannot be seen from there at all,
+which the report prints instead of quietly reporting nothing.
+
+### Answering "why": `src/explain/` — the one file in `src/` that can go stale
+
+`nirdep explain chalk` prints what the standard library already gives you, what it
+does not, and — for a package the codemod rewrites — which import forms will be
+rewritten and which will be refused, with the refusal's reason. Almost all of it
+is read off the rule registry and the runtime modules, because a hand-written
+explanation is a second source of truth and the first time the two disagree the
+tool is lying with confidence.
+
+The exception is `src/explain/facts.mjs`, which is a table of Node APIs and the
+versions that introduced them: `util.styleText` in 20.12.0, `util.stripVTControlCharacters`
+in 16.11.0, `util.parseArgs` in 18.3.0. Those versions are in the document because a
+reader on Node 18 needs to know that `styleText` is not going to be there. Nothing
+in that file is derived from the code, so it is the one place in `src/` that can go
+quietly out of date, and the mitigation is that `tests/explain/facts.test.mjs`
+checks every API named there against the running Node rather than against the
+table. The `semver` row has an empty "what it gives you" list, and that is not an
+oversight — it is the argument for the file existing at all.
+
+Whether a specifier is a builtin is answered by `isBuiltin` from `node:module`
+rather than by a set built from `builtinModules`, and the difference matters:
+`builtinModules` omits the prefix-only modules such as `node:test` and
+`node:sqlite`, omits subpaths such as `node:assert/strict`, and pairing every name
+with a `node:` form would wrongly accept bare `test`, which resolves to a package on
+npm. A builtin gets a positive answer rather than an error — it is a perfectly
+good answer, it just is not a rule — and only an unrecognised name exits 2, with a
+suggestion. There is no exit 1 in this command: it reads nothing and writes
+nothing.
+
+### Proving it: `src/conformance/` — Node's test runner, read as TAP
+
+`nirdep conformance` is the receipt for the three runtime modules, and it is the
+one command that does not take a path: it reports on nirdep, not on your project.
+Nothing in the table is declared. The module list comes from the rule registry, the
+corpus comes from walking `tests/vectors/`, and a test file is attributed to a
+module by scanning its own specifiers for `runtime/<name>.mjs` — because a
+hand-typed conformance table is a claim about a number somebody wrote down once,
+and it stays green after the cases are deleted.
+
+The runner is `node --test --test-reporter=tap`, spawned through `process.execPath`,
+one child per module so that a crash in one does not take the numbers of the others
+with it. Spawning the interpreter is not spawning a tool: it is the same Node that
+is already running, and there is deliberately no second executor in `src/`, because
+two answers to "did the vectors pass" would drift and the one in `src/` would be the
+one nobody runs. The standard library's gap here is the result: `node --test` emits
+TAP text and no machine-readable object, so `parseTap` reads the trailing summary
+lines with an anchored `^# <name> (\d+)$` rather than counting lines, since Node
+prints one summary at column zero and indents everything a subtest says. The child
+also has `NODE_TEST_CONTEXT` deleted from its environment — a child that inherits it
+reports to its parent in V8-serialised frames instead of honouring the reporter, and
+this command has to print the same page whether it was run from a shell or from
+inside somebody else's suite.
+
+There are three verdicts, not two. A module that never reached its own summary did
+not fail a test, it failed to start, and it reports `null` counts rather than nought
+failures, which would read as a pass. The same exit 2 covers the published-artifact
+case: the vectors are not in the `files` list, because nobody wants fourteen hundred
+test vectors in their `node_modules`, so an installed copy prints *NO VERDICT*, says
+how many cases went unchecked, and tells the reader to clone the repository and run
+`make conformance`. An artifact without the vectors in it must not print a pass it
+did not earn.
+
+### Writing this document: `src/stdlib/` — a generator that must not claim credit
+
+`nirdep stdlibmd .` generates the derived half of a document like this one for
+whatever project it is pointed at: the claim, the table of what left the manifest,
+a section per runtime module, and a table of what stayed. It prints by default, so
+it is safe to run on a repository you do not own, and `--write` follows the same
+rules as `eject` — identical is *up to date*, different is *refused* at exit 2 with
+`--force` offered, unreadable is refused even with `--force`. It is deterministic
+for the same reason: this file is meant to be committed and read as a diff, so
+nothing in the output can be dated, and a test asserts that no year, timezone or
+Node version appears anywhere in it.
+
+Every number is derived. The weekly download figures, the `codemod` versus *by hand*
+column, the module-to-package mapping and the module list all come from the rule
+registry and the `exports` map. What the generator will not write is the prose: each
+heading that needs a sentence of judgement carries a TODO, the last TODO is to delete
+the list of TODOs, and the receipt printed after a write says so, because a tool that
+reported "done" about a write-up with five TODOs still in it would be the last thing
+somebody read before publishing five TODOs.
+
+The hard part is adoption, and it is hard because the document is generated *after*
+the migration, when the package is gone and there is nothing left to scan for. At
+that point an import is the only surviving evidence that anything happened, and
+there are three ways to hold the replacement: as a package subpath
+(`nirdep/runtime/colour`), as a copy somebody ejected, or as the tree the module
+lives in. The copy is identified by the banner `eject` wrote and never by the file
+name — half the JavaScript projects in the world have a `src/args.mjs` in them and
+almost none of them got it from here — and only the first two hundred bytes of the
+candidate are read, after the name has already got it that far. The third case is
+decided by resolving the specifier against our own `exports` map, so the file is
+never opened at all: the path is the evidence.
+
+That third case exists because of a bug worth recording. Pointed at its own tree,
+the generator said "declares 0 direct dependencies, and none of them is a package
+nirdep replaces", and then, in the section on what was left, "every direct
+dependency this project has is one nirdep replaces" — because an empty remainder is
+true both of a project that replaced everything and of a project that never had
+anything, and only one of those two may claim the credit. A generated document that
+invents one claim is a document nobody should believe about the others, so the
+no-dependencies case is now its own branch, it counts the replacements it can see in
+the imports instead, and a test asserts that the false sentence is absent.
 
 ## Borrowed test data
 
@@ -372,6 +773,29 @@ files for a reason worth stating: many of the cases are import statements, and
 `tools/verify.mjs` scans `.mjs` files for exactly that shape. A fixture that
 looked like a real dependency would have made the dependency proof lie about this
 repository, and weakening the proof to accommodate a fixture was not an option.
+
+The scan vectors in `tests/vectors/scan/` are the same story and for the same
+reason. `locks.json` holds seven lockfile texts — npm v1 and v3, yarn classic and
+berry, pnpm 5 and 9, and one deliberately corrupt file — written by hand to carry
+one awkward case each: a package with no integrity hash, a git install, a plain
+HTTP tarball, a linked directory, an install script, a deprecation message that
+wraps, and pnpm's peer-suffixed key `/react-dom/18.2.0_react@18.2.0`, which is
+what caught a real bug in the key parser. `tree.json` holds two whole projects,
+manifest and lockfile and source together, so the end-to-end numbers are asserted
+against a tree somebody can read rather than against a snapshot. Nothing was
+captured from a package manager's output and no package manager's test suite was
+read. They live in JSON for the reason the lexer vectors do: a real specifier
+inside a `.mjs` file would make `tools/verify.mjs` report this project as having a
+dependency it does not have.
+
+The patch tests borrow nothing at all: the inputs are three-line files and seeded
+random letters. Two oracles were used while writing them and both are stated
+plainly. The golden hunks in `tests/patch/diff.test.mjs` were compared against
+what GNU `diff -u` prints for the same inputs — a system tool run by hand during
+development, not called by any test and not shipped with anything. And the
+minimality check compares against a shortest-edit-distance table written from the
+textbook in the test file itself, which is an oracle we wrote rather than one we
+borrowed.
 
 ## Things I expected to need and did not
 

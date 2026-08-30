@@ -46,6 +46,19 @@ export function isBuiltinSpecifier(specifier) {
 }
 
 /**
+ * The package a specifier belongs to. `chalk/index.js` is chalk; `@scope/a/b` is
+ * `@scope/a`, because a scope on its own is not a package and cutting at the first slash
+ * would produce one.
+ *
+ * @param {string} specifier
+ * @returns {string}
+ */
+export function packageOf(specifier) {
+  const parts = specifier.split('/');
+  return specifier.startsWith('@') && parts.length > 1 ? `${parts[0]}/${parts[1]}` : parts[0];
+}
+
+/**
  * @param {string} specifier
  * @param {{ selfNames?: Set<string> }} [options]
  * @returns {'relative' | 'absolute' | 'subpath' | 'builtin' | 'self' | 'third-party'}
@@ -55,7 +68,13 @@ export function classify(specifier, options = {}) {
   if (specifier.startsWith('/')) return 'absolute';
   if (specifier.startsWith('#')) return 'subpath';
   if (isBuiltinSpecifier(specifier)) return 'builtin';
-  if (options.selfNames?.has(specifier)) return 'self';
+  if (options.selfNames === undefined) return 'third-party';
+  // Two shapes of the same thing. A caller may register a whole specifier, which is what
+  // this project's own runtime paths look like, or just the package name -- and a package
+  // may import itself by name through its own `exports` map, so `demo/helper` inside
+  // `demo` is a self reference. Missing that made `scan` report the project as one of its
+  // own dependencies, which is a number nobody could act on.
+  if (options.selfNames.has(specifier) || options.selfNames.has(packageOf(specifier))) return 'self';
   return 'third-party';
 }
 

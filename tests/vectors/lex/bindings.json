@@ -277,6 +277,26 @@
       "deps": ["node:path|import|0"]
     },
     {
+      "why": "a parameter default is evaluated in the parameter scope, so an earlier parameter is in scope for it",
+      "in": "const plural = (count, one, many = `${one}s`) => count + one + many;\n",
+      "bindings": ["plural:const", "count:param", "one:param", "many:param"],
+      "refs": ["one->2", "count->1", "one->2", "many->3"],
+      "unresolved": []
+    },
+    {
+      "why": "the same for a declared function, where the parameter list is read before the body",
+      "in": "function g(a, b = a) { return b; }\n",
+      "bindings": ["g:function", "a:param", "b:param"],
+      "refs": ["a->1", "b->2"],
+      "unresolved": []
+    },
+    {
+      "why": "a default that names something nobody declared is still unresolved",
+      "in": "const h = (a = missing) => a;\n",
+      "bindings": ["h:const", "a:param"],
+      "unresolved": ["missing"]
+    },
+    {
       "why": "several specifiers in one file, in source order",
       "in": "import a from 'one';\nimport b from 'two';\nconst c = require('three');\n",
       "bindings": ["a:import", "b:import", "c:require"],

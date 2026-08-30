@@ -1,0 +1,24 @@
+{
+  "note": "A small project laid down in a temporary directory by tests/apply/project.test.mjs. It lives in JSON because every interesting file in it imports a third-party package, and tools/verify.mjs reads .mjs files looking for exactly that. `expect` is what the driver must say about it: `changes` as path:line, `declined` as path:code, and `written` as the files a write run must touch and no others. `broken` and `vendored` are extra files individual tests drop into the tree.",
+  "project": {
+    "package.json": "{\n  \"name\": \"patient\",\n  \"type\": \"module\",\n  \"dependencies\": { \"chalk\": \"^5.3.0\", \"semver\": \"^7.6.0\", \"minimist\": \"^1.2.8\" }\n}\n",
+    "src/report.mjs": "import chalk from 'chalk';\nimport { satisfies } from 'semver';\n\nexport const ok = (v) => (satisfies(v, '>=1') ? chalk.green('yes') : chalk.red('no'));\n",
+    "src/deep/plain.mjs": "import stripAnsi from 'strip-ansi';\n\nexport const plain = (text) => stripAnsi(text);\n",
+    "src/cli.mjs": "import minimist from 'minimist';\n\nexport const args = minimist(process.argv.slice(2));\n",
+    "src/legacy.cjs": "const chalk = require('chalk');\n\nmodule.exports = chalk.red;\n",
+    "src/quiet.mjs": "export const nothing = 1;\n",
+    "README.md": "chalk semver minimist, mentioned in prose, in a file nobody opens\n"
+  },
+  "broken": "import chalk from 'chalk';\n\nexport const half = chalk.red(\n",
+  "vendored": "import x from 'chalk';\n\nx.red('a');\n",
+  "expect": {
+    "changes": ["src/deep/plain.mjs:1", "src/report.mjs:1", "src/report.mjs:2"],
+    "declined": ["src/cli.mjs:advice", "src/legacy.cjs:form"],
+    "written": ["src/deep/plain.mjs", "src/report.mjs"],
+    "added": {
+      "package": "+import chalk from 'nirdep/runtime/colour';",
+      "ejected": "+import chalk from '../nirdep/runtime/colour.mjs';",
+      "ejectedDeeper": "+import { strip as stripAnsi } from '../../nirdep/runtime/colour.mjs';"
+    }
+  }
+}

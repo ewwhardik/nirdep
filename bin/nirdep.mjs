@@ -12,12 +12,28 @@
 // nirdep running on its own replacements for chalk, supports-color, minimist and
 // commander is the whole correctness argument -- see STDLIB.md.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { parseToml } from '../src/meta/toml.mjs';
 import { createColour } from '../src/runtime/colour.mjs';
-import { createCli } from '../src/runtime/args.mjs';
+import { createCli, EXIT, suggest } from '../src/runtime/args.mjs';
+import { planProject, applyProject, DEFAULT_RUNTIME_DIR } from '../src/apply/project.mjs';
+import { planReport, applyReport, exitCodeFor } from '../src/apply/report.mjs';
+import { scanProject } from '../src/scan/project.mjs';
+import { scanReport, scanExitCode } from '../src/scan/report.mjs';
+import { catalogue, ejectPlan, ejectApply } from '../src/eject/project.mjs';
+import { ejectReport, ejectList, ejectExitCode } from '../src/eject/report.mjs';
+import { explainPackage, explainReport, explainList, explainExitCode } from '../src/explain/report.mjs';
+import { guardProject, guardExitCode } from '../src/guard/project.mjs';
+import { guardReport } from '../src/guard/report.mjs';
+import { POLICY_FILE } from '../src/guard/policy.mjs';
+import { conformancePlan, onlyModules } from '../src/conformance/plan.mjs';
+import { runConformance, conformanceExitCode } from '../src/conformance/run.mjs';
+import { conformanceReport } from '../src/conformance/report.mjs';
+import { stdlibDocument } from '../src/stdlib/document.mjs';
+import { stdlibAdoption, stdlibApply, stdlibPlan, STDLIB_FILE } from '../src/stdlib/project.mjs';
+import { stdlibReport, stdlibExitCode } from '../src/stdlib/report.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -71,19 +87,186 @@ function about() {
   ].join('\n');
 }
 
-// Every command that will exist, with the ones that do not yet marked. A table
-// that lists the whole plan and says plainly which parts are unfinished is worth
-// more than a short table that pretends to be complete; `ready: false` is what
-// turns a name into an honest exit code 3 rather than a silent no-op. Options and
-// positionals arrive with the implementations, so nothing here describes a flag
-// that does not work.
+// `plan` and `apply` are the same walk with one bit flipped, so they share their
+// options and their reader. Keeping them one function is not a saving of lines; it
+// is the guarantee that the diff you were shown is the diff that gets written.
+const WORK_OPTIONS = {
+  runtime: {
+    type: 'string',
+    describe: 'directory the ejected runtime lives in, relative to the project; '
+      + 'imports are rewritten to a path into it rather than to the nirdep package',
+  },
+  context: { type: 'number', default: 3, describe: 'lines of context in the diff' },
+  // Declared positive and negated by the parser, which is where --no-diff comes from:
+  // spelling the negative form out as its own option would have produced two flags that
+  // disagree with each other the first time somebody passed both.
+  diff: { type: 'boolean', default: true, describe: 'include the unified diff' },
+};
+
+const WORK_POSITIONALS = [
+  { name: 'path', describe: 'project directory to read (default: the current one)' },
+];
+
+// The walker swallows ENOENT at every level, which is right for a directory that
+// vanishes mid-walk and wrong for the one the user named: a typo would otherwise be
+// reported as a spotless project. So the root, and only the root, is checked up front.
+function unreadableRoot(root) {
+  let stat;
+  try {
+    stat = statSync(root);
+  } catch (error) {
+    if (error.code === 'ENOENT') return 'there is nothing there';
+    if (error.code === 'EACCES' || error.code === 'EPERM') return 'it cannot be read';
+    return error.message;
+  }
+  return stat.isDirectory() ? null : 'it is a file, not a directory';
+}
+
+function work(context, { write }) {
+  const root = projectRoot(context);
+  if (root === null) return EXIT.USAGE;
+  const plan = planProject(root, { runtimeDir: context.options.runtime ?? null });
+  if (!write) {
+    context.out(planReport(plan, {
+      style: context.style,
+      context: context.options.context,
+      diff: context.options.diff !== false,
+    }));
+  }
+  const run = applyProject(plan, { write });
+  if (write) context.out(applyReport(run, { style: context.style }));
+  return exitCodeFor(run);
+}
+
+/** The directory a command was pointed at, or null once it has complained about it. */
+function projectRoot(context) {
+  const root = resolve(context.positionals.path ?? '.');
+  const complaint = unreadableRoot(root);
+  if (complaint === null) return root;
+  context.err(`${context.errStyle.red('nirdep:')} ${context.command}: cannot read `
+    + `${context.errStyle.bold(root)}: ${complaint}.\n`);
+  return null;
+}
+
+// `scan` reads and never writes, which is why it is the command to run first and the
+// only one that is safe to point at somebody else's repository.
+function scan(context) {
+  const root = projectRoot(context);
+  if (root === null) return EXIT.USAGE;
+  const result = scanProject(root);
+  context.out(scanReport(result, { style: context.style }));
+  return scanExitCode(result);
+}
+
+// `eject` is the other half of `apply --runtime`: one writes imports that point into a
+// directory, this one puts the files there. Both default to the same directory, from the
+// same constant, so the pair works without either flag being passed.
+function eject(context) {
+  if (context.options.list === true) {
+    context.out(ejectList(catalogue(), { style: context.style }));
+    return EXIT.OK;
+  }
+  const plan = ejectPlan({
+    modules: context.positionals.module ?? [],
+    into: context.options.into,
+    cwd: process.cwd(),
+  });
+  const run = ejectApply(plan, {
+    write: context.options['dry-run'] !== true,
+    force: context.options.force === true,
+  });
+  context.out(ejectReport(run, { style: context.style }));
+  return ejectExitCode(run);
+}
+
+// `guard` is `scan` with an opinion and an exit code. It is the command that goes in CI,
+// which is why the policy comes off disk rather than out of flags: a rule somebody wrote
+// down and committed is reviewable, and a rule spelled out in a workflow file is not.
+function guard(context) {
+  const root = projectRoot(context);
+  if (root === null) return EXIT.USAGE;
+  const result = guardProject(root, {
+    policyFile: context.options.policy ?? null,
+    overrides: {
+      // Only what was actually typed. `dev` defaults to true inside the policy, so reading
+      // the flag's own default here would silently overrule a policy that said false.
+      dev: context.provided.has('dev') ? context.options.dev : undefined,
+      max: context.provided.has('max') ? context.options.max : undefined,
+      allow: context.provided.has('allow') ? context.options.allow : undefined,
+    },
+  });
+  context.out(guardReport(result, { style: context.style }));
+  return guardExitCode(result);
+}
+
+// `conformance` is the only command that reports on nirdep instead of on your project, so
+// it takes module names rather than a path. It runs the real suite in a child process: the
+// files under tests/runtime are already the only definition of what a vector means, and a
+// second executor living in src/ would be a second definition that nobody runs.
+function conformance(context) {
+  const { plan, unknown } = onlyModules(conformancePlan(), context.positionals.module ?? []);
+  if (unknown.length > 0) {
+    const known = conformancePlan().modules.map((one) => one.name);
+    const near = suggest(unknown[0], known);
+    context.err(`${context.errStyle.red('nirdep:')} conformance: no runtime module `
+      + `${context.errStyle.bold(unknown[0])}`
+      + `${near.length > 0 ? `, did you mean ${near.join(' or ')}?` : `. There are ${known.join(', ')}.`}\n`);
+    return EXIT.USAGE;
+  }
+  const result = runConformance(plan);
+  context.out(conformanceReport(result, { style: context.style, verbose: context.options.verbose > 0 }));
+  return conformanceExitCode(result);
+}
+
+// `stdlibmd` writes the document this competition asks every entry for, about the project it
+// is pointed at. It prints to stdout by default so it can be redirected or read before it is
+// believed; --write puts it on disk and refuses to clobber a version somebody has edited.
+function stdlibmd(context) {
+  const root = projectRoot(context);
+  if (root === null) return EXIT.USAGE;
+  const document = stdlibDocument(scanProject(root), {
+    adoption: stdlibAdoption(root),
+    version: meta.manifest.version,
+  });
+  if (context.options.write !== true) {
+    context.out(document.markdown);
+    return EXIT.OK;
+  }
+  const run = stdlibApply(
+    stdlibPlan(document, { root, file: context.options.out }),
+    { write: context.options['dry-run'] !== true, force: context.options.force === true },
+  );
+  context.out(stdlibReport(run, { style: context.style }));
+  return stdlibExitCode(run);
+}
+
+// `explain` answers the question a reviewer asks about any codemod: how do you know that
+// was safe? One package name in, and out comes the rule, what Node already does, and the
+// import forms the rewriter refuses along with the reason for each refusal.
+function explain(context) {
+  const name = context.positionals.package;
+  if (name === undefined || name === '') {
+    context.out(explainList({ style: context.style }));
+    return EXIT.OK;
+  }
+  const answer = explainPackage(name);
+  context.out(explainReport(answer, { style: context.style }));
+  return explainExitCode(answer);
+}
+
+// Every command in the plan, and every one of them now implemented. The table used
+// to carry `ready: false` rows, which printed as (pending) and exited 3 rather than
+// pretending to work; the mechanism stays in src/runtime/args.mjs because a half
+// finished command is a thing to declare, not to hide, but there is nothing left
+// here to declare. Options and positionals arrive with the implementations, so
+// nothing here describes a flag that does not work.
 const app = createCli({
   name: 'nirdep',
   version: meta.manifest.version,
   tagline: 'delete your dependencies',
   describe: 'nir (Sanskrit, "without") + dep. A scope-aware JavaScript codemod and a '
     + 'standard-library runtime that together replace the most-installed packages on npm.',
-  footer: '(pending) commands are not implemented yet: they exit 3 and change nothing.\n'
+  footer: 'Every command above is implemented. "make conformance" is the receipt.\n'
     + 'Published by Nastik AI. Developed by Hardik.',
   out: (text) => process.stdout.write(text),
   err: (text) => process.stderr.write(text),
@@ -98,14 +281,76 @@ const app = createCli({
     verbose: { type: 'count', short: 'v', describe: 'say more; repeat for more still' },
   },
   commands: {
-    scan: { describe: 'report replaceable dependencies and their blast radius', ready: false },
-    plan: { describe: 'show the rewrite as a unified diff, change nothing', ready: false },
-    apply: { describe: 'rewrite call sites, gated through a syntax check', ready: false },
-    eject: { describe: 'write nirdep/runtime into the target project', ready: false },
-    guard: { describe: 'CI mode: fail if a replaceable dependency reappears', ready: false },
-    conformance: { describe: 'pass, fail and skip counts per runtime module', ready: false },
-    stdlibmd: { describe: "generate the target project's STDLIB.md", ready: false },
-    explain: { describe: 'the replacement for a package, and the Node version it landed in', ready: false },
+    scan: {
+      describe: 'report replaceable dependencies and their blast radius',
+      positionals: WORK_POSITIONALS,
+      run: (context) => scan(context),
+    },
+    plan: {
+      describe: 'show the rewrite as a unified diff, change nothing',
+      options: WORK_OPTIONS,
+      positionals: WORK_POSITIONALS,
+      run: (context) => work(context, { write: false }),
+    },
+    apply: {
+      describe: 'rewrite call sites, gated through a syntax check',
+      options: WORK_OPTIONS,
+      positionals: WORK_POSITIONALS,
+      run: (context) => work(context, { write: true }),
+    },
+    eject: {
+      describe: 'copy a runtime module into your own tree, no package required',
+      options: {
+        into: {
+          type: 'string',
+          default: DEFAULT_RUNTIME_DIR,
+          describe: 'directory to write into, relative to here',
+        },
+        force: { type: 'boolean', describe: 'overwrite a file that differs from ours' },
+        'dry-run': { type: 'boolean', describe: 'say what would be written and write nothing' },
+        list: { type: 'boolean', describe: 'show the modules and what each one replaces' },
+      },
+      positionals: [
+        { name: 'module', variadic: true, describe: 'which modules to copy (default: all of them)' },
+      ],
+      run: (context) => eject(context),
+    },
+    guard: {
+      describe: 'CI mode: fail if a replaceable dependency reappears',
+      options: {
+        policy: { type: 'string', describe: `policy file to read (default: ${POLICY_FILE}, then package.json)` },
+        dev: { type: 'boolean', default: true, describe: 'count devDependencies as dependencies' },
+        max: { type: 'number', describe: 'fail above this many direct dependencies' },
+        allow: { type: 'string', multiple: true, describe: 'a package to permit this run, repeatable' },
+      },
+      positionals: WORK_POSITIONALS,
+      run: (context) => guard(context),
+    },
+    conformance: {
+      describe: 'run the vector corpus: pass, fail and skip counts per runtime module',
+      positionals: [
+        { name: 'module', variadic: true, describe: 'which modules to check (default: all of them)' },
+      ],
+      run: (context) => conformance(context),
+    },
+    stdlibmd: {
+      describe: "generate the target project's STDLIB.md from its own dependencies",
+      options: {
+        write: { type: 'boolean', describe: 'write the file instead of printing it' },
+        out: { type: 'string', default: STDLIB_FILE, describe: 'file to write, relative to the project' },
+        force: { type: 'boolean', describe: 'replace a file that says something else' },
+        'dry-run': { type: 'boolean', describe: 'say what would be written and write nothing' },
+      },
+      positionals: WORK_POSITIONALS,
+      run: (context) => stdlibmd(context),
+    },
+    explain: {
+      describe: 'why a package can be replaced, and whether a machine may do it',
+      positionals: [
+        { name: 'package', describe: 'a package name (default: list all of them)' },
+      ],
+      run: (context) => explain(context),
+    },
     about: { describe: 'attribution, version and supported Node range', run: (context) => { context.out(about()); } },
     help: { describe: 'this text', run: (context) => { context.out(app.help()); } },
   },
