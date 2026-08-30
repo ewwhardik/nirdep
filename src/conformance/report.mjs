@@ -8,39 +8,17 @@
 // checked against a published package's own output are both worth having, and they are not
 // the same claim.
 
-import { pad, plural, styleOf, wrap, WIDTH } from '../text/format.mjs';
+import { columnWidth, COLUMNS, labelled, note, pad, plural, styleOf, verdictOf, wrap }
+  from '../text/format.mjs';
 import { DRIVERS, VECTORS } from './plan.mjs';
-
-/** The terminal this page is written for, as in src/guard/report.mjs. */
-const COLUMNS = WIDTH + 4;
 
 /** How many failing names to print before the list itself becomes the noise. */
 const NAMED = 5;
-
-/** A note under a row, folded before it is painted: the style hooks add bytes that are not
- * columns, so measuring styled text folds it early. */
-function note(plain, gutter, paint) {
-  return wrap(plain, COLUMNS - gutter.length, '').split('\n').map((line) => `${gutter}${paint(line)}`);
-}
 
 /** A bullet with a hanging indent, so a folded problem stays visibly one problem. */
 function bullet(plain, s) {
   return wrap(plain, COLUMNS - 4, '').split('\n')
     .map((line, index) => (index === 0 ? `  ${s.yellow('-')} ${s.dim(line)}` : `    ${s.dim(line)}`));
-}
-
-/** A footer line: a ten-column label, and prose folded to sit under itself. */
-function labelled(label, text, s) {
-  const indent = ' '.repeat(10);
-  return wrap(text, COLUMNS - indent.length, '').split('\n')
-    .map((line, index) => (index === 0 ? `${s.dim(pad(label, 10))}${s.dim(line)}` : `${indent}${s.dim(line)}`));
-}
-
-/** The last line, folded. The label is the first word and so never moves, which is what
- * lets it be painted after the measuring is done. */
-function verdictOf(label, rest, paint) {
-  const [first, ...more] = wrap(`${label}${rest}`, COLUMNS, '').split('\n');
-  return [`${paint(label)}${first.slice(label.length)}`, ...more];
 }
 
 /** What the suite said, in the order a reader cares about it. */
@@ -78,13 +56,13 @@ export function conformanceReport(result, options = {}) {
     return `${lines.join('\n')}\n`;
   }
 
-  const width = Math.max(8, ...result.modules.map((one) => one.name.length + 2));
+  const width = columnWidth(result.modules.map((one) => `${one.name}  `), { min: 8 });
   const gutter = `  ${' '.repeat(width)}`;
-  const cases = Math.max(5, ...result.modules.map((one) => String(one.cases).length));
+  const cases = columnWidth(result.modules.map((one) => one.cases), { min: 5 });
   const corpusOf = (one) => `${String(one.cases).padStart(cases)} cases in ${plural(one.vectors.length, 'file')}`;
   // Padded, because "1 file" is shorter than "2 files" and a verdict column that moves by
   // one character per row is a column a reader has to find again on every line.
-  const corpusWidth = Math.max(...result.modules.map((one) => corpusOf(one).length));
+  const corpusWidth = columnWidth(result.modules.map((one) => corpusOf(one)));
 
   lines.push(s.bold(`${plural(result.totals.modules, 'runtime module')}, `
     + `${plural(result.totals.cases, 'vector case')}, ${plural(result.totals.tests, 'test')}`));
@@ -111,9 +89,9 @@ export function conformanceReport(result, options = {}) {
   }
 
   lines.push('');
-  lines.push(...labelled('read', `${VECTORS} and ${DRIVERS}, on node ${result.node}`, s));
+  lines.push(...labelled('read', `${VECTORS} and ${DRIVERS}, on node ${result.node}`, s.dim));
   lines.push(...labelled('source', 'expectations are hand-written or taken from a published package\'s own '
-    + 'test data; STDLIB.md, under Borrowed test data, says which, per module.', s));
+    + 'test data; STDLIB.md, under Borrowed test data, says which, per module.', s.dim));
 
   lines.push('');
   const wrong = result.totals.fail + result.totals.cancelled;

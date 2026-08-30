@@ -5,7 +5,7 @@
 // not finished -- a generator that said "done" about a write-up with five TODOs in it would
 // be the last thing anybody read before publishing five TODOs.
 
-import { pad, plural, styleOf, wrap, WIDTH } from '../text/format.mjs';
+import { DRY_RUN, folded, pad, plural, sizeOf, styleOf } from '../text/format.mjs';
 import { RESULT } from './project.mjs';
 
 /** The verb in the margin, and the colour it is printed in. */
@@ -17,9 +17,6 @@ const MARGIN = Object.freeze({
   [RESULT.FAILED]: ['failed', 'red'],
 });
 
-const folded = (text, indent, paint) => wrap(text, WIDTH - (indent.length - 4), indent)
-  .split('\n').map((line) => `${indent}${paint(line.trimStart())}`).join('\n');
-
 /**
  * @param {object} run the result of stdlibApply
  * @param {{ style?: object }} [options]
@@ -30,7 +27,7 @@ export function stdlibReport(run, options = {}) {
   const { counts } = run.document;
   const lines = [
     `  ${s[colour](pad(verb, 11))}  ${s.bold(run.display)}`
-      + `${run.result === RESULT.SAME ? '' : `  ${s.dim(`${counts.lines} lines, ${counts.bytes} bytes`)}`}`,
+      + `${run.result === RESULT.SAME ? '' : `  ${s.dim(sizeOf(counts))}`}`,
   ];
   if (run.reason !== null) lines.push(`  ${' '.repeat(11)}  ${s.yellow(run.reason)}`);
 
@@ -51,7 +48,7 @@ export function stdlibReport(run, options = {}) {
   }
   if (run.result === RESULT.WOULD_WRITE) {
     lines.push('');
-    lines.push(s.dim('nothing was written: this was a dry run.'));
+    lines.push(s.dim(DRY_RUN));
   }
   return `${lines.join('\n')}\n`;
 }

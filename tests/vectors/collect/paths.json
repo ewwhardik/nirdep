@@ -1,0 +1,509 @@
+{
+ "note": "toPath, get and has. The expectation column is lodash 4.18.1, called as a black box; a row with `why` is a divergence this module owns.",
+ "cases": [
+  {
+   "op": "toPath",
+   "in": [
+    "a.b.c"
+   ],
+   "out": [
+    "a",
+    "b",
+    "c"
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    "users[0].name"
+   ],
+   "out": [
+    "users",
+    "0",
+    "name"
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    "a[0][1]"
+   ],
+   "out": [
+    "a",
+    "0",
+    "1"
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    "[0]"
+   ],
+   "out": [
+    "0"
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    "a[-1]"
+   ],
+   "out": [
+    "a",
+    "-1"
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    "a[\"x.y\"]"
+   ],
+   "out": [
+    "a",
+    "x.y"
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    "a['b.c']"
+   ],
+   "out": [
+    "a",
+    "b.c"
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    "a[b]"
+   ],
+   "out": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    "a[x.y]"
+   ],
+   "out": [
+    "a",
+    "x",
+    "y"
+   ],
+   "ours": [
+    "a",
+    "x.y"
+   ],
+   "why": "brackets"
+  },
+  {
+   "op": "toPath",
+   "in": [
+    "a[]"
+   ],
+   "out": [
+    "a",
+    ""
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    "a]"
+   ],
+   "out": [
+    "a"
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    "a..b"
+   ],
+   "out": [
+    "a",
+    "",
+    "b"
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    "a."
+   ],
+   "out": [
+    "a",
+    ""
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    ".a"
+   ],
+   "out": [
+    "",
+    "a"
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    ""
+   ],
+   "out": []
+  },
+  {
+   "op": "toPath",
+   "in": [
+    "a.0.b"
+   ],
+   "out": [
+    "a",
+    "0",
+    "b"
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    42
+   ],
+   "out": [
+    "42"
+   ]
+  },
+  {
+   "op": "toPath",
+   "in": [
+    [
+     "a",
+     0,
+     {
+      "$": "symbol",
+      "of": "tag"
+     }
+    ]
+   ],
+   "out": [
+    "a",
+    "0",
+    {
+     "$": "symbol",
+     "of": "tag"
+    }
+   ]
+  },
+  {
+   "op": "get",
+   "in": [
+    {
+     "a": {
+      "b": {
+       "c": 1
+      }
+     }
+    },
+    "a.b.c"
+   ],
+   "out": 1
+  },
+  {
+   "op": "get",
+   "in": [
+    {
+     "a": [
+      {
+       "b": 3
+      }
+     ]
+    },
+    "a[0].b"
+   ],
+   "out": 3
+  },
+  {
+   "op": "get",
+   "in": [
+    {
+     "x.y": 1
+    },
+    "x.y"
+   ],
+   "out": 1
+  },
+  {
+   "op": "get",
+   "in": [
+    {
+     "x": {
+      "y": 2
+     },
+     "x.y": 1
+    },
+    "x.y"
+   ],
+   "out": 1
+  },
+  {
+   "op": "get",
+   "in": [
+    {
+     "a": {
+      "x.y": 1
+     }
+    },
+    "a[x.y]"
+   ],
+   "out": {
+    "$": "undefined"
+   },
+   "ours": 1,
+   "why": "brackets"
+  },
+  {
+   "op": "get",
+   "in": [
+    [
+     [
+      1,
+      2
+     ]
+    ],
+    "0[1]"
+   ],
+   "out": 2
+  },
+  {
+   "op": "get",
+   "in": [
+    {
+     "a": 1
+    },
+    "b",
+    "D"
+   ],
+   "out": "D"
+  },
+  {
+   "op": "get",
+   "in": [
+    {
+     "a": null
+    },
+    "a.b",
+    "D"
+   ],
+   "out": "D"
+  },
+  {
+   "op": "get",
+   "in": [
+    {
+     "a": {
+      "b": {
+       "$": "undefined"
+      }
+     }
+    },
+    "a.b",
+    "D"
+   ],
+   "out": "D"
+  },
+  {
+   "op": "get",
+   "in": [
+    "abc",
+    "1"
+   ],
+   "out": "b"
+  },
+  {
+   "op": "get",
+   "in": [
+    {
+     "0": "z"
+    },
+    0
+   ],
+   "out": "z"
+  },
+  {
+   "op": "get",
+   "in": [
+    {
+     "": 1
+    },
+    ""
+   ],
+   "out": 1
+  },
+  {
+   "op": "get",
+   "in": [
+    {
+     "$": "object",
+     "of": [
+      [
+       {
+        "$": "symbol",
+        "of": "tag"
+       },
+       5
+      ]
+     ]
+    },
+    {
+     "$": "symbol",
+     "of": "tag"
+    }
+   ],
+   "out": 5
+  },
+  {
+   "op": "get",
+   "in": [
+    {
+     "$": "map",
+     "of": [
+      [
+       "a",
+       1
+      ]
+     ]
+    },
+    "a",
+    "D"
+   ],
+   "out": "D"
+  },
+  {
+   "op": "get",
+   "in": [
+    null,
+    "a.b",
+    "D"
+   ],
+   "out": "D"
+  },
+  {
+   "op": "has",
+   "in": [
+    {
+     "a": {
+      "b": 1
+     }
+    },
+    "a.b"
+   ],
+   "out": true
+  },
+  {
+   "op": "has",
+   "in": [
+    {
+     "a": {
+      "b": 1
+     }
+    },
+    "a.c"
+   ],
+   "out": false
+  },
+  {
+   "op": "has",
+   "in": [
+    {
+     "a": {
+      "b": {
+       "$": "undefined"
+      }
+     }
+    },
+    "a.b"
+   ],
+   "out": true
+  },
+  {
+   "op": "has",
+   "in": [
+    {
+     "0": "a",
+     "length": 2
+    },
+    "1"
+   ],
+   "out": false
+  },
+  {
+   "op": "has",
+   "in": [
+    {
+     "x.y": 1
+    },
+    "x.y"
+   ],
+   "out": true
+  },
+  {
+   "op": "has",
+   "in": [
+    {
+     "a": {
+      "x.y": 1
+     }
+    },
+    "a[x.y]"
+   ],
+   "out": false,
+   "ours": true,
+   "why": "brackets"
+  },
+  {
+   "op": "has",
+   "in": [
+    {},
+    "toString"
+   ],
+   "out": false
+  },
+  {
+   "op": "has",
+   "in": [
+    [
+     1,
+     2
+    ],
+    "1"
+   ],
+   "out": true
+  },
+  {
+   "op": "has",
+   "in": [
+    [
+     1,
+     2
+    ],
+    "2"
+   ],
+   "out": false
+  },
+  {
+   "op": "has",
+   "in": [
+    {
+     "$": "array",
+     "length": 2,
+     "of": []
+    },
+    "1"
+   ],
+   "out": true
+  }
+ ]
+}

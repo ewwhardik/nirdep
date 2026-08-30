@@ -56,10 +56,10 @@ test('eject writes the runtime into a directory that was not there', () => {
   const { code, stdout, stderr } = run(['eject'], { cwd: root });
   assert.equal(code, 0);
   assert.equal(stderr, '');
-  for (const leaf of ['args.mjs', 'colour.mjs', 'semver.mjs']) {
+  for (const leaf of ['args.mjs', 'collect.mjs', 'colour.mjs', 'semver.mjs']) {
     assert.equal(existsSync(at(root, 'nirdep', 'runtime', leaf)), true, `${leaf} is there`);
   }
-  assert.match(stdout, /written {5}colour {2}nirdep\/runtime\/colour\.mjs/);
+  assert.match(stdout, /written {5}colour {3}nirdep\/runtime\/colour\.mjs/);
   assert.match(stdout, /next: nirdep apply --runtime nirdep\/runtime \./);
 });
 
@@ -100,7 +100,7 @@ test('a module that does not exist is a usage error with one suggestion', () => 
   const { code, stdout } = run(['eject', 'colours'], { cwd: bare() });
   assert.equal(code, 2);
   assert.match(stdout, /no such runtime module: colours {2}did you mean colour\?/);
-  assert.match(stdout, /there are 4: args, colour, glob, semver/);
+  assert.match(stdout, /there are 5: args, collect, colour, glob, semver/);
 });
 
 test('--list names the modules and what each one replaces', () => {

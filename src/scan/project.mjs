@@ -16,8 +16,8 @@
 //
 // Nothing here formats anything. src/scan/report.mjs does that.
 
-import { readFileSync } from 'node:fs';
-import { selectFiles, displayPath } from '../fs/walk.mjs';
+import { readerFrom } from '../fs/read.mjs';
+import { ascending, selectFiles, displayPath } from '../fs/walk.mjs';
 import { analyse } from '../lex/bindings.mjs';
 import { auditSource, classify, packageOf } from '../audit/imports.mjs';
 import { SOURCE_EXTENSIONS, readManifest } from '../apply/project.mjs';
@@ -53,7 +53,7 @@ const EMPTY = Object.freeze([]);
  * every package it contributed, so nothing downstream can pretend otherwise.
  */
 function readSource(root, options) {
-  const read = options.read ?? ((file) => readFileSync(file, 'utf8'));
+  const read = readerFrom(options);
   const selfNames = new Set(options.selfNames ?? EMPTY);
   const found = selectFiles(root, { ...options, extensions: SOURCE_EXTENSIONS });
   const byPackage = new Map();
@@ -233,7 +233,7 @@ export function scanProject(root, options = {}) {
   const radius = [...roots].map((name) => radiusFor(name, { graph, roots, manifest, lock, byPackage: source.byPackage }))
     .sort((a, b) => Number(b.replaceable) - Number(a.replaceable)
       || b.own.length - a.own.length
-      || a.name.localeCompare(b.name));
+      || ascending(a.name, b.name));
 
   const replaceable = radius.filter((one) => one.replaceable);
   const going = new Set(replaceable.map((one) => one.name));
@@ -264,7 +264,7 @@ export function scanProject(root, options = {}) {
           files: Object.freeze([...one.files].sort()),
           sites: Object.freeze(one.sites),
         }))
-        .sort((a, b) => b.sites.length - a.sites.length || a.name.localeCompare(b.name))),
+        .sort((a, b) => b.sites.length - a.sites.length || ascending(a.name, b.name))),
     }),
     findings,
     advisories,

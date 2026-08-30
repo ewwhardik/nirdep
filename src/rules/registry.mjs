@@ -15,6 +15,7 @@
 import * as colour from '../runtime/colour.mjs';
 import * as semver from '../runtime/semver.mjs';
 import * as glob from '../runtime/glob.mjs';
+import * as collect from '../runtime/collect.mjs';
 
 /** What we are prepared to do about a package. */
 export const ACTION = Object.freeze({ REWRITE: 'rewrite', ADVISE: 'advise' });
@@ -49,6 +50,15 @@ const SEMVER_MEMBERS = Object.freeze(new Set(Object.keys(semver.default)));
  */
 const GLOB_MEMBERS = Object.freeze(new Set(
   Object.keys(glob.default).filter((name) => name !== 'makeRe'),
+));
+
+/**
+ * The sixteen functions of lodash this project answers, read off the module. `CollectError` is
+ * held out: it is on the default export so a caller can catch a refusal by class, but no lodash
+ * call site has ever reached for `_.CollectError`, and a member list is a promise about calls.
+ */
+const COLLECT_MEMBERS = Object.freeze(new Set(
+  Object.keys(collect.default).filter((name) => name !== 'CollectError'),
 ));
 
 /**
@@ -123,6 +133,26 @@ export const RULES = Object.freeze([
     members: GLOB_MEMBERS,
     note: 'the matcher takes the same arguments in the same order and answers the same, '
       + 'with makeRe held out of the member list on purpose',
+    declines: Object.freeze({}),
+  }),
+  Object.freeze({
+    package: 'lodash',
+    // Blank rather than guessed: no download figure could be checked from this machine. What could
+    // be measured is the copy on disk -- 1051 files and 2.1MB of it, carried to reach two names.
+    weekly: '—',
+    action: ACTION.REWRITE,
+    target: 'nirdep/runtime/collect',
+    subpath: 'runtime/collect',
+    fromDefault: Object.freeze({ as: AS.DEFAULT }),
+    fromNamespace: Object.freeze({ as: AS.NAMESPACE }),
+    fromNamed: Object.freeze({ as: AS.NAMED }),
+    chained: false,
+    members: COLLECT_MEMBERS,
+    // `_(list).map(...)` needs no entry here: a default binding that is called is a value use, and
+    // a value use is already refused with DECLINE.SHAPE. The wrapper is not part of this surface.
+    note: 'the names take the same arguments and answer the same, with two refusals on purpose: a '
+      + 'deep write stops at a key the object does not own, and __proto__ throws ERR_UNSAFE_KEY '
+      + 'rather than returning quietly. Both are named in STDLIB.md',
     declines: Object.freeze({}),
   }),
   Object.freeze({
@@ -207,3 +237,13 @@ export const REPLACEABLE = Object.freeze(RULES.map((rule) => rule.package));
 export const REWRITABLE = Object.freeze(
   RULES.filter((rule) => rule.action === ACTION.REWRITE).map((rule) => rule.package),
 );
+
+/**
+ * The last segment of a subpath, which is what `eject`, `conformance` and `stdlibmd` all
+ * call a module. Five commands were each keeping their own copy of this line, and five
+ * copies of a naming rule is five chances to disagree about what to call `runtime/colour`.
+ *
+ * @param {string} subpath a rule's subpath, or any specifier ending in one
+ * @returns {string}
+ */
+export const moduleOf = (subpath) => subpath.slice(subpath.lastIndexOf('/') + 1);

@@ -46,7 +46,10 @@ function guard(versions, policy = {}, extra = {}) {
   return guardProject('/demo', {
     scan: scanOf(versions, extra),
     read: () => { throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' }); },
-    overrides: policy,
+    // A deny list narrowed to one package nothing here installs. The default list is every
+    // package nirdep replaces, and lodash joined it when runtime/collect landed -- which would
+    // make the fixture below fail twice for two different reasons and prove neither.
+    overrides: { deny: ['chalk'], ...policy },
   });
 }
 

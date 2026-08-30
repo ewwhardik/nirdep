@@ -15,20 +15,9 @@
 import { isBuiltinSpecifier, packageOf } from '../audit/imports.mjs';
 import { DEFAULT_RUNTIME_DIR } from '../apply/project.mjs';
 import { suggest } from '../runtime/args.mjs';
-import { ACTION, RULES, REPLACEABLE, ruleFor } from '../rules/registry.mjs';
-import { pad, plural, styleOf, wrap, WIDTH } from '../text/format.mjs';
+import { ACTION, moduleOf, RULES, REPLACEABLE, ruleFor } from '../rules/registry.mjs';
+import { agree, columnWidth, didYouMean, folded, pad, plural, styleOf } from '../text/format.mjs';
 import { nodeApiFor } from './facts.mjs';
-
-/** One folded, uniformly styled paragraph at a given indent. Same trick as scan's report:
- * `wrap` counts characters, so a styled line has to be styled whole. `lead` is the first
- * line's prefix, which is how a bullet gets a hanging indent instead of continuations that
- * read as items of their own. */
-function folded(text, indent, paint = (line) => line, lead = indent) {
-  return wrap(text, WIDTH - (indent.length - 4), indent)
-    .split('\n')
-    .map((line, index) => `${index === 0 ? lead : indent}${paint(line.trimStart())}`)
-    .join('\n');
-}
 
 /**
  * What we have to say about a name. `kind` is the shape of the answer, not its severity:
@@ -60,9 +49,6 @@ export function explainPackage(name) {
   });
 }
 
-/** The module a rule points at, as `eject` names it. */
-const moduleOf = (rule) => rule.subpath.slice(rule.subpath.lastIndexOf('/') + 1);
-
 /**
  * @param {object} answer the result of explainPackage
  * @param {{ style?: object }} [options]
@@ -80,7 +66,7 @@ export function explainReport(answer, options = {}) {
     const lines = [`${s.red('nothing to explain:')} ${s.bold(answer.name)} `
       + s.dim('is not a package this project replaces')];
     if (answer.near.length > 0) {
-      lines.push(`  ${s.dim(`did you mean ${answer.near.join(' or ')}?`)}`);
+      lines.push(`  ${s.dim(didYouMean(answer.near, { lead: '' }))}`);
     }
     lines.push(folded(`The list is short on purpose: ${plural(REPLACEABLE.length, 'package')}, each one `
       + 'taken to conformance rather than to a demo. Run "nirdep explain" with no argument to see it.',
@@ -90,9 +76,13 @@ export function explainReport(answer, options = {}) {
 
   const rule = answer.rule;
   const rewrite = rule.action === ACTION.REWRITE;
-  const module = moduleOf(rule);
+  const module = moduleOf(rule.subpath);
   const lines = [
-    `${s.bold(rule.package)}  ${s.dim(`${rule.weekly} downloads a week`)}`,
+    // A blank figure is a figure nobody could check from the machine that built this, so the
+    // line says that rather than printing an em dash where a number belongs.
+    `${s.bold(rule.package)}  ${s.dim(rule.weekly === '—'
+      ? 'weekly downloads: not verified here'
+      : `${rule.weekly} downloads a week`)}`,
     rewrite
       ? `  ${s.green('nirdep rewrites this one.')} ${s.dim('->')} ${s.bold(rule.target)}`
       : `  ${s.yellow('nirdep replaces this one by hand.')} ${s.dim('->')} ${s.bold(rule.target)}`,
@@ -105,7 +95,7 @@ export function explainReport(answer, options = {}) {
       + 'comparator, no range grammar and no precedence rule, so every line of the replacement '
       + 'had to be written.', '    ', s.dim));
   } else {
-    const width = Math.max(...answer.api.has.map((one) => `${one.module.slice('node:'.length)}.${one.path}`.length));
+    const width = columnWidth(answer.api.has.map((one) => `${one.module.slice('node:'.length)}.${one.path}`));
     for (const one of answer.api.has) {
       const api = `${one.module.slice('node:'.length)}.${one.path}`;
       lines.push(`    ${s.cyan(pad(api, width))}  ${s.dim(`Node ${one.version}`)}`);
@@ -164,7 +154,7 @@ export function explainReport(answer, options = {}) {
     // commit, not another thing to type.
     lines.push('');
     lines.push(folded(`The same file replaces ${together.map((one) => one.package).join(', ')}, so `
-      + `${together.length === 1 ? 'that package goes' : 'those packages go'} in the same commit.`, '    ', s.dim));
+      + `${agree(together.length, 'that package goes', 'those packages go')} in the same commit.`, '    ', s.dim));
   }
   return `${lines.join('\n')}\n`;
 }
@@ -172,11 +162,14 @@ export function explainReport(answer, options = {}) {
 /** `explain` with nothing to explain: the whole claim, in one table. */
 export function explainList(options = {}) {
   const s = styleOf(options.style);
-  const width = Math.max(...REPLACEABLE.map((name) => name.length));
+  const width = columnWidth(REPLACEABLE);
   const lines = [s.bold('what nirdep replaces'), ''];
   for (const rule of RULES) {
     const verb = rule.action === ACTION.REWRITE ? s.green(pad('rewrite', 8)) : s.yellow(pad('by hand', 8));
-    lines.push(`  ${verb}  ${s.bold(pad(rule.package, width))}  ${s.dim(pad(`${rule.weekly}/week`, 10))}  ${rule.target}`);
+    // `—/week` would read as a rate of nothing. The two packages with no checkable figure say
+    // so in the same column width instead.
+    const rate = rule.weekly === '—' ? 'unverified' : `${rule.weekly}/week`;
+    lines.push(`  ${verb}  ${s.bold(pad(rule.package, width))}  ${s.dim(pad(rate, 11))}  ${rule.target}`);
   }
   lines.push('');
   lines.push(folded('Name any one of them for the reasoning: what Node already does, what it does '

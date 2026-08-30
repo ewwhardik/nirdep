@@ -7,7 +7,10 @@
 // than guessing. It is not toml-test complete and does not pretend to be:
 // offsets are tracked from the first character so the refusal is useful.
 
-export class TomlError extends Error {
+/** A document that is not TOML. Extends SyntaxError for the reason LexError does: a caller
+ * catching parse failures generically should catch this one too, and a bespoke base class
+ * that nobody's existing catch block knows about is a refusal that escapes as a crash. */
+export class TomlError extends SyntaxError {
   constructor(message, line, column) {
     super(`${message} (line ${line}, column ${column})`);
     this.name = 'TomlError';

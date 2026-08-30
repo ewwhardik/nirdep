@@ -179,6 +179,21 @@ test('freeName avoids every name the file uses, declared or free', () => {
   assert.equal(freeName(analyse('const a = 1;'), 'const'), 'const2', 'and never a keyword');
 });
 
+test('`of` is a name where a name belongs and grammar where grammar belongs', () => {
+  // The for-of clause word ends a pattern, so a declarator that opens with it once ended
+  // before it began: no binding, and every later use of the variable filed as a global.
+  const analysis = analyse('const of = (x) => x;\nfor (const item of [1]) of(item);\n');
+  assert.deepEqual(shapeBindings(analysis), ['of:const', 'x:param', 'item:const']);
+  assert.deepEqual([...analysis.unresolved], [], 'the call resolves to the arrow');
+  assert.equal(analysis.references.filter((one) => one.name === 'of').length, 1,
+    'the clause word reads nothing, so it is not one of them');
+
+  // And the reverse, absurd but legal: the first `of` is the name, the second is the clause.
+  const both = analyse('for (const of of [1]) count(of);\n');
+  assert.deepEqual(shapeBindings(both), ['of:const']);
+  assert.deepEqual(shapeRefs(both).filter((one) => one.startsWith('of')), ['of->0']);
+});
+
 test('a name declared in a scope nothing else can see does not block a rename elsewhere', () => {
   const analysis = analyse('function f() { const inner = 1; return inner; }\n');
   assert.equal(lookup(analysis, 'inner'), -1, 'not visible from the module scope');

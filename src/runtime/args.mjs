@@ -640,7 +640,11 @@ export function suggest(word, candidates, limit = 3) {
     const near = distance <= allowed || lowered.startsWith(target) || target.startsWith(lowered);
     if (near) scored.push({ candidate, distance: lowered.startsWith(target) ? Math.min(distance, allowed) : distance });
   }
-  scored.sort((left, right) => left.distance - right.distance || left.candidate.localeCompare(right.candidate));
+  // Codepoints rather than localeCompare: two machines with different locales printing
+  // "did you mean a or b" and "did you mean b or a" is a difference nobody can explain,
+  // and this module is vendored into other people's trees where it cannot import ours.
+  scored.sort((left, right) => left.distance - right.distance
+    || (left.candidate < right.candidate ? -1 : left.candidate > right.candidate ? 1 : 0));
   return scored.slice(0, limit).map((entry) => entry.candidate);
 }
 

@@ -15,10 +15,12 @@
 import { isBuiltin } from 'node:module';
 
 /**
- * The positions we read. Each pattern must capture the specifier in group 1.
+ * The positions we read. Each pattern must capture the specifier in group 1. Private: the
+ * list is an implementation detail of `findSpecifiers`, and a caller running these itself
+ * would get the matches without the overlap resolution that makes them trustworthy.
  * @type {ReadonlyArray<{ kind: string, pattern: RegExp }>}
  */
-export const SPECIFIER_PATTERNS = Object.freeze([
+const SPECIFIER_PATTERNS = Object.freeze([
   { kind: 'import-from', pattern: /\bimport\s+[^;'"]*?from\s*['"]([^'"]+)['"]/g },
   { kind: 'import-bare', pattern: /\bimport\s*['"]([^'"]+)['"]/g },
   { kind: 'import-dynamic', pattern: /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g },

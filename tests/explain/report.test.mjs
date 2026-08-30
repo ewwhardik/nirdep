@@ -143,7 +143,10 @@ test('the list is the whole claim, one line each, and folds', () => {
   assert.match(text, /^what nirdep replaces\n/);
   for (const rule of RULES) {
     const verb = rule.action === ACTION.REWRITE ? 'rewrite' : 'by hand';
-    assert.match(text, new RegExp(`^ {2}${verb} +${rule.package} +${rule.weekly}/week +${rule.target.replace(/\//g, '\\/')}$`, 'm'));
+    // A package with no download figure anybody could check from here says so in the column
+    // rather than printing an em dash as though it were a rate.
+    const rate = rule.weekly === '—' ? 'unverified' : `${rule.weekly}/week`;
+    assert.match(text, new RegExp(`^ {2}${verb} +${rule.package} +${rate} +${rule.target.replace(/\//g, '\\/')}$`, 'm'));
   }
   for (const line of text.split('\n')) assert.ok(line.length <= 80, `${line.length} columns: ${line}`);
 });

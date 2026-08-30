@@ -12,11 +12,12 @@
 // Nothing here formats output. The CLI decides what a person reads; this decides what
 // is true.
 
-import { readFileSync, writeFileSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, resolve as resolvePath, sep } from 'node:path';
-import { selectFiles, displayPath } from '../fs/walk.mjs';
+import { writeFileSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative, resolve as resolvePath } from 'node:path';
+import { readerFrom, readJson } from '../fs/read.mjs';
+import { byField, selectFiles, displayPath, toPosix } from '../fs/walk.mjs';
 import { gate, kindFor } from '../patch/gate.mjs';
-import { REPLACEABLE } from '../rules/registry.mjs';
+import { moduleOf, REPLACEABLE } from '../rules/registry.mjs';
 import { planFile } from '../rules/rewrite.mjs';
 
 /** What happened to one file. */
@@ -56,7 +57,7 @@ export function mayMention(source) {
  * modules reading package.json differently is how they end up disagreeing about what
  * a project depends on.
  */
-export function readManifest(root) {
+export function readManifest(root, options = {}) {
   const empty = () => Object.freeze({
     found: false,
     type: 'commonjs',
@@ -66,8 +67,10 @@ export function readManifest(root) {
     ranges: Object.freeze(new Map()),
     scripts: Object.freeze(new Map()),
   });
-  try {
-    const raw = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  // No manifest, or one that is not JSON: both tell you the same nothing about the project.
+  const raw = readJson(readerFrom(options), join(root, 'package.json'));
+  if (raw === null) return empty();
+  {
     const named = (field) => Object.keys(raw[field] ?? {});
     const ranges = new Map();
     for (const field of ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies']) {
@@ -82,9 +85,6 @@ export function readManifest(root) {
       ranges: Object.freeze(ranges),
       scripts: Object.freeze(new Map(Object.entries(raw.scripts ?? {}).filter(([, one]) => typeof one === 'string'))),
     });
-  } catch {
-    // No manifest, or one that is not JSON. Node's own default is commonjs, so ours is too.
-    return empty();
   }
 }
 
@@ -102,9 +102,9 @@ export function targetResolver(options = {}) {
   if (into === null) return (rule) => rule.target;
   const base = isAbsolute(into) ? into : resolvePath(root, into);
   return (rule, file) => {
-    const leaf = `${rule.subpath.slice(rule.subpath.lastIndexOf('/') + 1)}.mjs`;
+    const leaf = `${moduleOf(rule.subpath)}.mjs`;
     const from = dirname(isAbsolute(file) ? file : resolvePath(root, file));
-    const path = relative(from, join(base, leaf)).split(sep).join('/');
+    const path = toPosix(relative(from, join(base, leaf)));
     return path.startsWith('.') ? path : `./${path}`;
   };
 }
@@ -124,7 +124,7 @@ export function targetResolver(options = {}) {
  */
 export function planProject(root, options = {}) {
   const manifest = readManifest(root);
-  const read = options.read ?? ((file) => readFileSync(file, 'utf8'));
+  const read = readerFrom(options);
   const resolve = targetResolver({ root, runtimeDir: options.runtimeDir ?? null });
   const found = selectFiles(root, { ...options, extensions: SOURCE_EXTENSIONS });
   const entries = [];
@@ -162,7 +162,7 @@ export function planProject(root, options = {}) {
 
   // Sorted by path rather than by walk order: a report a person reads and a report a CI
   // job diffs against yesterday's both want the same sequence every time.
-  entries.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  entries.sort(byField('path'));
   const changes = entries.flatMap((entry) => (entry.plan?.changes ?? []).map((one) => ({ ...one, path: entry.path })));
   const declined = entries.flatMap((entry) => (entry.plan?.declined ?? []).map((one) => ({ ...one, path: entry.path })));
   return Object.freeze({
@@ -239,7 +239,7 @@ export function applyProject(plan, options = {}) {
     results.push(Object.freeze({ ...withoutSource(entry), after, gate: verdict, outcome, detail }));
   }
 
-  results.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+  results.sort(byField('path'));
   const count = (name) => results.filter((one) => one.outcome === name).length;
   return Object.freeze({
     root: plan.root,

@@ -54,7 +54,7 @@ function ran(plan, options = {}) {
 
 test('the modules on offer are the ones package.json exports, not a list typed here', () => {
   const modules = catalogue();
-  assert.deepEqual(modules.map((one) => one.name), ['args', 'colour', 'glob', 'semver']);
+  assert.deepEqual(modules.map((one) => one.name), ['args', 'collect', 'colour', 'glob', 'semver']);
   for (const module of modules) {
     assert.equal(existsSync(module.source), true, `${module.name} resolves to a file that is there`);
     assert.equal(module.leaf, `${module.name}.mjs`);
@@ -96,7 +96,7 @@ test('a file already there and already identical is not a conflict', () => {
   assert.equal(entryFor(plan, 'semver').state, STATE.SAME);
   const { run, wrote } = ran(plan, { write: true });
   assert.equal(run.counts.skipped, 1);
-  assert.deepEqual(wrote, ['args.mjs', 'colour.mjs', 'glob.mjs'], 'the rest are missing, so they are written');
+  assert.deepEqual(wrote, ['args.mjs', 'collect.mjs', 'colour.mjs', 'glob.mjs'], 'the rest are missing, so they are written');
   assert.equal(ejectExitCode(run), 0, 're-running eject is free, not an error');
 });
 
@@ -168,7 +168,7 @@ test('an unknown module name is collected rather than guessed at', () => {
   const text = ejectReport(run);
   assert.match(text, /no such runtime module: colur {2}did you mean colour\?/);
   assert.match(text, /no such runtime module: chalk\n/, 'and no suggestion where there is no near miss');
-  assert.match(text, /there are 4: args, colour, glob, semver/);
+  assert.match(text, /there are 5: args, collect, colour, glob, semver/);
 });
 
 test('where the files go is where apply expects to find them', () => {
@@ -182,7 +182,7 @@ test('where the files go is where apply expects to find them', () => {
 
 test('the report ends with the command that makes the copy reachable', () => {
   const text = ejectReport(ran(planFor({ into: 'vendor' }), { write: true }).run);
-  assert.match(text, /^ {2}written {5}args {4}vendor\/args\.mjs {2}\d+ lines, \d+ bytes$/m);
+  assert.match(text, /^ {2}written {5}args {5}vendor\/args\.mjs {2}\d+ lines, \d+ bytes$/m);
   assert.match(text, /replaces minimist, commander, yargs\n/);
   assert.match(text, /next: nirdep apply --runtime vendor \.\n$/);
   // Printed on the boring path too: "nothing to do" is exactly the moment somebody has
@@ -209,7 +209,7 @@ test('the refusal explains the way out, once, in a sentence', () => {
 test('--list is the catalogue, sizes and all, and folds inside 80 columns', () => {
   const text = ejectList(catalogue());
   assert.match(text, /^runtime modules\n/);
-  assert.match(text, /\n {2}colour {2}nirdep\/runtime\/colour\n/);
+  assert.match(text, /\n {2}colour {3}nirdep\/runtime\/colour\n/);
   assert.match(text, /replaces chalk, strip-ansi, supports-color, ansi-styles\n/);
   for (const line of text.split('\n')) assert.ok(line.length <= 80, `${line.length} columns: ${line}`);
 });

@@ -21,10 +21,12 @@
 // diff deserves a first line that explains them. MIT asks for the notice; nothing asks
 // for an advertisement.
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_RUNTIME_DIR } from '../apply/project.mjs';
+import { present, readerFrom } from '../fs/read.mjs';
+import { byField, displayPath, toPosix } from '../fs/walk.mjs';
 import { RULES } from '../rules/registry.mjs';
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
@@ -46,8 +48,6 @@ export const RESULT = Object.freeze({
   FAILED: 'failed',
 });
 
-const posix = (path) => path.split(sep).join('/');
-
 /**
  * The modules on offer, read off our own `exports` map rather than typed out here.
  *
@@ -59,7 +59,7 @@ const posix = (path) => path.split(sep).join('/');
  * @param {{ read?: (file: string) => string }} [options]
  */
 export function catalogue(options = {}) {
-  const read = options.read ?? ((file) => readFileSync(file, 'utf8'));
+  const read = readerFrom(options);
   const manifest = JSON.parse(read(join(ROOT, 'package.json')));
   const entries = [];
   for (const [subpath, file] of Object.entries(manifest.exports ?? {})) {
@@ -76,7 +76,7 @@ export function catalogue(options = {}) {
       version: manifest.version,
     }));
   }
-  return Object.freeze(entries.sort((a, b) => a.name.localeCompare(b.name)));
+  return Object.freeze(entries.sort(byField('name')));
 }
 
 /** The provenance header. Six lines, so nobody has to guess what the next 900 are. */
@@ -104,7 +104,7 @@ function banner(module) {
  * @param {{ modules?: string[], into?: string, cwd?: string, read?: (file: string) => string }} [options]
  */
 export function ejectPlan(options = {}) {
-  const read = options.read ?? ((file) => readFileSync(file, 'utf8'));
+  const read = readerFrom(options);
   const available = catalogue({ read });
   const cwd = resolve(options.cwd ?? '.');
   const into = options.into ?? DEFAULT_RUNTIME_DIR;
@@ -119,22 +119,17 @@ export function ejectPlan(options = {}) {
   const files = chosen.map((module) => {
     const file = join(base, module.leaf);
     const text = `${banner(module)}${read(module.source)}`;
-    let state = STATE.NEW;
-    let existing = null;
-    try {
-      existing = read(file);
-      state = existing === text ? STATE.SAME : STATE.DIFFERS;
-    } catch (error) {
-      // ENOENT is the whole point of the command. Anything else is a file that is there
-      // and cannot be compared, which is not a file to overwrite on a hunch.
-      if (error.code !== 'ENOENT') state = STATE.UNREADABLE;
-    }
+    // Absent is the whole point of the command; unreadable is a file to leave alone.
+    const found = present(read, file);
+    const state = found.error !== null
+      ? STATE.UNREADABLE
+      : found.missing ? STATE.NEW : found.text === text ? STATE.SAME : STATE.DIFFERS;
     return Object.freeze({
       module: module.name,
       target: module.target,
       replaces: module.replaces,
       file,
-      path: posix(relative(cwd, file)),
+      path: displayPath(cwd, file),
       bytes: Buffer.byteLength(text),
       lines: text.split('\n').length - 1,
       text,
@@ -146,7 +141,7 @@ export function ejectPlan(options = {}) {
   return Object.freeze({
     // As the user spelled it, because it is about to be printed back at them inside the
     // `apply --runtime` line that makes the ejected files reachable.
-    into: posix(into),
+    into: toPosix(into),
     dir: base,
     files: Object.freeze(files),
     available: Object.freeze(available.map((module) => module.name)),

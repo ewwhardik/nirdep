@@ -13,6 +13,8 @@
 // A finding is a sentence with a number in it. A severity with no sentence is a
 // colour, and a colour is not an argument.
 
+import { ascending } from '../fs/walk.mjs';
+import { agree, listOf, plural } from '../text/format.mjs';
 import { auditTree, HAND, highestFixed, KIND, SOURCE } from './advisories.mjs';
 
 const EMPTY = Object.freeze([]);
@@ -51,16 +53,15 @@ const finding = (code, severity, detail, subjects = EMPTY, id = null) => Object.
   subjects: Object.freeze([...subjects]),
 });
 
-const count = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 // Findings are sentences, and a sentence that does not agree with its own subject
 // reads like a template with the numbers punched in, which is exactly the
-// impression a report about somebody else's sloppiness should not give.
-const is = (n) => (n === 1 ? 'is' : 'are');
-const them = (n) => (n === 1 ? 'it' : 'them');
-const list = (items, limit = 4) => {
-  const shown = items.slice(0, limit).join(', ');
-  return items.length > limit ? `${shown} and ${items.length - limit} more` : shown;
-};
+// impression a report about somebody else's sloppiness should not give. Two words
+// this file needs often enough to name, over the one agreement helper.
+const is = (n) => agree(n, 'is', 'are');
+const them = (n) => agree(n, 'it', 'them');
+// A shorter tail than a report's: a finding is one sentence, and four names is as
+// many as one sentence carries.
+const list = (items, limit = 4) => listOf(items, limit);
 
 /** A range that resolves to whatever exists on install day rather than to a version. */
 export function floats(range) {
@@ -96,26 +97,26 @@ function fromLock(lock, direct) {
   if (scripts.length > 0) {
     const n = scripts.length;
     found.push(finding(FINDING.INSTALL_SCRIPT, SEVERITY.HIGH,
-      `${count(n, 'package')} ${n === 1 ? 'runs its' : 'run their'} own code during install, before anything of `
+      `${plural(n, 'package')} ${agree(n, 'runs its', 'run their')} own code during install, before anything of `
       + `yours does: ${list(scripts)}. That is the part of a dependency no code review covers.`, scripts));
   }
   if (deprecated.length > 0) {
     const sample = deprecated[0];
     found.push(finding(FINDING.DEPRECATED, SEVERITY.MEDIUM,
-      `${count(deprecated.length, 'package')} in this tree ${is(deprecated.length)} deprecated by `
-      + `${deprecated.length === 1 ? 'its own author' : 'their own authors'}, and the message is sitting in your `
+      `${plural(deprecated.length, 'package')} in this tree ${is(deprecated.length)} deprecated by `
+      + `${agree(deprecated.length, 'its own author', 'their own authors')}, and the message is sitting in your `
       + `lockfile. ${sample.name}@${sample.version}: "${sample.deprecated.replace(/\s+/g, ' ').trim()}"`,
       deprecated.map((one) => `${one.name}@${one.version}`)));
   }
   if (unhashed.length > 0) {
     found.push(finding(FINDING.NO_INTEGRITY, SEVERITY.HIGH,
-      `${count(unhashed.length, 'registry package')} ${is(unhashed.length)} recorded without an integrity hash, `
+      `${plural(unhashed.length, 'registry package')} ${is(unhashed.length)} recorded without an integrity hash, `
       + `so a reinstall cannot tell whether it got the same bytes as last time: ${list(unhashed)}.`, unhashed));
   }
   if (offRegistry.length > 0) {
     const n = offRegistry.length;
     found.push(finding(FINDING.OFF_REGISTRY, SEVERITY.MEDIUM,
-      `${count(n, 'package')} ${n === 1 ? 'comes' : 'come'} from somewhere other than a registry, so nothing `
+      `${plural(n, 'package')} ${agree(n, 'comes', 'come')} from somewhere other than a registry, so nothing `
       + `published is being pinned: ${list(offRegistry)}.`, offRegistry));
   }
   const duplicated = [...lock.byName.entries()]
@@ -125,15 +126,15 @@ function fromLock(lock, direct) {
   if (duplicated.length > 0) {
     const n = duplicated.length;
     found.push(finding(FINDING.DUPLICATE, SEVERITY.LOW,
-      `${count(n, 'package')} ${is(n)} installed at more than one version `
+      `${plural(n, 'package')} ${is(n)} installed at more than one version `
       + `(${list(duplicated.map(([name, versions]) => `${name} ×${versions}`))}), which is install weight `
       + `twice over and a patch applied to one copy that does not reach the other.`,
       duplicated.map(([name]) => name)));
   }
   if (deepest > 0) {
     found.push(finding(FINDING.DEPTH, SEVERITY.NOTE,
-      `${count(lock.count, 'installed package')} under `
-      + `${count(direct, 'direct dependency', 'direct dependencies')}, `
+      `${plural(lock.count, 'installed package')} under `
+      + `${plural(direct, 'direct dependency', 'direct dependencies')}, `
       + `nested ${deepest} deep. ${lock.note}.`));
   }
   return found;
@@ -167,13 +168,13 @@ function fromProject(world) {
     if (n === 1) hoisted = 'It is';
     else if (installed.length === 1) hoisted = 'One of them is';
     found.push(finding(FINDING.UNDECLARED, SEVERITY.HIGH,
-      `${count(n, 'package')} ${is(n)} imported by this project's source and declared in no `
+      `${plural(n, 'package')} ${is(n)} imported by this project's source and declared in no `
       + `dependency field: ${list(undeclared)}. `
       + (installed.length > 0
         ? `${hoisted} in the lockfile anyway, hoisted there by something else, which is why this works on `
           + 'your machine and fails on a clean install.'
         : `Nothing installs ${them(n)}, so this only runs where `
-          + `${n === 1 ? 'it already happens' : 'they already happen'} to be.`),
+          + `${agree(n, 'it already happens', 'they already happen')} to be.`),
       undeclared));
   }
   // Only reported when the package brought no executable and is named in no script:
@@ -186,15 +187,15 @@ function fromProject(world) {
   if (unused.length > 0 && used.size > 0) {
     const n = unused.length;
     found.push(finding(FINDING.UNUSED, SEVERITY.LOW,
-      `${count(n, 'declared dependency', 'declared dependencies')} ${is(n)} imported by no file here and `
+      `${plural(n, 'declared dependency', 'declared dependencies')} ${is(n)} imported by no file here and `
       + `named in no script: ${list(unused)}. Either something else needs ${them(n)} at run time or `
-      + `${n === 1 ? 'it is' : 'they are'} install weight nobody is carrying on purpose.`, unused));
+      + `${agree(n, 'it is', 'they are')} install weight nobody is carrying on purpose.`, unused));
   }
   const floating = [...manifest.ranges.entries()].filter(([, range]) => floats(range)).map(([name]) => name).sort();
   if (floating.length > 0) {
     const n = floating.length;
     found.push(finding(FINDING.FLOATING, lock.understood ? SEVERITY.LOW : SEVERITY.MEDIUM,
-      `${count(n, 'dependency', 'dependencies')} ${is(n)} declared with a range that resolves to `
+      `${plural(n, 'dependency', 'dependencies')} ${is(n)} declared with a range that resolves to `
       + `whatever exists on install day: ${list(floating)}.`
       + (lock.understood
         ? ` The lockfile is holding ${them(n)} still for now.`
@@ -204,7 +205,7 @@ function fromProject(world) {
   if (lock.kind === 'none' && manifest.dependencies.size > 0) {
     const n = manifest.dependencies.size;
     found.push(finding(FINDING.NO_LOCKFILE, SEVERITY.MEDIUM,
-      `${count(n, 'dependency', 'dependencies')} ${is(n)} declared and no lockfile is `
+      `${plural(n, 'dependency', 'dependencies')} ${is(n)} declared and no lockfile is `
       + 'committed, so two installs a week apart are two different programs. Everything below this line is '
       + 'read from package.json alone; the transitive tree is invisible from here.'));
   }
@@ -259,7 +260,7 @@ function fromAdvisories(audit) {
     const fixed = highestFixed(rows);
     const n = rows.length;
     found.push(finding(FINDING.VULNERABLE, worst.severity,
-      `${subject} is inside ${count(n, 'published advisory', 'published advisories')}`
+      `${subject} is inside ${plural(n, 'published advisory', 'published advisories')}`
       // The list is dropped when there is one of them, because the next sentence quotes
       // that identifier anyway and printing it twice in two lines reads like a mail merge.
       + `${ids.length === 0 || n === 1 ? '' : ` (${list(ids, 6)})`}. `
@@ -275,12 +276,12 @@ function fromAdvisories(audit) {
     const n = names.length;
     const dated = [...new Set(audit.unversioned.map((one) => one.advisory.when))].sort();
     found.push(finding(FINDING.IN_INCIDENT, SEVERITY.LOW,
-      `${count(n, 'package')} in this tree ${is(n)} named in a supply-chain incident whose affected releases `
+      `${plural(n, 'package')} in this tree ${is(n)} named in a supply-chain incident whose affected releases `
       + `this table does not record: ${list(names, 8)}. `
       // A colon, not a full stop: every story in the table is written to follow one, so
       // joining with a stop would start a sentence in lower case.
       + `${dated.length === 1 ? dated[0] : dated.join(', ')}: `
-      + `${audit.unversioned[0].advisory.what} This is a match on ${n === 1 ? 'a name' : 'names'} and not a `
+      + `${audit.unversioned[0].advisory.what} This is a match on ${agree(n, 'a name', 'names')} and not a `
       + `verdict on your versions; go and look ${them(n)} up.`,
       names));
   }
@@ -288,12 +289,12 @@ function fromAdvisories(audit) {
     const names = [...new Set(audit.unknown.map((one) => one.package))].sort();
     const n = names.length;
     found.push(finding(FINDING.UNCHECKED, SEVERITY.NOTE,
-      `${count(n, 'package')} in the advisory table could not be checked against a version here: `
+      `${plural(n, 'package')} in the advisory table could not be checked against a version here: `
       + `${list(names, 8)}. `
       + (audit.source === SOURCE.MANIFEST
         ? 'No lockfile was read, so what is declared is a range and not the thing that gets installed.'
         : 'The lockfile records something other than a version for '
-          + `${n === 1 ? 'it' : 'them'} -- a path, a URL, a tag -- so no range comparison applies.`),
+          + `${them(n)} -- a path, a URL, a tag -- so no range comparison applies.`),
       names));
   }
   return found;
@@ -317,7 +318,7 @@ export function assess(world) {
     ...fromLock(world.lock, direct),
     ...fromProject({ ...world, used }),
   ];
-  found.sort((a, b) => (ORDER[a.severity] - ORDER[b.severity]) || a.code.localeCompare(b.code));
+  found.sort((a, b) => (ORDER[a.severity] - ORDER[b.severity]) || ascending(a.code, b.code));
   return Object.freeze(found);
 }
 

@@ -135,7 +135,9 @@ test('five advisories against one package are one finding at the worst of them',
   assert.match(flaw.detail, /^lodash@4\.17\.4 is inside 5 published advisories \(CVE-/);
   assert.match(flaw.detail, /The worst of them, CVE-2021-23337: /, 'the newest of the worst, not the oldest');
   // The highest fix across all five, by version order: 4.17.9 sorts after 4.17.12 as text.
-  assert.match(flaw.detail, /Fixed in 4\.17\.21\.$/);
+  // The upgrade is not the last word any more: lodash joined the catalogue with
+  // runtime/collect, so the sentence goes on to say the dependency itself is optional.
+  assert.match(flaw.detail, /Fixed in 4\.17\.21\. This is a package nirdep replaces outright\.$/);
   assert.equal(flaw.id, 'CVE-2021-23337', 'the margin cites what the sentence quotes');
 });
 

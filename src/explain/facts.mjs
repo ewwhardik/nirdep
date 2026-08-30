@@ -91,6 +91,30 @@ export const NODE_API = Object.freeze({
       'options at all: dot, ignore, nocase, maxDepth, mark, nodir and absolute',
     ]),
   }),
+  'runtime/collect': Object.freeze({
+    has: Object.freeze([
+      Object.freeze({
+        module: 'node:util',
+        path: 'isDeepStrictEqual',
+        version: '9.0.0',
+        gives: 'a deep comparison, though a stricter one: it reads the prototype and separates -0 from 0',
+      }),
+      Object.freeze({
+        module: 'node:v8',
+        path: 'serialize',
+        version: '8.0.0',
+        gives: 'a deep copy by round trip, for the values a structured clone survives',
+      }),
+    ]),
+    lacks: Object.freeze([
+      'a path language: nothing reads a.b[0].c off an object, or writes one back into it',
+      'debounce and throttle: setTimeout is a timer, not a policy about when to stop waiting',
+      'a clone that keeps a prototype, a function or a symbol key: structuredClone throws on the '
+        + 'first and quietly loses the other two',
+      'a deep merge, and the shaping calls around it: sortBy, uniqBy, keyBy, pick and omit, each '
+        + 'taking a path as a string',
+    ]),
+  }),
 });
 
 /** The floor this project asks for, quoted from our own manifest by the caller. */

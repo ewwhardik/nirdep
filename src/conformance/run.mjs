@@ -66,39 +66,58 @@ export function runConformance(plan, options = {}) {
   const blocked = [...plan.problems];
   if (!plan.present) blocked.push(`${plan.modules.length === 0 ? 'no modules' : 'no test files'} to run: the corpus ships with the repository, not with the artifact`);
   if (blocked.length > 0) {
-    return { ran: false, blocked, plan, modules: [], totals: zero(plan), node: process.version };
+    return Object.freeze({
+      ran: false, blocked: Object.freeze(blocked), plan, modules: Object.freeze([]), totals: zero(plan), node: process.version,
+    });
   }
 
   const modules = plan.modules.map((one) => {
     const { stdout, status, error } = spawn(plan.root, one.drivers);
     const tap = parseTap(stdout);
-    return {
+    return Object.freeze({
       ...one,
       ran: tap.summarised,
       status,
       // A suite that could not be started reports no counts at all, rather than nought
       // failures, which would read as a pass.
       counts: tap.summarised
-        ? { tests: tap.tests, pass: tap.pass, fail: tap.fail, skipped: tap.skipped, todo: tap.todo, cancelled: tap.cancelled }
+        ? Object.freeze({
+          tests: tap.tests, pass: tap.pass, fail: tap.fail, skipped: tap.skipped, todo: tap.todo, cancelled: tap.cancelled,
+        })
         : null,
       failures: tap.failures,
       note: tap.summarised ? null : (error?.message ?? `the suite exited ${status} without a summary`),
-    };
+    });
   });
 
-  const totals = TALLIES.reduce((sum, name) => ({ ...sum, [name]: modules.reduce((count, one) => count + (one.counts?.[name] ?? 0), 0) }), {});
-  return {
+  const totals = TALLIES.reduce(
+    (sum, name) => ({ ...sum, [name]: modules.reduce((count, one) => count + (one.counts?.[name] ?? 0), 0) }),
+    {},
+  );
+  return Object.freeze({
     ran: modules.every((one) => one.ran),
-    blocked: [],
+    blocked: Object.freeze([]),
     plan,
-    modules,
-    totals: { ...totals, cases: plan.totals.cases, modules: modules.length, packages: plan.totals.packages, vectors: plan.totals.vectors },
+    modules: Object.freeze(modules),
+    totals: sizes(plan, totals, modules.length),
     node: process.version,
-  };
+  });
+}
+
+/** The four figures that come off the plan rather than off the run, so a blocked run and a
+ * finished one describe the same corpus. */
+function sizes(plan, tallies, modules) {
+  return Object.freeze({
+    ...tallies,
+    cases: plan.totals.cases,
+    modules,
+    packages: plan.totals.packages,
+    vectors: plan.totals.vectors,
+  });
 }
 
 function zero(plan) {
-  return { tests: 0, pass: 0, fail: 0, cancelled: 0, skipped: 0, todo: 0, cases: plan.totals.cases, modules: plan.modules.length, packages: plan.totals.packages, vectors: plan.totals.vectors };
+  return sizes(plan, { tests: 0, pass: 0, fail: 0, cancelled: 0, skipped: 0, todo: 0 }, plan.modules.length);
 }
 
 /**

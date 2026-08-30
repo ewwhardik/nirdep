@@ -165,7 +165,9 @@ export function annotate(result, options = {}) {
     const room = all.length > limit ? limit - 1 : limit;
     for (const one of all.slice(0, room)) lines.push(command(level, one.title, one.text, one.place));
     if (all.length > room) {
-      lines.push(command(level, 'nirdep', `${all.length - room} more ${level}${all.length - room === 1 ? '' : 's'} `
+      // `plural` counts the noun, and the noun here is whatever level GitHub is being told
+      // about, so the count and the word arrive together rather than agreeing by hand.
+      lines.push(command(level, 'nirdep', `${plural(all.length - room, `more ${level}`, `more ${level}s`)} `
         + 'are in the run log: GitHub shows ten per level and this step had more.', null));
     }
   }

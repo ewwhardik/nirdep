@@ -352,7 +352,67 @@ either, so `make repro` still compares byte for byte. One `selectFiles()` serves
 not a file the scan may report as rewritten. Pointed at itself: 84 files,
 `--exclude 'tests/**'` 38, `--include 'src/runtime/**'` 4.
 
-**A JavaScript reader. Node parses JavaScript and will not tell you about it.**
+**Reaching into an object. Node has the answers and not the questions.**
+`structuredClone`, `util.isDeepStrictEqual` and `Object.groupBy` cover three
+lines of lodash and stop there. Nothing in Node reads `a.b[0].c` off an object or
+writes one back, nothing merges two trees, nothing debounces, and
+`structuredClone` throws on a function and silently drops a symbol key.
+`runtime/collect.mjs` is 994 lines and exports the seventeen names people
+actually reach for — `get set has unset toPath pick omit cloneDeep merge isEqual
+groupBy keyBy uniqBy chunk sortBy debounce throttle` — plus `CollectError` and a
+frozen default carrying all eighteen, which is the shape a default binding of
+lodash expects, so a call site can be rewritten rather than rewritten *and*
+rethought.
+
+*The security story here is prototype pollution, and it is lodash's own.*
+`CVE-2018-3721` was `_.merge`, `CVE-2020-8203` was `_.set` and `_.zipObjectDeep`,
+`CVE-2019-10744` was `_.defaultsDeep`: four years of the same bug in the same
+package, because a deep write that accepts `__proto__` writes to every object in
+the program at once. The three-name blocklist — `__proto__`, `constructor`,
+`prototype`, raised here as `ERR_UNSAFE_KEY` rather than ignored — is the obvious
+half. The other half is what the blocklist cannot see: `_.set({},
+'toString.polluted', 'yes')` names nothing forbidden, walks into the *inherited*
+`Object.prototype.toString`, materialises it and writes there, after which an
+unrelated `_.pick({}, 'toString')` hands the value straight back. So a deep write
+in this module never follows a property the object does not own. Reproduced
+against the package in `oracle/pollution.mjs`; the fix is four lines and the bug
+was worth a CVE three times.
+
+*Every write is a `Reflect` call, which is a portability fix rather than a
+flourish.* lodash's dist runs sloppy: a write to a frozen slot or a delete of a
+non-configurable key quietly did nothing there and **throws** in a module, so a
+straight port would have turned silent no-ops into crashes at other people's call
+sites. `Reflect.set` and `Reflect.deleteProperty` decline the impossible quietly
+with a lodash-compatible return, while a genuinely dangerous operation still
+throws. A complaint the object raises itself — `arr.length = {}` — is passed on,
+because it is the object's answer and not ours. Swallowing that one turned three
+divergences into eighty-seven.
+
+*How it was checked, and the eleven that stand.* The semver harness again, and
+the same disclosure: **lodash 4.18.1 called as a black box** from outside this
+repository, **120,000 comparisons over 8000 seeded rounds**, every difference
+pinned by cause and by count so a new one lands in `unknown` and `unknown` is
+asserted empty. Eleven remain and each is a decision. Four are own-only walking
+in `set`, `unset`, `pick` and `merge`. `cloneDeep(new Error(…))` clones the error;
+lodash returns `{}`. `omit` copies own keys only — lodash copies inherited ones,
+so `_.omit(Buffer.from('hi'), '0')` comes back with 95 keys, including
+`Buffer.prototype.inspect`, and **throws when you try to log it**. `merge` into a
+primitive returns the primitive rather than a boxed wrapper, keeps a typed array
+typed, and merges symbol keys. Brackets quote their content, so `a[x.y]` is two
+keys: lodash's path regex accepts only numbers and quoted strings inside brackets
+and reads anything else as though the brackets were absent. `sortBy` ties two
+`NaN`s, where lodash's comparator answers "greater" in both directions and so
+leaves the order to the sort algorithm *and* skips the remaining criteria. Two
+small buckets are lodash's own pollution damage answering later calls with
+`TypeError: Cannot convert object to primitive value`. The one admitted *limit*,
+not a repair: an object iteratee matches partially but not with lodash's full
+partial-array semantics.
+
+*And the same rule as glob applies.* `groupBy`, `keyBy` and `sortBy` walk any
+iterable rather than only arrays and plain objects, because the tool needed to
+group a `Set` and a module that cannot do what its own author needed is a module
+nobody should adopt.
+
 This is the gap that decided the shape of the whole project. `node:vm` will
 compile a string and throw if it is not valid, which is a yes-or-no answer;
 `import()` will run a module. Neither hands back a tree, a token list or a byte
@@ -775,6 +835,7 @@ a guard. Inputs arrive as environment variables and are never interpolated into
 `run:` — a package name is a string somebody else controls, and `run:` is a
 shell.
 
+### Answering for it: `src/explain/` — derived, except for one table
 
 `nirdep explain chalk` prints what the standard library already gives you, what it
 does not, and — for a package the codemod rewrites — which import forms will be
@@ -805,7 +866,7 @@ nothing.
 
 ### Proving it: `src/conformance/` — Node's test runner, read as TAP
 
-`nirdep conformance` is the receipt for the three runtime modules, and it is the
+`nirdep conformance` is the receipt for every runtime module, and it is the
 one command that does not take a path: it reports on nirdep, not on your project.
 Nothing in the table is declared. The module list comes from the rule registry, the
 corpus comes from walking `tests/vectors/`, and a test file is attributed to a
@@ -878,6 +939,64 @@ invents one claim is a document nobody should believe about the others, so the
 no-dependencies case is now its own branch, it counts the replacements it can see in
 the imports instead, and a test asserts that the false sentence is absent.
 
+### Underneath all of them: `src/text/` and `src/fs/` — one answer each
+
+Neither directory is a command. Twelve modules measure their output through
+`src/text/format.mjs` and eight walk a tree through `src/fs/walk.mjs`, and both
+files exist because the alternative was every command answering the same question
+slightly differently.
+
+**Folding text.** `node:util` gives colour (`styleText`) and gives the tool for
+measuring a string that already has colour in it (`stripVTControlCharacters`), and
+gives nothing at all for what every page here needs: fold this sentence at a width
+and indent the continuations. So `WIDTH` is 76 and `COLUMNS` is 80, once, and a
+paragraph is measured before it is painted — a styled string does not measure the
+way it looks, so the fold sees plain text and the caller's style hooks go on line
+by line afterwards. That is also why a report can be tested without an escape
+sequence anywhere near it.
+
+Two exports are there because English does not derive what a report needs. `plural`
+counts a noun and `agree` conjugates a verb against a count it does not print,
+because "1 dependencys" tells a reader exactly how much care went into the rest of
+the table. `sizeOf` is the one that had already gone wrong: both commands that
+write a file spelled the size phrase by hand with the numbers interpolated raw, so
+a one-line file came back as "1 lines" — a grammar slip in the only sentence either
+command makes about its own output. `columnWidth` is there for a crash instead:
+`Math.max()` of nothing is `-Infinity`, `pad` turns that into a RangeError, and an
+empty table is a perfectly ordinary thing to print.
+
+**Walking a tree.** `fs.globSync` landed in Node 22 and would cover most of the
+walk. What it does not cover is skipping `node_modules` and `.git` by name, and a
+traversal order you can depend on. `ascending` is this project's only comparator and
+it compares codepoints, never `localeCompare` — a build claiming byte-identical
+output cannot have a sequence that depends on which machine ran it, and `make repro`
+is the check that would catch it. `toPosix` is the same argument about reading: a
+report that says `src\util.mjs` on one machine has told two stories about one file,
+and only one of them matches a path anybody pastes back. The walk's `exclude`
+patterns are compiled by `src/runtime/glob.mjs`, which is where that module came
+from — we needed real pattern matching internally, and building it on the package we
+tell other people to delete would have been a joke.
+
+**Reading a file.** `src/fs/read.mjs` is three functions and closes two holes. One
+is a test seam: every reader was spelling `options.read ?? readFileSync` out by
+hand, which is a dozen chances for one command to take a reader nobody can
+override. Every planted project in this suite is a Map and a closure rather than a
+temporary directory, and that only works while there is one seam to plant into.
+
+The other is that absence and unreadability are different answers. A missing file
+is the ordinary case for `eject` and `stdlibmd`: write it. A file that is there and
+throws is a file to leave alone, because a caller that overwrites on an error has
+destroyed something it could not read. `present` returns the two separately, and
+counts ENOTDIR and ENAMETOOLONG as missing alongside ENOENT — a path routed through
+a file, and a name too long for the filesystem, both mean nothing is there. No
+command in `src/` calls `existsSync`: it answers a question about the past, and the
+answer that matters is the one the read itself gives.
+
+**One duplication kept on purpose**, so a later pass does not tidy it away:
+`src/runtime/colour.mjs` and `src/runtime/args.mjs` carry private copies of the
+plain style set and of a wrap. They are published subpaths that `eject` vendors as
+single files, and a shared import would leave a dangling path in somebody's tree.
+
 ## Borrowed test data
 
 `tests/vectors/semver/` — six tables, 1266 lines. The input columns were chosen
@@ -945,6 +1064,20 @@ each claim at a source that is not this repository. The versions were not taken
 from a package's own metadata either, which is why the test suite re-derives the
 one invariant that matters — every `fixed` must sit outside its own range — rather
 than trusting the typing.
+
+The 147 collect vectors in `tests/vectors/collect/` are the third telling of the
+same story. Three tables — 43 path cases, 54 value cases, 50 write cases — with
+the inputs chosen by hand, one per rule that has a wrong answer, and **the
+expectation column filled in by calling `lodash 4.18.1` as a black box**, because
+a path language and an assignment rule are specified nowhere except in the package
+everybody installed. No line of its source was read and no line of its test suite
+was copied. Where our answer is deliberately not theirs the row carries both, as
+`out` and `ours`, plus a `why`, so a repaired prototype-pollution bug is never
+filed as a passing test. Values JSON cannot hold — `NaN`, a `Map`, a cycle, a
+`-0` — travel tagged, as `{"$":"nan"}` and the rest, and are decoded in the test
+file rather than in the data. The harness that calls the package lives outside
+this repository and ships with nothing; the package itself sits in an unrelated
+project's `node_modules`.
 
 The patch tests borrow nothing at all: the inputs are three-line files and seeded
 random letters. Two oracles were used while writing them and both are stated

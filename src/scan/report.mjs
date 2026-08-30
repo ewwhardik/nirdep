@@ -11,7 +11,7 @@
 // number anyway. Printing the limit next to the figure costs four lines and is the
 // difference between a report and an advertisement.
 
-import { pad, plural, styleOf, wrap, WIDTH } from '../text/format.mjs';
+import { agree, columnWidth, folded, listOf, pad, plural, styleOf, wrap } from '../text/format.mjs';
 import { ACTION } from '../rules/registry.mjs';
 import { SOURCE } from './advisories.mjs';
 import { SEVERITY } from './risk.mjs';
@@ -67,19 +67,6 @@ function overview(scan, s) {
   return lines;
 }
 
-/** A list of names, cut short before it stops being readable. */
-const some = (names, limit = 12) => (names.length > limit
-  ? `${names.slice(0, limit).join(', ')} and ${names.length - limit} more`
-  : names.join(', '));
-
-/** One folded, uniformly styled paragraph at a given indent. */
-function folded(text, indent, paint) {
-  return wrap(text, WIDTH - (indent.length - 4), indent)
-    .split('\n')
-    .map((line) => `${indent}${paint(line.trimStart())}`)
-    .join('\n');
-}
-
 /**
  * The blast radius table, which is the reason this command exists.
  *
@@ -93,7 +80,7 @@ function radius(scan, s) {
     return [s.bold('what nirdep can replace'), folded('nothing here: no direct dependency is one of the '
       + 'packages this tool knows how to stand in for.', '  ', s.dim)];
   }
-  const width = Math.max(...rows.map((one) => one.name.length));
+  const width = columnWidth(rows.map((one) => one.name));
   const lines = [s.bold('what nirdep can replace')];
   for (const one of rows) {
     const verb = one.action === ACTION.REWRITE ? s.green('rewrite') : s.yellow('by hand');
@@ -110,7 +97,7 @@ function radius(scan, s) {
     // The names go on their own folded, dimmed lines. Styling a whole line at a time is
     // the only way to fold and colour the same text: `wrap` counts characters, and an
     // escape sequence is characters that occupy no columns.
-    if (one.installed && one.own.length > 0) lines.push(folded(some(one.own), '      ', s.dim));
+    if (one.installed && one.own.length > 0) lines.push(folded(listOf(one.own), '      ', s.dim));
   }
   const { removable } = scan;
   if (removable.count > 0) {
@@ -120,13 +107,13 @@ function radius(scan, s) {
     // number against the row above believes the next one for free.
     const others = removable.stranded.filter((name) => !removable.direct.includes(name)).length;
     const head = `${n} of ${removable.of}`;
-    const sentence = `${head} installed ${removable.of === 1 ? 'name' : 'names'} `
-      + `${n === 1 ? 'is' : 'are'} reachable `
+    const sentence = `${head} installed ${agree(removable.of, 'name', 'names')} `
+      + `${agree(n, 'is', 'are')} reachable `
       + `only through ${plural(direct, 'package')} this tool replaces`
       + (others === 0
         ? '.'
         : `: remove ${direct === 1 ? 'it' : `those ${direct}`} and `
-          + `${plural(others, 'package')} ${others === 1 ? 'goes' : 'go'} with ${direct === 1 ? 'it' : 'them'}.`);
+          + `${plural(others, 'package')} ${agree(others, 'goes', 'go')} with ${agree(direct, 'it', 'them')}.`);
     lines.push('');
     // Folded first and styled after, which is the only order that works: the head is the
     // start of the first line, so bolding it cannot move the column the fold measured.
@@ -163,7 +150,7 @@ function limits(scan, s) {
   // packages the table covers, and the day somebody last read it against its sources.
   lines.push(`    ${wrap('Known vulnerabilities beyond a curated table. '
     + `${plural(advisories.coverage.packages, 'package')} `
-    + `${advisories.coverage.packages === 1 ? 'is' : 'are'} in it, reviewed ${advisories.reviewed}, and `
+    + `${agree(advisories.coverage.packages, 'is', 'are')} in it, reviewed ${advisories.reviewed}, and `
     + `${advisories.matched} of ${advisories.source === SOURCE.LOCK ? 'the installed names' : 'the declared names'} `
     + 'matched. That is the neighbourhood nirdep offers to replace and the incidents that happened beside it. '
     + 'npm audit mirrors the whole advisory database over the network; this makes no request, so a clean '
@@ -180,13 +167,13 @@ function limits(scan, s) {
   }
   if (scan.source.unparsed.length > 0) {
     const n = scan.source.unparsed.length;
-    lines.push(`    ${wrap(`${plural(n, 'file')} would not parse, so ${n === 1 ? 'its' : 'their'} imports `
+    lines.push(`    ${wrap(`${plural(n, 'file')} would not parse, so ${agree(n, 'its', 'their')} imports `
       + `were read with a blunt text scan instead: ${scan.source.unparsed.map((one) => one.path).join(', ')}.`)}`);
   }
   if (scan.source.unanalysable.length > 0) {
     const n = scan.source.unanalysable.length;
-    lines.push(`    ${wrap(`${plural(n, IMPORT)} ${n === 1 ? 'names' : 'name'} a specifier that is not a `
-      + `literal string, so no tool can say what ${n === 1 ? 'it loads' : 'they load'} without running the `
+    lines.push(`    ${wrap(`${plural(n, IMPORT)} ${agree(n, 'names', 'name')} a specifier that is not a `
+      + `literal string, so no tool can say what ${agree(n, 'it loads', 'they load')} without running the `
       + 'program.')}`);
   }
   for (const one of scan.source.unreadable) {

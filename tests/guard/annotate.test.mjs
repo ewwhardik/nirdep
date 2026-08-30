@@ -110,7 +110,9 @@ test('a policy that could not be read is annotated as a check that did not happe
 });
 
 test('a green build still says what was not checked', () => {
-  const off = annotations(guard({ lodash: '4.17.21' }, {}, { advisories: ADVISORY.OFF }));
+  // A package nirdep does not replace, so the only thing left to annotate is the setting: with
+  // a denied name in the tree the build would fail, and the notice would be beside the point.
+  const off = annotations(guard({ typescript: '5.9.2' }, {}, { advisories: ADVISORY.OFF }));
   assert.deepEqual(off.map((one) => one.level), ['notice']);
   assert.match(off[0].text, /advisories: off/);
 
@@ -123,14 +125,15 @@ test('a green build still says what was not checked', () => {
 test('the cap on annotations is admitted rather than applied by GitHub in silence', () => {
   // GitHub shows ten per level and drops the rest without a word. Nine and a line saying how
   // many were left reads as what happened; ten and nothing reads as ten problems.
-  // Three alarming versions and one of them denied by name as well: four errors, one file.
+  // Three alarming versions, and two of those packages are denied by name as well: five
+  // errors, one file.
   const result = guard(POISONED);
   const capped = annotate(result, { limit: 2 }).split('\n').filter(Boolean);
   assert.equal(capped.length, 2);
-  assert.match(capped[1], /^::error title=nirdep::3 more errors are in the run log/);
+  assert.match(capped[1], /^::error title=nirdep::4 more errors are in the run log/);
 
   // Under the limit, nothing is added and nothing is said.
-  assert.equal(annotate(result, { limit: 50 }).split('\n').filter(Boolean).length, 4);
+  assert.equal(annotate(result, { limit: 50 }).split('\n').filter(Boolean).length, 5);
 });
 
 test('nothing to say is an empty string, not a blank line', () => {

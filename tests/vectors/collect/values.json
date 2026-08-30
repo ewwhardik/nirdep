@@ -1,0 +1,1124 @@
+{
+ "note": "cloneDeep, isEqual and the collection functions. Values JSON cannot hold travel tagged: {\"$\":\"nan\"}, {\"$\":\"map\"}, {\"$\":\"cycle\"} and the rest, decoded by `dec` in tests/runtime/collect.test.mjs.",
+ "cases": [
+  {
+   "op": "cloneDeep",
+   "in": [
+    {
+     "a": {
+      "b": [
+       1,
+       {
+        "c": 2
+       }
+      ]
+     }
+    }
+   ],
+   "out": {
+    "a": {
+     "b": [
+      1,
+      {
+       "c": 2
+      }
+     ]
+    }
+   }
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    [
+     1,
+     [
+      2,
+      [
+       3
+      ]
+     ]
+    ]
+   ],
+   "out": [
+    1,
+    [
+     2,
+     [
+      3
+     ]
+    ]
+   ]
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    {
+     "$": "date",
+     "of": "1970-01-02T00:00:00.000Z"
+    }
+   ],
+   "out": {
+    "$": "date",
+    "of": "1970-01-02T00:00:00.000Z"
+   }
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    {
+     "$": "regexp",
+     "of": "ab+c",
+     "flags": "gi"
+    }
+   ],
+   "out": {
+    "$": "regexp",
+    "of": "ab+c",
+    "flags": "gi"
+   }
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    {
+     "$": "map",
+     "of": [
+      [
+       "k",
+       {
+        "a": 1
+       }
+      ]
+     ]
+    }
+   ],
+   "out": {
+    "$": "map",
+    "of": [
+     [
+      "k",
+      {
+       "a": 1
+      }
+     ]
+    ]
+   }
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    {
+     "$": "set",
+     "of": [
+      1,
+      {
+       "a": 2
+      }
+     ]
+    }
+   ],
+   "out": {
+    "$": "set",
+    "of": [
+     1,
+     {
+      "a": 2
+     }
+    ]
+   }
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    {
+     "$": "bytes",
+     "of": [
+      1,
+      2,
+      3
+     ]
+    }
+   ],
+   "out": {
+    "$": "bytes",
+    "of": [
+     1,
+     2,
+     3
+    ]
+   }
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    {
+     "$": "buffer",
+     "of": "hi"
+    }
+   ],
+   "out": {
+    "$": "buffer",
+    "of": "hi"
+   }
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    {
+     "$": "bare",
+     "of": []
+    }
+   ],
+   "out": {},
+   "ours": {
+    "$": "bare",
+    "of": []
+   },
+   "why": "bare"
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    {
+     "$": "frozen",
+     "of": [
+      [
+       "a",
+       1
+      ]
+     ]
+    }
+   ],
+   "out": {
+    "a": 1
+   }
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    {
+     "a": 1,
+     "self": {
+      "$": "cycle"
+     }
+    }
+   ],
+   "out": {
+    "a": 1,
+    "self": {
+     "$": "cycle"
+    }
+   }
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    {
+     "$": "object",
+     "of": [
+      [
+       {
+        "$": "symbol",
+        "of": "tag"
+       },
+       1
+      ]
+     ]
+    }
+   ],
+   "out": {
+    "$": "object",
+    "of": [
+     [
+      {
+       "$": "symbol",
+       "of": "tag"
+      },
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    {
+     "$": "array",
+     "length": 2,
+     "of": []
+    }
+   ],
+   "out": [
+    {
+     "$": "undefined"
+    },
+    {
+     "$": "undefined"
+    }
+   ]
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    null
+   ],
+   "out": null
+  },
+  {
+   "op": "cloneDeep",
+   "in": [
+    {
+     "$": "error",
+     "of": "boom"
+    }
+   ],
+   "out": {},
+   "ours": {
+    "$": "error",
+    "of": "boom"
+   },
+   "why": "error"
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    {
+     "a": 1
+    },
+    {
+     "a": 1
+    }
+   ],
+   "out": true
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    {
+     "a": 1
+    },
+    {
+     "a": 1,
+     "b": {
+      "$": "undefined"
+     }
+    }
+   ],
+   "out": false
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    {
+     "$": "nan"
+    },
+    {
+     "$": "nan"
+    }
+   ],
+   "out": true
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    0,
+    {
+     "$": "-0"
+    }
+   ],
+   "out": true
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    [
+     1,
+     2
+    ],
+    [
+     1,
+     2
+    ]
+   ],
+   "out": true
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    {
+     "$": "date",
+     "of": "1970-01-01T00:00:00.005Z"
+    },
+    {
+     "$": "date",
+     "of": "1970-01-01T00:00:00.005Z"
+    }
+   ],
+   "out": true
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    {
+     "$": "map",
+     "of": [
+      [
+       "a",
+       1
+      ],
+      [
+       "b",
+       2
+      ]
+     ]
+    },
+    {
+     "$": "map",
+     "of": [
+      [
+       "b",
+       2
+      ],
+      [
+       "a",
+       1
+      ]
+     ]
+    }
+   ],
+   "out": true
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    {
+     "$": "set",
+     "of": [
+      1,
+      2
+     ]
+    },
+    {
+     "$": "set",
+     "of": [
+      2,
+      1
+     ]
+    }
+   ],
+   "out": true
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    {
+     "$": "regexp",
+     "of": "a",
+     "flags": "g"
+    },
+    {
+     "$": "regexp",
+     "of": "a",
+     "flags": "g"
+    }
+   ],
+   "out": true
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    {
+     "$": "regexp",
+     "of": "a",
+     "flags": "g"
+    },
+    {
+     "$": "regexp",
+     "of": "a",
+     "flags": "i"
+    }
+   ],
+   "out": false
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    {
+     "$": "bytes",
+     "of": [
+      1
+     ]
+    },
+    {
+     "$": "bytes",
+     "of": [
+      1
+     ]
+    }
+   ],
+   "out": true
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    {
+     "a": 1,
+     "self": {
+      "$": "cycle"
+     }
+    },
+    {
+     "a": 1,
+     "self": {
+      "$": "cycle"
+     }
+    }
+   ],
+   "out": true
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    {
+     "$": "object",
+     "of": [
+      [
+       {
+        "$": "symbol",
+        "of": "tag"
+       },
+       1
+      ]
+     ]
+    },
+    {
+     "$": "object",
+     "of": [
+      [
+       {
+        "$": "symbol",
+        "of": "tag"
+       },
+       1
+      ]
+     ]
+    }
+   ],
+   "out": true
+  },
+  {
+   "op": "isEqual",
+   "in": [
+    {
+     "$": "bare",
+     "of": []
+    },
+    {}
+   ],
+   "out": true
+  },
+  {
+   "op": "groupBy",
+   "in": [
+    [
+     {
+      "role": "a"
+     },
+     {
+      "role": "b"
+     },
+     {
+      "role": "a"
+     }
+    ],
+    "role"
+   ],
+   "out": {
+    "a": [
+     {
+      "role": "a"
+     },
+     {
+      "role": "a"
+     }
+    ],
+    "b": [
+     {
+      "role": "b"
+     }
+    ]
+   }
+  },
+  {
+   "op": "groupBy",
+   "in": [
+    [
+     {
+      "role": "a",
+      "on": true
+     },
+     {
+      "role": "b"
+     }
+    ],
+    [
+     "role",
+     "a"
+    ]
+   ],
+   "out": {
+    "true": [
+     {
+      "role": "a",
+      "on": true
+     }
+    ],
+    "false": [
+     {
+      "role": "b"
+     }
+    ]
+   }
+  },
+  {
+   "op": "groupBy",
+   "in": [
+    [
+     {
+      "role": "a",
+      "on": true
+     },
+     {
+      "role": "b"
+     }
+    ],
+    {
+     "role": "a"
+    }
+   ],
+   "out": {
+    "true": [
+     {
+      "role": "a",
+      "on": true
+     }
+    ],
+    "false": [
+     {
+      "role": "b"
+     }
+    ]
+   }
+  },
+  {
+   "op": "groupBy",
+   "in": [
+    [
+     {
+      "at": {
+       "deep": "q"
+      }
+     },
+     {}
+    ],
+    "at.deep"
+   ],
+   "out": {
+    "q": [
+     {
+      "at": {
+       "deep": "q"
+      }
+     }
+    ],
+    "undefined": [
+     {}
+    ]
+   }
+  },
+  {
+   "op": "groupBy",
+   "in": [
+    [
+     1.2,
+     2.4,
+     1.8
+    ],
+    {
+     "$": "undefined"
+    }
+   ],
+   "out": {
+    "1.2": [
+     1.2
+    ],
+    "2.4": [
+     2.4
+    ],
+    "1.8": [
+     1.8
+    ]
+   }
+  },
+  {
+   "op": "groupBy",
+   "in": [
+    "abc",
+    {
+     "$": "undefined"
+    }
+   ],
+   "out": {
+    "a": [
+     "a"
+    ],
+    "b": [
+     "b"
+    ],
+    "c": [
+     "c"
+    ]
+   }
+  },
+  {
+   "op": "groupBy",
+   "in": [
+    {
+     "x": "a",
+     "y": "b"
+    },
+    {
+     "$": "undefined"
+    }
+   ],
+   "out": {
+    "a": [
+     "a"
+    ],
+    "b": [
+     "b"
+    ]
+   }
+  },
+  {
+   "op": "groupBy",
+   "in": [
+    null,
+    "role"
+   ],
+   "out": {}
+  },
+  {
+   "op": "groupBy",
+   "in": [
+    {
+     "$": "set",
+     "of": [
+      "a",
+      "b"
+     ]
+    },
+    {
+     "$": "undefined"
+    }
+   ],
+   "out": {},
+   "ours": {
+    "a": [
+     "a"
+    ],
+    "b": [
+     "b"
+    ]
+   },
+   "why": "iterable"
+  },
+  {
+   "op": "keyBy",
+   "in": [
+    [
+     {
+      "id": "a",
+      "n": 1
+     },
+     {
+      "id": "a",
+      "n": 2
+     },
+     {
+      "id": "b"
+     }
+    ],
+    "id"
+   ],
+   "out": {
+    "a": {
+     "id": "a",
+     "n": 2
+    },
+    "b": {
+     "id": "b"
+    }
+   }
+  },
+  {
+   "op": "keyBy",
+   "in": [
+    [
+     {
+      "id": {
+       "$": "undefined"
+      }
+     }
+    ],
+    "id"
+   ],
+   "out": {
+    "undefined": {
+     "id": {
+      "$": "undefined"
+     }
+    }
+   }
+  },
+  {
+   "op": "uniqBy",
+   "in": [
+    [
+     {
+      "n": 1
+     },
+     {
+      "n": 1
+     },
+     {
+      "n": 2
+     }
+    ],
+    "n"
+   ],
+   "out": [
+    {
+     "n": 1
+    },
+    {
+     "n": 2
+    }
+   ]
+  },
+  {
+   "op": "uniqBy",
+   "in": [
+    [
+     {
+      "n": {
+       "$": "nan"
+      }
+     },
+     {
+      "n": {
+       "$": "nan"
+      }
+     }
+    ],
+    "n"
+   ],
+   "out": [
+    {
+     "n": {
+      "$": "nan"
+     }
+    }
+   ]
+  },
+  {
+   "op": "chunk",
+   "in": [
+    [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    2
+   ],
+   "out": [
+    [
+     1,
+     2
+    ],
+    [
+     3,
+     4
+    ],
+    [
+     5
+    ]
+   ]
+  },
+  {
+   "op": "chunk",
+   "in": [
+    [
+     1,
+     2,
+     3
+    ],
+    0
+   ],
+   "out": []
+  },
+  {
+   "op": "chunk",
+   "in": [
+    [
+     1,
+     2,
+     3
+    ],
+    -1
+   ],
+   "out": []
+  },
+  {
+   "op": "chunk",
+   "in": [
+    [
+     1,
+     2,
+     3
+    ],
+    2.7
+   ],
+   "out": [
+    [
+     1,
+     2
+    ],
+    [
+     3
+    ]
+   ]
+  },
+  {
+   "op": "chunk",
+   "in": [
+    [
+     1,
+     2,
+     3
+    ],
+    {
+     "$": "undefined"
+    }
+   ],
+   "out": [
+    [
+     1
+    ],
+    [
+     2
+    ],
+    [
+     3
+    ]
+   ]
+  },
+  {
+   "op": "chunk",
+   "in": [
+    [],
+    2
+   ],
+   "out": []
+  },
+  {
+   "op": "sortBy",
+   "in": [
+    [
+     {
+      "n": 3
+     },
+     {
+      "n": 1
+     },
+     {
+      "n": 2
+     }
+    ],
+    "n"
+   ],
+   "out": [
+    {
+     "n": 1
+    },
+    {
+     "n": 2
+    },
+    {
+     "n": 3
+    }
+   ]
+  },
+  {
+   "op": "sortBy",
+   "in": [
+    [
+     {
+      "n": 1,
+      "t": "b"
+     },
+     {
+      "n": 1,
+      "t": "a"
+     }
+    ],
+    [
+     "n",
+     "t"
+    ]
+   ],
+   "out": [
+    {
+     "n": 1,
+     "t": "a"
+    },
+    {
+     "n": 1,
+     "t": "b"
+    }
+   ]
+  },
+  {
+   "op": "sortBy",
+   "in": [
+    [
+     {
+      "n": null
+     },
+     {
+      "n": 2
+     },
+     {
+      "n": {
+       "$": "undefined"
+      }
+     },
+     {
+      "n": 1
+     }
+    ],
+    "n"
+   ],
+   "out": [
+    {
+     "n": 1
+    },
+    {
+     "n": 2
+    },
+    {
+     "n": null
+    },
+    {
+     "n": {
+      "$": "undefined"
+     }
+    }
+   ]
+  },
+  {
+   "op": "sortBy",
+   "in": [
+    [
+     {
+      "n": "b"
+     },
+     {
+      "n": "a"
+     }
+    ],
+    "n"
+   ],
+   "out": [
+    {
+     "n": "a"
+    },
+    {
+     "n": "b"
+    }
+   ]
+  },
+  {
+   "op": "sortBy",
+   "in": [
+    [
+     3,
+     1,
+     2
+    ],
+    {
+     "$": "undefined"
+    }
+   ],
+   "out": [
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "op": "sortBy",
+   "in": [
+    [
+     {
+      "n": {
+       "$": "nan"
+      },
+      "t": "b"
+     },
+     {
+      "n": {
+       "$": "nan"
+      },
+      "t": "a"
+     }
+    ],
+    [
+     "n",
+     "t"
+    ]
+   ],
+   "out": [
+    {
+     "n": {
+      "$": "nan"
+     },
+     "t": "b"
+    },
+    {
+     "n": {
+      "$": "nan"
+     },
+     "t": "a"
+    }
+   ],
+   "ours": [
+    {
+     "n": {
+      "$": "nan"
+     },
+     "t": "a"
+    },
+    {
+     "n": {
+      "$": "nan"
+     },
+     "t": "b"
+    }
+   ],
+   "why": "nan"
+  }
+ ]
+}

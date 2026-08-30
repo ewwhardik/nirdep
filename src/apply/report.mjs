@@ -12,7 +12,7 @@
 // truth.
 
 import { unified } from '../patch/diff.mjs';
-import { plural, styleOf, wrap } from '../text/format.mjs';
+import { plural, styleOf, wrap, WIDTH } from '../text/format.mjs';
 import { OUTCOME } from './project.mjs';
 
 /** What a decline code is called out loud. Short, because it is printed in a column. */
@@ -61,7 +61,7 @@ export function planReport(plan, options = {}) {
     for (const one of plan.declined) {
       const where = one.specifier ? `${s.bold(one.specifier)} ` : '';
       lines.push(`  ${s.yellow(HEADING[one.code] ?? one.code)}  ${where}${s.dim(`${one.path}:${one.line}`)}`);
-      lines.push(`    ${wrap(one.detail, 76, '    ')}`);
+      lines.push(`    ${wrap(one.detail, WIDTH, '    ')}`);
     }
   }
 
@@ -97,7 +97,7 @@ export function applyReport(run, options = {}) {
   for (const file of run.files) {
     if (file.outcome === OUTCOME.UNCHANGED) continue;
     lines.push(`${mark[file.outcome] ?? file.outcome}  ${file.path}`);
-    if (file.detail) lines.push(`    ${wrap(file.detail, 76, '    ')}`);
+    if (file.detail) lines.push(`    ${wrap(file.detail, WIDTH, '    ')}`);
     if (file.gate?.after?.error?.line) {
       lines.push(`    ${s.dim(`${file.path}:${file.gate.after.error.line} (checked by ${file.gate.after.method})`)}`);
     }

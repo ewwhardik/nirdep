@@ -139,8 +139,9 @@ test('the page is plain down a pipe and painted when a terminal is claimed', () 
 });
 
 test('a version nobody chose to install fails the build, and is printed first', () => {
-  // The other project: nothing here was a decision. lodash is declared, and the release of it
-  // that is installed and the two packages that came with somebody else's tree are not.
+  // The other project: the lodash import is a decision, and the release of it that is installed
+  // is not, and neither are the two packages that came with somebody else's tree. So the page
+  // has to carry both halves -- a breach somebody can defend, and an advisory nobody can.
   const { code, stdout } = run(['guard', plant(null, 'poisoned')]);
   assert.equal(code, 1);
   assert.equal(stdout.split('\n')[0], '3 versions the advisory table names',
@@ -149,7 +150,7 @@ test('a version nobody chose to install fails the build, and is printed first', 
   assert.match(flat(stdout), /No version fixes this one: the release itself was the payload/);
   assert.match(flat(stdout), /3 further advisories name this version/);
   assert.match(flat(stdout),
-    new RegExp(`FAIL: 1 of ${WATCHED} watched packages present; 3 versions the advisory table names\\.`));
+    new RegExp(`FAIL: 2 of ${WATCHED} watched packages present; 3 versions the advisory table names\\.`));
 });
 
 test('the ladder is a flag as well, and a rung nobody defined is a typo at the keyboard', () => {
@@ -186,7 +187,7 @@ test('--annotate says it again in the dialect GitHub reads, after the report and
   assert.equal(verdict < first, true, 'workflow commands are noise in a terminal, so they go last');
   // A version comes from the lockfile, so that is the file every advisory is attached to.
   const commands = lines.filter((line) => line.startsWith('::'));
-  assert.equal(commands.length, 4);
+  assert.equal(commands.length, 5);
   assert.equal(commands.filter((one) => one.includes('file=package-lock.json')).length, 3);
   assert.equal(/node_modules/.test(stdout), false);
 });

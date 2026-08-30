@@ -21,13 +21,14 @@
 // is a document a person is meant to finish by hand, so this refusal matters more here than
 // it does for a vendored module.
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { findSpecifiers } from '../audit/imports.mjs';
 import { SOURCE_EXTENSIONS } from '../apply/project.mjs';
 import { catalogue } from '../eject/project.mjs';
+import { present, readerFrom } from '../fs/read.mjs';
 import { displayPath, selectFiles } from '../fs/walk.mjs';
-import { RULES } from '../rules/registry.mjs';
+import { moduleOf, RULES } from '../rules/registry.mjs';
 
 /** The file this command writes, unless told otherwise. */
 export const STDLIB_FILE = 'STDLIB.md';
@@ -41,7 +42,6 @@ export const RESULT = Object.freeze({
   FAILED: 'failed',
 });
 
-const moduleOf = (subpath) => subpath.slice(subpath.lastIndexOf('/') + 1);
 const MODULES = Object.freeze([...new Set(RULES.map((rule) => moduleOf(rule.subpath)))]);
 
 /** The package form, as `apply` writes it without --runtime. */
@@ -62,7 +62,7 @@ const VENDORED = /vendored from nirdep\/runtime\/([a-z0-9-]+)/;
  * @returns {Map<string, { sites: Array<object>, files: string[], vendored: boolean, home: boolean }>}
  */
 export function stdlibAdoption(root, options = {}) {
-  const read = options.read ?? ((file) => readFileSync(file, 'utf8'));
+  const read = readerFrom(options);
   const files = selectFiles(root, { ...options, extensions: SOURCE_EXTENSIONS });
   const found = new Map();
   // Where each module's one true copy lives, taken off our own exports map rather than off a
@@ -97,7 +97,7 @@ export function stdlibAdoption(root, options = {}) {
         continue;
       }
       if (!one.specifier.startsWith('.')) continue;
-      const leaf = one.specifier.slice(one.specifier.lastIndexOf('/') + 1);
+      const leaf = moduleOf(one.specifier);
       if (!MODULES.includes(leaf.replace(/\.mjs$/, '')) || !leaf.endsWith('.mjs')) continue;
       const target = resolve(dirname(file), one.specifier);
       const ours = home.get(target);
@@ -135,18 +135,13 @@ export function stdlibAdoption(root, options = {}) {
  * @param {{ root: string, file?: string, read?: (file: string) => string }} options
  */
 export function stdlibPlan(document, options) {
-  const read = options.read ?? ((file) => readFileSync(file, 'utf8'));
+  const read = readerFrom(options);
   const file = options.file ?? STDLIB_FILE;
   const path = resolve(options.root, file);
-  let existing = null;
-  let unreadable = null;
-  try {
-    existing = read(path);
-  } catch (error) {
-    // ENOENT is the ordinary case. Anything else is a file that is there and cannot be
-    // compared, which is not a file to overwrite on a hunch.
-    if (error.code !== 'ENOENT') unreadable = error.message;
-  }
+  // Absent is the ordinary case; unreadable is a file to leave alone rather than overwrite.
+  const found = present(read, path);
+  const existing = found.text;
+  const unreadable = found.error === null ? null : found.error.message;
   return Object.freeze({
     document,
     path,

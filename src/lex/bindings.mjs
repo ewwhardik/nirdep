@@ -281,6 +281,18 @@ export function analyse(input, options = {}) {
   const PATTERN_STOP = Object.freeze(new Set(['=', ',', ';', 'of', 'in']));
   const DECLARATOR_STOP = Object.freeze(new Set([',', ';']));
 
+  /**
+   * Where a declarator's pattern stops. `of` and `in` end a pattern because a for-of head
+   * puts them there, but at the first token of the declarator neither is grammar: `of` is a
+   * legal name, and `const of = f(x)` would otherwise declare nothing and leave every later
+   * use of it looking like a global. One token, because a name is the only pattern that can
+   * start with a word.
+   */
+  const patternBoundary = (from) => {
+    const stop = boundary(from, PATTERN_STOP);
+    return stop === from && tokens[from]?.kind === KIND.NAME ? boundary(from + 1, PATTERN_STOP) : stop;
+  };
+
   /** A call of the CommonJS loader with a literal specifier, or null. */
   const loaderCall = (at) => {
     if (!isWord(tokens[at], REQUIRE) || !isPunct(tokens[at + 1], '(')) return null;
@@ -304,7 +316,7 @@ export function analyse(input, options = {}) {
     const scope = kind === BINDING.VAR ? inFunction() : inScope();
     let from = at + 1;
     while (from < tokens.length) {
-      const patternEnd = boundary(from, PATTERN_STOP);
+      const patternEnd = patternBoundary(from);
       const initialiser = isPunct(tokens[patternEnd], '=') ? patternEnd + 1 : -1;
       // A name taken straight from the loader is a dependency binding, not an ordinary
       // one: the codemod needs its specifier to know what to replace it with.
@@ -437,9 +449,14 @@ export function analyse(input, options = {}) {
     const close = partner.get(open) ?? open;
     const scope = openScope('for', inScope().id, open);
     // `of` is an ordinary name everywhere else, so the lexer hands it over as one. Here
-    // it is the clause word of a for-of head and reads nothing.
+    // it is the clause word of a for-of head and reads nothing -- except where the loop
+    // binds a variable of that name, in which case the first one is the name and the
+    // clause word is the next.
+    const declared = tokens[open + 1]?.value;
+    const bound = declared === BINDING.CONST || declared === BINDING.LET || declared === BINDING.VAR
+      ? open + 2 : -1;
     for (let n = open + 1; n < close; n += 1) {
-      if (isWord(tokens[n], 'of')) {
+      if (n !== bound && isWord(tokens[n], 'of')) {
         skipTokens.add(n);
         break;
       }

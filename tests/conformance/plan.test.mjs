@@ -39,6 +39,7 @@ const full = () => tree({
   [`${VECTORS}/args/parse.json`]: vector(94),
   [`${VECTORS}/semver/ranges.json`]: vector(432),
   [`${VECTORS}/glob/match.json`]: vector(300),
+  [`${VECTORS}/collect/values.json`]: vector(147),
   // A vector directory for a layer that is not a runtime module: covered by `make test`,
   // and none of conformance's business.
   [`${VECTORS}/lex/tokens.json`]: vector(49),
@@ -47,12 +48,13 @@ const full = () => tree({
   [`${DRIVERS}/args.test.mjs`]: driver('args'),
   [`${DRIVERS}/semver.test.mjs`]: driver('semver'),
   [`${DRIVERS}/glob.test.mjs`]: driver('glob'),
+  [`${DRIVERS}/collect.test.mjs`]: driver('collect'),
 });
 
 const moduleNamed = (plan, name) => plan.modules.find((one) => one.name === name);
 
 test('the modules and the packages they replace come off the rule catalogue', () => {
-  assert.deepEqual(MODULES.map((one) => one.name), ['colour', 'semver', 'glob', 'args']);
+  assert.deepEqual(MODULES.map((one) => one.name), ['colour', 'semver', 'glob', 'collect', 'args']);
   const colour = MODULES.find((one) => one.name === 'colour');
   assert.equal(colour.subpath, 'runtime/colour');
   assert.deepEqual(colour.packages.map((one) => one.name),
@@ -66,8 +68,8 @@ test('a case count is the length of an array in a file, not a number somebody ty
   const plan = conformancePlan(full());
   assert.equal(moduleNamed(plan, 'colour').cases, 74);
   assert.equal(moduleNamed(plan, 'args').cases, 94);
-  assert.equal(plan.totals.cases, 74 + 94 + 432 + 300);
-  assert.equal(plan.totals.vectors, 5, 'the lex vectors belong to another layer');
+  assert.equal(plan.totals.cases, 74 + 94 + 432 + 300 + 147);
+  assert.equal(plan.totals.vectors, 6, 'the lex vectors belong to another layer');
   assert.equal(plan.present, true);
   assert.deepEqual(plan.problems, []);
 });
@@ -161,7 +163,7 @@ test('this repository is its own fixture, and the numbers are real', () => {
   assert.equal(plan.present, true, 'every runtime module has a driver in this repository');
   assert.deepEqual(plan.problems, []);
   assert.equal(plan.totals.cases > 1000, true, `only ${plan.totals.cases} cases found`);
-  assert.equal(plan.totals.packages, 10);
+  assert.equal(plan.totals.packages, 11);
   for (const one of plan.modules) {
     assert.equal(one.vectors.length > 0, true, `${one.name} has vector files`);
     assert.equal(one.drivers.length > 0, true, `${one.name} has a driver`);

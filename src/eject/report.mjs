@@ -7,7 +7,9 @@
 // user actually chose rather than the default in the documentation.
 
 import { suggest } from '../runtime/args.mjs';
-import { pad, plural, styleOf, wrap } from '../text/format.mjs';
+import {
+  agree, columnWidth, didYouMean, DRY_RUN, pad, plural, sizeOf, styleOf, wrap, WIDTH,
+} from '../text/format.mjs';
 import { RESULT } from './project.mjs';
 
 /** The verb in the margin, and the colour it is printed in. */
@@ -32,20 +34,18 @@ export function ejectReport(run, options = {}) {
       // The did-you-mean comes from our own replacement for commander, which already had
       // to solve this for command names. One typo, one answer, no second guess.
       const near = suggest(name, run.available, 1);
-      lines.push(`${s.red('no such runtime module:')} ${s.bold(name)}`
-        + (near.length > 0 ? `  ${s.dim(`did you mean ${near[0]}?`)}` : ''));
+      const tail = didYouMean(near, { lead: '' });
+      lines.push(`${s.red('no such runtime module:')} ${s.bold(name)}${tail === '' ? '' : `  ${s.dim(tail)}`}`);
     }
-    lines.push(`  ${s.dim(`there ${run.available.length === 1 ? 'is' : 'are'} `
+    lines.push(`  ${s.dim(`there ${agree(run.available.length, 'is', 'are')} `
       + `${run.available.length}: ${run.available.join(', ')}`)}`);
     if (run.files.length > 0) lines.push('');
   }
 
-  const width = Math.max(0, ...run.files.map((entry) => entry.module.length));
+  const width = columnWidth(run.files.map((entry) => entry.module));
   for (const entry of run.files) {
     const [verb, colour] = MARGIN[entry.result] ?? ['?', 'dim'];
-    const size = entry.result === RESULT.SKIPPED
-      ? ''
-      : `  ${s.dim(`${entry.lines} lines, ${entry.bytes} bytes`)}`;
+    const size = entry.result === RESULT.SKIPPED ? '' : `  ${s.dim(sizeOf(entry))}`;
     lines.push(`  ${s[colour](pad(verb, 10))}  ${s.bold(pad(entry.module, width))}  ${entry.path}${size}`);
     if (entry.replaces.length > 0) {
       lines.push(`  ${' '.repeat(10)}  ${s.dim(`replaces ${entry.replaces.join(', ')}`)}`);
@@ -58,7 +58,7 @@ export function ejectReport(run, options = {}) {
   if (run.counts.refused > 0) {
     lines.push('');
     lines.push(`  ${wrap(`${plural(run.counts.refused, 'file')} already there and not what this version of `
-      + 'nirdep writes. Diff it, keep whichever you prefer, and pass --force to take ours.', 76, '  ')}`);
+      + 'nirdep writes. Diff it, keep whichever you prefer, and pass --force to take ours.', WIDTH, '  ')}`);
   }
 
   const done = run.counts.written + run.counts.skipped;
@@ -70,7 +70,7 @@ export function ejectReport(run, options = {}) {
   }
   if (!run.wrote && run.counts.wouldWrite > 0) {
     lines.push('');
-    lines.push(s.dim('nothing was written: this was a dry run.'));
+    lines.push(s.dim(DRY_RUN));
   }
 
   if (lines.length === 0) lines.push(s.dim('no runtime modules selected, so nothing to write.'));
@@ -91,7 +91,7 @@ export function ejectExitCode(run) {
 /** `eject --list`: the modules, what each replaces, and how big the file is. */
 export function ejectList(modules, options = {}) {
   const s = styleOf(options.style);
-  const width = Math.max(0, ...modules.map((module) => module.name.length));
+  const width = columnWidth(modules.map((module) => module.name));
   const lines = [s.bold('runtime modules')];
   for (const module of modules) {
     lines.push(`  ${s.bold(pad(module.name, width))}  ${s.dim(module.target)}`);

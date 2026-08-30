@@ -35,14 +35,17 @@ test('every path the export map promises exists on disk', () => {
 test('the entry point re-exports the runtime, namespaced, with no work at import time', async () => {
   const entry = await import(new URL('../../src/index.mjs', import.meta.url));
   assert.deepEqual(Object.keys(entry).sort(), [
-    'ABOUT', 'args', 'colour', 'colourDefault', 'glob', 'globDefault', 'semver', 'semverDefault',
+    'ABOUT', 'args', 'collect', 'collectDefault', 'colour', 'colourDefault', 'glob', 'globDefault',
+    'semver', 'semverDefault',
   ]);
   assert.equal(entry.semver.valid('1.2.3'), '1.2.3');
   assert.equal(typeof entry.args.createCli, 'function');
   assert.equal(typeof entry.colour.createColour, 'function');
+  assert.equal(typeof entry.collect.cloneDeep, 'function');
   assert.equal(entry.semverDefault, entry.semver.default);
   assert.equal(entry.colourDefault, entry.colour.default);
   assert.equal(entry.globDefault, entry.glob.default);
+  assert.equal(entry.collectDefault, entry.collect.default);
   assert.equal(entry.ABOUT.publisher, 'Nastik AI');
   assert.equal(entry.ABOUT.developer, 'Hardik');
   assert.equal(Object.isFrozen(entry.ABOUT), true);

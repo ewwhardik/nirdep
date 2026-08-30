@@ -14,12 +14,9 @@
 // meant to be committed, and a generator that changes its output when nothing changed makes
 // a diff nobody reads.
 
-import { ACTION, RULES } from '../rules/registry.mjs';
+import { ACTION, moduleOf, RULES } from '../rules/registry.mjs';
 import { nodeApiFor } from '../explain/facts.mjs';
-import { plural, wrap } from '../text/format.mjs';
-
-/** Markdown prose folds at the width of the terminal it will be read in. */
-const COLUMNS = 80;
+import { agree, COLUMNS, plural, wrap } from '../text/format.mjs';
 
 /** How many rows of "what is left" before the table stops being a table. */
 const LEFT = 15;
@@ -40,7 +37,6 @@ function table(headers, rows) {
   ];
 }
 
-const moduleOf = (subpath) => subpath.slice(subpath.lastIndexOf('/') + 1);
 
 /** The sites a module's replacement is imported from, once eject or apply has been run. */
 function adoptedOf(adoption, name) {
@@ -133,7 +129,9 @@ export function stdlibDocument(scan, options = {}) {
     }
   } else if (replaceable.length === 0 && subpaths.length === 0) {
     lines.push(para(`${name} declares ${plural(scan.counts.direct, 'direct dependency', 'direct dependencies')}`
-      + `, and ${scan.counts.direct === 1 ? 'it is not a package nirdep replaces' : 'none of them is a package nirdep replaces'}`
+      + `, and ${scan.counts.direct === 1
+        ? 'it is not a package nirdep replaces'
+        : 'none of them is a package nirdep replaces'}`
       + '. There is nothing for this document to log yet. The '
       + `${plural(RULES.length, 'package')} it does replace are listed by \`nirdep explain\`.`), '');
   } else {
@@ -146,13 +144,13 @@ export function stdlibDocument(scan, options = {}) {
       + `. ${plural(replaceable.length, 'of them is a package', 'of them are packages')} nirdep `
       + `replaces with a standard-library module`
       + (stranded > 0
-        ? `, and removing ${replaceable.length === 1 ? 'it' : 'them'} takes ${stranded} of the `
+        ? `, and removing ${agree(replaceable.length, 'it', 'them')} takes ${stranded} of the `
           + `${scan.removable.of} installed packages out of the tree`
           + (also > 0
-            ? `: the ${plural(seeds, 'package')} ${seeds === 1 ? 'itself' : 'themselves'}`
+            ? `: the ${plural(seeds, 'package')} ${agree(seeds, 'itself', 'themselves')}`
               + `, plus ${plural(also, 'package')} nothing else needs.`
-            : `: ${seeds === 1 ? 'itself' : 'themselves'}, and nothing that was there only for `
-              + `${seeds === 1 ? 'it' : 'them'}.`)
+            : `: ${agree(seeds, 'itself', 'themselves')}, and nothing that was there only for `
+              + `${agree(seeds, 'it', 'them')}.`)
         : '.')), '');
     if (scan.removable.count > 0 && scan.graph.understood) {
       lines.push(para('That count is an upper bound. The dependency graph is keyed by package '

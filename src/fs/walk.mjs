@@ -25,6 +25,17 @@ import { matcher } from '../runtime/glob.mjs';
 
 const DEFAULT_IGNORE = new Set(['node_modules', '.git', 'dist', 'coverage', '.cache']);
 
+/**
+ * The one ordering this project sorts by. Codepoints, never `localeCompare`: that answers in
+ * the machine's locale, and a build claiming byte-identical output cannot have a sequence
+ * that depends on which machine ran it. Every ordered table, walk and report shares this so
+ * there is one answer to "sorted how".
+ */
+export const ascending = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+/** The same order, read off a named field. */
+export const byField = (field) => (a, b) => ascending(a[field], b[field]);
+
 /** Patterns are written with forward slashes on every platform, so the path we test is. */
 const SLASH = '/';
 
@@ -69,7 +80,7 @@ export function* walk(root, options = {}) {
       if (error.code === 'EACCES' || error.code === 'ENOENT' || error.code === 'ENOTDIR') continue;
       throw error;
     }
-    entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    entries.sort(byField('name'));
     // Push directories in reverse so the sorted order survives the stack.
     const directories = [];
     for (const entry of entries) {
@@ -111,9 +122,14 @@ function hasExtension(name, extensions) {
   return dot > 0 && extensions.has(name.slice(dot));
 }
 
+/** Forward slashes, whatever the platform separates with. A report that says `src\util.mjs`
+ * on one machine and `src/util.mjs` on another has told two different stories about the same
+ * file, and one of them will not match a path anybody pastes back. */
+export const toPosix = (path) => path.split(sep).join('/');
+
 /** Posix-style path relative to root, so reports read the same on every platform. */
 export function displayPath(root, file) {
-  return relative(root, file).split(sep).join('/');
+  return toPosix(relative(root, file));
 }
 
 /**

@@ -12,24 +12,22 @@
 // vectors in their node_modules -- and it means this command has a third answer besides pass
 // and fail: the vectors are not here, so nothing was measured.
 
-import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { findSpecifiers } from '../audit/imports.mjs';
+import { readerFrom } from '../fs/read.mjs';
 import { displayPath, walk } from '../fs/walk.mjs';
-import { RULES } from '../rules/registry.mjs';
+import { moduleOf, RULES } from '../rules/registry.mjs';
 
 /** The repository this source file is part of, which is the tree being tested. Unlike every
- * other command, conformance does not take a path: it reports on nirdep, not on your project. */
-export const SELF = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
+ * other command, conformance does not take a path: it reports on nirdep, not on your project.
+ * Not exported: `options.root` is how a caller says otherwise, and a second way in would be
+ * a second thing to keep true. */
+const SELF = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
 /** Where the two halves of the corpus live, relative to the root. */
 export const VECTORS = 'tests/vectors';
 export const DRIVERS = 'tests/runtime';
-
-/** `runtime/colour` -> `colour`. The rules name a subpath because that is what a rewritten
- * import has to say; the module name is the last segment of it. */
-const moduleOf = (subpath) => subpath.slice(subpath.lastIndexOf('/') + 1);
 
 /**
  * The runtime modules, in the order the catalogue lists them, each with the packages it
@@ -72,7 +70,7 @@ function casesIn(parsed) {
  */
 export function conformancePlan(options = {}) {
   const root = options.root ?? SELF;
-  const read = options.read ?? ((file) => readFileSync(file, 'utf8'));
+  const read = readerFrom(options);
   const list = options.list ?? ((dir) => [...walk(join(root, dir), { extensions: new Set(['.json', '.mjs']) })]
     .map((file) => displayPath(root, file)));
 
@@ -126,13 +124,20 @@ export function conformancePlan(options = {}) {
     modules,
     strays,
     problems,
-    totals: {
-      modules: modules.length,
-      packages: modules.reduce((sum, one) => sum + one.packages.length, 0),
-      vectors: modules.reduce((sum, one) => sum + one.vectors.length, 0),
-      cases: modules.reduce((sum, one) => sum + one.cases, 0),
-    },
+    totals: totalsOf(modules),
   };
+}
+
+/** What a set of modules adds up to. Counted twice in this file -- once for the whole plan
+ * and once for the subset `--only` leaves -- and a second copy of the arithmetic is how a
+ * filtered run ends up reporting the unfiltered corpus. */
+function totalsOf(modules) {
+  return Object.freeze({
+    modules: modules.length,
+    packages: modules.reduce((sum, one) => sum + one.packages.length, 0),
+    vectors: modules.reduce((sum, one) => sum + one.vectors.length, 0),
+    cases: modules.reduce((sum, one) => sum + one.cases, 0),
+  });
 }
 
 /**
@@ -152,12 +157,7 @@ export function onlyModules(plan, names) {
     plan: {
       ...plan,
       modules,
-      totals: {
-        modules: modules.length,
-        packages: modules.reduce((sum, one) => sum + one.packages.length, 0),
-        vectors: modules.reduce((sum, one) => sum + one.vectors.length, 0),
-        cases: modules.reduce((sum, one) => sum + one.cases, 0),
-      },
+      totals: totalsOf(modules),
     },
     unknown,
   };

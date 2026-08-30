@@ -80,7 +80,7 @@ test('a module name we do not have is a usage error with a suggestion', () => {
 test('a name with nothing near it is told what there is', () => {
   const { code, stderr } = run(['conformance', 'lodash']);
   assert.equal(code, 2);
-  assert.match(stderr, /no runtime module lodash\. There are colour, semver, glob, args\./);
+  assert.match(stderr, /no runtime module lodash\. There are colour, semver, glob, collect, args\./);
 });
 
 test('conformance documents itself, and is no longer one of the pending commands', () => {

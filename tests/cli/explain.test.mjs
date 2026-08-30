@@ -44,9 +44,9 @@ test('a package we replace exits zero and shows its reasoning', () => {
 });
 
 test('a package we do not replace exits 2, which is a CI-visible answer', () => {
-  const { code, stdout } = run(['explain', 'lodash']);
+  const { code, stdout } = run(['explain', 'left-pad']);
   assert.equal(code, 2);
-  assert.match(stdout, /nothing to explain: lodash/);
+  assert.match(stdout, /nothing to explain: left-pad/);
 });
 
 test('a builtin exits zero: the dependency is already gone', () => {

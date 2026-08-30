@@ -16,8 +16,8 @@
 // that subset is what `readIndented` understands. Anything else makes the reader
 // give up honestly rather than guess.
 
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readerFrom } from '../fs/read.mjs';
 
 /** The lockfiles we look for, in the order a project with several should be believed. */
 export const LOCKFILES = Object.freeze([
@@ -410,7 +410,7 @@ const NOTES = Object.freeze({
  * @returns {{ kind: string, file: string, text: string|null }}
  */
 export function findLock(root, options = {}) {
-  const read = options.read ?? ((path) => readFileSync(path, 'utf8'));
+  const read = readerFrom(options);
   for (const candidate of LOCKFILES) {
     try {
       // The read is what proves the file is there; bun's is binary, so its presence

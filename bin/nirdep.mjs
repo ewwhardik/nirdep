@@ -18,6 +18,7 @@ import { dirname, join, resolve } from 'node:path';
 import { parseToml } from '../src/meta/toml.mjs';
 import { createColour } from '../src/runtime/colour.mjs';
 import { createCli, EXIT, suggest } from '../src/runtime/args.mjs';
+import { didYouMean } from '../src/text/format.mjs';
 import { planProject, applyProject, DEFAULT_RUNTIME_DIR } from '../src/apply/project.mjs';
 import { planReport, applyReport, exitCodeFor } from '../src/apply/report.mjs';
 import { scanProject } from '../src/scan/project.mjs';
@@ -218,7 +219,7 @@ function guard(context) {
     const near = suggest(String(context.options.advisories), levels);
     context.err(`${context.errStyle.red('nirdep:')} guard: no advisory level `
       + `${context.errStyle.bold(String(context.options.advisories))}`
-      + `${near.length > 0 ? `, did you mean ${near.join(' or ')}?` : `. There are ${levels.join(', ')}.`}\n`);
+      + `${didYouMean(near) || `. There are ${levels.join(', ')}.`}\n`);
     return EXIT.USAGE;
   }
   const result = guardProject(root, {
@@ -250,7 +251,7 @@ function conformance(context) {
     const near = suggest(unknown[0], known);
     context.err(`${context.errStyle.red('nirdep:')} conformance: no runtime module `
       + `${context.errStyle.bold(unknown[0])}`
-      + `${near.length > 0 ? `, did you mean ${near.join(' or ')}?` : `. There are ${known.join(', ')}.`}\n`);
+      + `${didYouMean(near) || `. There are ${known.join(', ')}.`}\n`);
     return EXIT.USAGE;
   }
   const result = runConformance(plan);

@@ -12,10 +12,11 @@
 // denied, in all three of the places a dependency can hide, and a version the advisory table
 // already knows about fails the build whether or not anybody chose to install it.
 
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readerFrom } from '../fs/read.mjs';
 import { suggest } from '../runtime/args.mjs';
 import { REPLACEABLE } from '../rules/registry.mjs';
+import { didYouMean } from '../text/format.mjs';
 
 /** The three places a dependency can come back, which are the three readers `scan` has. */
 export const SIGNAL = Object.freeze({ DECLARED: 'declared', INSTALLED: 'installed', IMPORTED: 'imported' });
@@ -79,7 +80,7 @@ export function validatePolicy(raw) {
   for (const key of Object.keys(raw)) {
     if (KEYS.includes(key)) continue;
     const near = suggest(key, KEYS, 1);
-    problems.push(`unknown policy key "${key}"${near.length > 0 ? `, did you mean "${near[0]}"?` : ''}`);
+    problems.push(`unknown policy key "${key}"${didYouMean(near, { quote: true })}`);
   }
 
   const names = (key) => {
@@ -122,7 +123,7 @@ export function validatePolicy(raw) {
       const unknown = listed.filter((one) => !SIGNALS.includes(one));
       if (unknown.length > 0) {
         const near = suggest(unknown[0], SIGNALS, 1);
-        problems.push(`unknown signal "${unknown[0]}"${near.length > 0 ? `, did you mean "${near[0]}"?` : ''}`
+        problems.push(`unknown signal "${unknown[0]}"${didYouMean(near, { quote: true })}`
           + ` -- the three are ${SIGNALS.join(', ')}`);
       } else if (listed.length === 0) problems.push('"signals" is empty, so the guard would pass on anything');
       else signals = listed;
@@ -145,7 +146,7 @@ export function validatePolicy(raw) {
     else if (typeof raw.advisories !== 'string' || !LEVELS.includes(raw.advisories)) {
       const near = typeof raw.advisories === 'string' ? suggest(raw.advisories, LEVELS, 1) : [];
       problems.push(`unknown advisory level ${JSON.stringify(raw.advisories)}`
-        + `${near.length > 0 ? `, did you mean "${near[0]}"?` : ''}`
+        + `${didYouMean(near, { quote: true })}`
         + ` -- the four are ${LEVELS.join(', ')}`);
     } else advisories = raw.advisories;
   }
@@ -180,7 +181,7 @@ function parse(text, where, problems) {
  * @param {{ policyFile?: string|null, read?: (file: string) => string, overrides?: object }} [options]
  */
 export function readPolicy(root, options = {}) {
-  const read = options.read ?? ((file) => readFileSync(file, 'utf8'));
+  const read = readerFrom(options);
   const problems = [];
   let source = SOURCE.DEFAULT;
   let path = null;

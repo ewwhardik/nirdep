@@ -38,40 +38,42 @@ function page(per, options = {}) {
 
 test('every row carries the size of the corpus it passed', () => {
   const text = page({ pass: 12 });
-  assert.match(text, /^4 runtime modules, \d{4} vector cases, 48 tests$/m);
-  assert.match(text, /^ {2}colour {5}74 cases in 2 files {2}12 tests, all passed$/m);
-  assert.match(text, /^ {10}4 packages: chalk, strip-ansi, supports-color, ansi-styles$/m);
-  assert.match(text, /^ {2}semver {3}1243 cases in 7 files {2}12 tests, all passed$/m);
-  assert.match(text, /^ {10}1 package: semver$/m);
-  assert.match(text, /^ {2}glob {5}2035 cases in 5 files {2}12 tests, all passed$/m);
-  assert.match(text, /^ {10}2 packages: minimatch, glob$/m);
-  assert.match(text, /^PASS: 10 packages replaced, 3446 cases checked, nothing came back wrong\.$/m);
+  assert.match(text, /^5 runtime modules, \d{4} vector cases, 60 tests$/m);
+  assert.match(text, /^ {2}colour {6}74 cases in 2 files {2}12 tests, all passed$/m);
+  assert.match(text, /^ {11}4 packages: chalk, strip-ansi, supports-color, ansi-styles$/m);
+  assert.match(text, /^ {2}semver {4}1243 cases in 7 files {2}12 tests, all passed$/m);
+  assert.match(text, /^ {11}1 package: semver$/m);
+  assert.match(text, /^ {2}glob {6}2035 cases in 5 files {2}12 tests, all passed$/m);
+  assert.match(text, /^ {11}2 packages: minimatch, glob$/m);
+  assert.match(text, /^ {2}collect {4}147 cases in 3 files {2}12 tests, all passed$/m);
+  assert.match(text, /^ {11}1 package: lodash$/m);
+  assert.match(text, /^PASS: 11 packages replaced, 3593 cases checked, nothing came back wrong\.$/m);
 });
 
 test('a failure is named where the row is, and the last line is the one CI quotes', () => {
   const text = page((name) => (name === 'semver'
     ? { pass: 14, fail: 2, failures: ['ranges: a comparator set that selects nothing', 'coerce, right to left'] }
     : { pass: 12 }));
-  assert.match(text, /^ {2}semver {3}1243 cases in 7 files {2}16 tests, 14 passed, 2 failed$/m);
-  assert.match(text, /^ {10}failed: ranges: a comparator set that selects nothing$/m);
-  assert.match(text, /^ {10}failed: coerce, right to left$/m);
-  assert.match(text, /^FAIL: 2 of 52 tests came back wrong across 4 modules\.$/m);
+  assert.match(text, /^ {2}semver {4}1243 cases in 7 files {2}16 tests, 14 passed, 2 failed$/m);
+  assert.match(text, /^ {11}failed: ranges: a comparator set that selects nothing$/m);
+  assert.match(text, /^ {11}failed: coerce, right to left$/m);
+  assert.match(text, /^FAIL: 2 of 64 tests came back wrong across 5 modules\.$/m);
   assert.equal(/PASS/.test(text), false);
 });
 
 test('a long list of failures stops being a list and says how many there were', () => {
   const failures = Array.from({ length: 9 }, (_, n) => `case number ${n}`);
   const text = page((name) => (name === 'args' ? { pass: 1, fail: 9, failures } : { pass: 12 }));
-  assert.match(text, /^ {10}failed: case number 4$/m);
+  assert.match(text, /^ {11}failed: case number 4$/m);
   assert.equal(/case number 5/.test(text), false, 'five names, then a count');
-  assert.match(text, /^ {10}and 4 more, in the suite's own output$/m);
+  assert.match(text, /^ {11}and 4 more, in the suite's own output$/m);
 });
 
 test('a skip is on the page and not in the verdict', () => {
   const text = page((name) => (name === 'colour' ? { pass: 11, skipped: 1 } : { pass: 12 }));
-  assert.match(text, /^ {2}colour {5}74 cases in 2 files {2}12 tests, 11 passed, 1 skipped$/m);
+  assert.match(text, /^ {2}colour {6}74 cases in 2 files {2}12 tests, 11 passed, 1 skipped$/m);
   // With a skip in it the verdict is 81 columns and folds, so it is read as a sentence.
-  assert.match(flat(text), /PASS: 10 packages replaced, 3446 cases checked, 1 skipped, nothing came back wrong\./);
+  assert.match(flat(text), /PASS: 11 packages replaced, 3593 cases checked, 1 skipped, nothing came back wrong\./);
 });
 
 test('the verdict column does not move between a file and two files', () => {
@@ -85,12 +87,12 @@ test('a module that could not be started says so instead of showing a nought', (
   const text = page((name) => (name === 'args'
     ? { stdout: 'Cannot find module\n', status: 1, error: null }
     : { pass: 12 }));
-  assert.match(text, /^ {2}args {7}94 cases in 1 file {3}did not run$/m);
-  assert.match(text, /^ {10}the suite exited 1 without a summary$/m);
+  assert.match(text, /^ {2}args {8}94 cases in 1 file {3}did not run$/m);
+  assert.match(text, /^ {11}the suite exited 1 without a summary$/m);
   // The two modules that did run are still on the page, and the last line still refuses to
   // call the run a pass: 94 cases had nobody look at them.
-  assert.match(text, /^ {2}colour {5}74 cases in 2 files {2}12 tests, all passed$/m);
-  assert.match(text, /^NO VERDICT: 1 of 4 modules did not run; 94 cases went unchecked\.$/m);
+  assert.match(text, /^ {2}colour {6}74 cases in 2 files {2}12 tests, all passed$/m);
+  assert.match(text, /^NO VERDICT: 1 of 5 modules did not run; 94 cases went unchecked\.$/m);
   assert.equal(/PASS|FAIL/.test(text), false);
 });
 
@@ -100,8 +102,8 @@ test('a module that did not run outranks the failures in the ones that did', () 
     if (name === 'semver') return { pass: 10, fail: 2, failures: ['coerce, right to left'] };
     return { pass: 12 };
   });
-  assert.match(text, /^ {10}failed: coerce, right to left$/m);
-  assert.match(flat(text), /NO VERDICT: 1 of 4 modules did not run; 94 cases went unchecked, and 2 of the rest came back wrong\./);
+  assert.match(text, /^ {11}failed: coerce, right to left$/m);
+  assert.match(flat(text), /NO VERDICT: 1 of 5 modules did not run; 94 cases went unchecked, and 2 of the rest came back wrong\./);
 });
 
 test('the footer says what was read and sends the reader to the provenance', () => {
@@ -130,8 +132,8 @@ test('naming a module reports that module and totals only what it ran', () => {
 
 test('verbose names the files, because a case count is a claim about files', () => {
   const text = page({ pass: 12 }, { verbose: true });
-  assert.match(text, /^ {10}tests\/vectors\/colour\/named\.json 38$/m);
-  assert.match(text, /^ {10}tests\/runtime\/level\.test\.mjs$/m);
+  assert.match(text, /^ {11}tests\/vectors\/colour\/named\.json 38$/m);
+  assert.match(text, /^ {11}tests\/runtime\/level\.test\.mjs$/m);
 });
 
 test('a driver that reads no runtime module is called out under the table', () => {

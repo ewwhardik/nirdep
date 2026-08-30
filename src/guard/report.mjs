@@ -8,7 +8,8 @@
 //
 // Nothing here decides anything; guardExitCode does that, from the same result.
 
-import { pad, plural, styleOf, wrap, WIDTH } from '../text/format.mjs';
+import { agree, columnWidth, COLUMNS, folded, labelled, note, pad, plural, styleOf, wrap }
+  from '../text/format.mjs';
 import { ACTION } from '../rules/registry.mjs';
 import { KIND, VERDICT } from '../scan/advisories.mjs';
 import { ADVISORY, SIGNAL, SOURCE } from './policy.mjs';
@@ -16,12 +17,6 @@ import { ADVISORY, SIGNAL, SOURCE } from './policy.mjs';
 /** Two nouns spelled by splitting a string, for the reason src/scan/report.mjs gives:
  * the word `import` followed by a quote is what tools/verify.mjs counts as a dependency. */
 const [IMPORTED, FILE] = 'imported file'.split(' ');
-
-const folded = (text, indent = '  ') => `${indent}${wrap(text, WIDTH - (indent.length - 4), indent)}`;
-
-/** The terminal this report is written for. WIDTH is the folding width inside a four-space
- * indent, so the whole line is four wider. */
-const COLUMNS = WIDTH + 4;
 
 /** What a package's presence looks like, one phrase per signal the policy watches. Kept as
  * plain-and-styled pairs because the styled text has bytes in it that are not columns, and
@@ -81,12 +76,6 @@ function rowOf(row, s, width) {
     : `${gutter}${one.text}`));
 }
 
-/** A note under a row, folded to the terminal and painted after it has been measured: the
- * style hooks add bytes that are not columns, so measuring styled text folds it early. */
-function note(plain, gutter, paint) {
-  return wrap(plain, COLUMNS - gutter.length, '').split('\n').map((line) => `${gutter}${paint(line)}`);
-}
-
 /** The signals a policy is not watching, said out loud rather than quietly dropped. */
 function alsoSeen(row) {
   const ignored = row.seen.filter((one) => !row.signals.includes(one));
@@ -131,7 +120,7 @@ function storyOf(row) {
   const parts = [row.what];
   if (row.advisories > 1) {
     parts.push(`${plural(row.advisories - 1, 'further advisory', 'further advisories')} `
-      + `${row.advisories - 1 === 1 ? 'names' : 'name'} this version.`);
+      + `${agree(row.advisories - 1, 'names', 'name')} this version.`);
   }
   if (row.unrecorded !== null) parts.push(`Note that ${row.unrecorded}.`);
   return parts.join(' ');
@@ -196,7 +185,6 @@ function whatFails(level) {
  * the review date travel with the claim, never in a footnote: this table is one neighbourhood
  * of npm on purpose, and a reader who does not know that has been misled by a PASS. */
 function advisoryLines(advisories, s) {
-  const indent = ' '.repeat(10);
   const body = advisories.coverage === null
     ? 'not checked: this run was handed a scan with no advisory pass in it.'
     : advisories.level === ADVISORY.OFF
@@ -205,8 +193,7 @@ function advisoryLines(advisories, s) {
       : `${plural(advisories.coverage.packages, 'package')} in the table, reviewed `
         + `${advisories.reviewed}, ${advisories.matched} matched here. ${whatFails(advisories.level)}. `
         + 'This is one neighbourhood of npm and not an audit of your whole tree.';
-  return wrap(body, COLUMNS - indent.length, '').split('\n')
-    .map((line, index) => (index === 0 ? `${s.dim('advisory')}  ${s.dim(line)}` : `${indent}${s.dim(line)}`));
+  return labelled('advisory', body, s.dim);
 }
 
 /** Where the policy came from, including the part flags overrode. Folded rather than allowed
@@ -257,7 +244,7 @@ export function guardReport(result, options = {}) {
   const rows = [...result.breaches, ...result.exempt];
   // Capped, because a column as wide as the longest name somebody ever denied would indent
   // every other row past the point of being readable.
-  const width = Math.min(24, Math.max(12, ...rows.map((one) => one.name.length)));
+  const width = columnWidth(rows.map((one) => one.name), { min: 12, max: 24 });
   // Above the breach table, not below it. A dependency that came back is a decision somebody
   // made and can defend; a release published to do harm is neither, and it goes first.
   const lines = alarmBlock(result.advisories, s);

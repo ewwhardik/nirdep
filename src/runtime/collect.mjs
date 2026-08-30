@@ -2,8 +2,9 @@
 //
 // Replaces the sixteen functions that make up most real lodash traffic: get, set, has, unset,
 // pick, omit, cloneDeep, merge, isEqual, groupBy, keyBy, uniqBy, chunk, sortBy, debounce and
-// throttle. lodash is around 25 million downloads a week and 4.7MB unpacked, and the median
-// project imports the whole of it to reach for two of these.
+// throttle. The copy measured here is 1051 files and 2.1MB installed, 17,259 lines of it in one
+// file, and the usual reason a project carries all of that is two of these sixteen names. No
+// download figure is quoted because none could be checked from here; the file count can be.
 //
 // Its advisory record is the argument for this file. CVE-2018-3721 and CVE-2018-16487 were
 // prototype pollution in `merge`; CVE-2019-10744 was the same bug again in `defaultsDeep`, by a
@@ -981,7 +982,7 @@ export function throttle(fn, wait = 0, options = {}) {
   });
 }
 
-/** The default export is the shape `import _ from 'lodash'` expects, and the list the codemod
+/** The default export is the shape a default binding of lodash expects, and the list the codemod
  * checks a call site against: a file reaching for a function that is not on it is refused rather
  * than rewritten into something that would throw at run time. */
 export default Object.freeze({

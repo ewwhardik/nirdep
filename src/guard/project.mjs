@@ -20,7 +20,7 @@
 
 import { scanProject } from '../scan/project.mjs';
 import { KIND, VERDICT, highestFixed } from '../scan/advisories.mjs';
-import { ruleFor } from '../rules/registry.mjs';
+import { moduleOf, ruleFor } from '../rules/registry.mjs';
 import { ADVISORY, SIGNAL, readPolicy } from './policy.mjs';
 
 const EMPTY = Object.freeze([]);
@@ -64,7 +64,7 @@ function inspect(name, world) {
     replaceable: rule !== null,
     action: rule?.action ?? null,
     target: rule?.target ?? null,
-    module: rule === null ? null : rule.subpath.slice(rule.subpath.lastIndexOf('/') + 1),
+    module: rule === null ? null : moduleOf(rule.subpath),
   });
 }
 

@@ -1,0 +1,12 @@
+# Line endings, pinned, because a test in this repository rejects a carriage return.
+#
+# tests/repo/hygiene.test.mjs fails on any byte below 0x20 that is not a newline or a tab,
+# and CR is one of them. Git for Windows converts on checkout by default, so without this
+# file the same commit is clean on ubuntu and full of control bytes on windows-latest --
+# a red build caused by the checkout rather than by the code.
+#
+# `eol=lf` is the working tree as well as the archive: this project's build claims
+# byte-identical output, and a hash that depends on which platform checked the tree out
+# would make that claim untestable in CI.
+
+* text=auto eol=lf

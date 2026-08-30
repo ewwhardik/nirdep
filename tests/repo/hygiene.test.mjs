@@ -113,7 +113,7 @@ test('the attribution the hackathon requires is where it is claimed to be', () =
   assert.equal(manifest.author, 'Hardik');
   assert.equal(manifest.publisher, 'Nastik AI');
   assert.match(manifest.description, /Published by Nastik AI\. Developed by Hardik\./);
-  for (const file of ['README.md', 'STDLIB.md', 'src/runtime/args.mjs', 'src/runtime/colour.mjs']) {
+  for (const file of ['README.md', 'STDLIB.md', 'SECURITY.md', 'src/runtime/args.mjs', 'src/runtime/colour.mjs']) {
     const text = readFileSync(join(ROOT, file), 'utf8');
     assert.match(text, /Nastik AI/, `${file} names the publisher`);
   }

@@ -13,11 +13,11 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { walk, displayPath } from '../src/fs/walk.mjs';
 import { auditSource } from '../src/audit/imports.mjs';
+import { SOURCE_EXTENSIONS } from '../src/apply/project.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const SCANNED = ['bin', 'src', 'tools', 'tests'];
 const MANIFEST_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
-const SOURCE_EXTENSIONS = new Set(['.mjs', '.js', '.cjs']);
 
 const findings = [];
 const lines = [];
