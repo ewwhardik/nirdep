@@ -19,12 +19,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 import { findSpecifiers, isBuiltinSpecifier } from '../../src/audit/imports.mjs';
+import { childEnvironment } from './environment.mjs';
 
 const BIN = fileURLToPath(new URL('../../bin/nirdep.mjs', import.meta.url));
 const TREE = JSON.parse(readFileSync(new URL('../vectors/rules/tree.json', import.meta.url), 'utf8'));
 
 function run(args = [], options = {}) {
-  const childEnv = { ...process.env, NO_COLOR: '1' };
+  const childEnv = childEnvironment({ NO_COLOR: '1' });
   try {
     const stdout = execFileSync(process.execPath, [BIN, ...args], {
       encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv, cwd: options.cwd,

@@ -8,18 +8,17 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { stripVTControlCharacters } from 'node:util';
+import { childEnvironment } from './environment.mjs';
 
 const BIN = fileURLToPath(new URL('../../bin/nirdep.mjs', import.meta.url));
 const MANIFEST = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
 
 // A child's stdout is a pipe, so the CLI must detect level 0 and emit no escape
-// sequences at all. FORCE_COLOR and NO_COLOR are removed rather than blanked:
-// an empty FORCE_COLOR is itself a request for colour.
+// sequences at all. The scrubbed environment is what makes that true anywhere:
+// on CI, `CI` and `GITHUB_ACTIONS` would otherwise turn colour back on, and the
+// tool would be right to do it.
 function run(args = [], env = {}) {
-  const childEnv = { ...process.env, ...env };
-  for (const name of ['FORCE_COLOR', 'NO_COLOR']) {
-    if (!(name in env)) delete childEnv[name];
-  }
+  const childEnv = childEnvironment(env);
   try {
     const stdout = execFileSync(process.execPath, [BIN, ...args], {
       encoding: 'utf8',

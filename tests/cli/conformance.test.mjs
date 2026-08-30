@@ -15,14 +15,12 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 import { conformancePlan } from '../../src/conformance/plan.mjs';
+import { childEnvironment } from './environment.mjs';
 
 const BIN = fileURLToPath(new URL('../../bin/nirdep.mjs', import.meta.url));
 
 function run(args = [], env = {}) {
-  const childEnv = { ...process.env, NO_COLOR: '1', ...env };
-  for (const name of ['FORCE_COLOR', 'NO_COLOR']) {
-    if (name in env && env[name] === undefined) delete childEnv[name];
-  }
+  const childEnv = childEnvironment({ NO_COLOR: '1', ...env });
   try {
     const stdout = execFileSync(process.execPath, [BIN, ...args], {
       encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv,

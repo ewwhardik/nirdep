@@ -14,13 +14,13 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
+import { childEnvironment } from './environment.mjs';
 
 const BIN = fileURLToPath(new URL('../../bin/nirdep.mjs', import.meta.url));
 const TREE = JSON.parse(readFileSync(new URL('../vectors/scan/tree.json', import.meta.url), 'utf8'));
 
 function run(args = [], env = {}) {
-  const childEnv = { ...process.env, ...env };
-  for (const name of ['FORCE_COLOR', 'NO_COLOR']) if (!(name in env)) delete childEnv[name];
+  const childEnv = childEnvironment(env);
   try {
     const stdout = execFileSync(process.execPath, [BIN, ...args], {
       encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv,
@@ -101,7 +101,7 @@ test('a project with no lockfile is scanned anyway, with the gap named', () => {
 test('scan defaults to the current directory', () => {
   const root = plant(TREE.bare);
   const stdout = execFileSync(process.execPath, [BIN, 'scan'], {
-    encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], cwd: root, env: { ...process.env, NO_COLOR: '1' },
+    encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], cwd: root, env: childEnvironment({ NO_COLOR: '1' }),
   });
   assert.match(stdout, /2 packages declared/);
 });

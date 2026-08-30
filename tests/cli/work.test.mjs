@@ -12,13 +12,13 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { childEnvironment } from './environment.mjs';
 
 const BIN = fileURLToPath(new URL('../../bin/nirdep.mjs', import.meta.url));
 const TREE = JSON.parse(readFileSync(new URL('../vectors/rules/tree.json', import.meta.url), 'utf8'));
 
 function run(args = [], env = {}) {
-  const childEnv = { ...process.env, ...env };
-  for (const name of ['FORCE_COLOR', 'NO_COLOR']) if (!(name in env)) delete childEnv[name];
+  const childEnv = childEnvironment(env);
   try {
     const stdout = execFileSync(process.execPath, [BIN, ...args], {
       encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv,

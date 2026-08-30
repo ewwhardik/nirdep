@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 import { POLICY_FILE } from '../../src/guard/policy.mjs';
 import { REPLACEABLE } from '../../src/rules/registry.mjs';
+import { childEnvironment } from './environment.mjs';
 
 /** The default deny list is the catalogue, so the count on the page follows it. */
 const WATCHED = REPLACEABLE.length;
@@ -27,10 +28,7 @@ const BIN = fileURLToPath(new URL('../../bin/nirdep.mjs', import.meta.url));
 const VECTOR = JSON.parse(readFileSync(new URL('../vectors/guard/project.json', import.meta.url), 'utf8'));
 
 function run(args = [], env = {}) {
-  const childEnv = { ...process.env, NO_COLOR: '1', ...env };
-  for (const name of ['FORCE_COLOR', 'NO_COLOR']) {
-    if (name in env && env[name] === undefined) delete childEnv[name];
-  }
+  const childEnv = childEnvironment({ NO_COLOR: '1', ...env });
   try {
     const stdout = execFileSync(process.execPath, [BIN, ...args], {
       encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnv,

@@ -16,6 +16,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { childEnvironment } from './environment.mjs';
 
 const BIN = fileURLToPath(new URL('../../bin/nirdep.mjs', import.meta.url));
 const VECTOR = JSON.parse(readFileSync(new URL('../vectors/guard/project.json', import.meta.url), 'utf8'));
@@ -23,7 +24,7 @@ const VECTOR = JSON.parse(readFileSync(new URL('../vectors/guard/project.json', 
 function run(args = [], env = {}) {
   try {
     const stdout = execFileSync(process.execPath, [BIN, ...args], {
-      encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, NO_COLOR: '1', ...env },
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: childEnvironment({ NO_COLOR: '1', ...env }),
     });
     return { code: 0, stdout, stderr: '' };
   } catch (error) {
@@ -129,7 +130,7 @@ test('after the migration the document logs the copy in the tree, not the packag
   const root = plant();
   // eject writes relative to where it was run, so this one needs a cwd rather than a path.
   const ejected = execFileSync(process.execPath, [BIN, 'eject', '--into', 'vendor'], {
-    cwd: root, encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' },
+    cwd: root, encoding: 'utf8', env: childEnvironment({ NO_COLOR: '1' }),
   });
   assert.match(ejected, /next: nirdep apply --runtime vendor \./);
   assert.equal(run(['apply', '--runtime', 'vendor', '--no-diff', root]).code, 0);

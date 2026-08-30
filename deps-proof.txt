@@ -11,7 +11,7 @@ PASS  no node_modules directory in the repository
 PASS  no lockfile entries beyond the root package
 
 2. Every import in the artifact resolves to a Node builtin or a relative path
-PASS  455 import specifiers checked across 93 files
+PASS  463 import specifiers checked across 94 files
 
 3. The standard library we actually use
       node:assert/strict
