@@ -14,7 +14,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve as resolvePath, sep } from 'node:path';
-import { walk, displayPath } from '../fs/walk.mjs';
+import { selectFiles, displayPath } from '../fs/walk.mjs';
 import { gate, kindFor } from '../patch/gate.mjs';
 import { REPLACEABLE } from '../rules/registry.mjs';
 import { planFile } from '../rules/rewrite.mjs';
@@ -117,13 +117,16 @@ export function targetResolver(options = {}) {
  * moved under us between the two commands.
  *
  * @param {string} root
- * @param {{ files?: string[], ignore?: Set<string>, runtimeDir?: string|null, read?: (file: string) => string }} [options]
+ * @param {{
+ *   files?: string[], ignore?: Set<string>, exclude?: string|string[], include?: string|string[],
+ *   runtimeDir?: string|null, read?: (file: string) => string,
+ * }} [options]
  */
 export function planProject(root, options = {}) {
   const manifest = readManifest(root);
   const read = options.read ?? ((file) => readFileSync(file, 'utf8'));
   const resolve = targetResolver({ root, runtimeDir: options.runtimeDir ?? null });
-  const found = options.files ?? [...walk(root, { ignore: options.ignore, extensions: SOURCE_EXTENSIONS })];
+  const found = selectFiles(root, { ...options, extensions: SOURCE_EXTENSIONS });
   const entries = [];
   let scanned = 0;
   let opened = 0;

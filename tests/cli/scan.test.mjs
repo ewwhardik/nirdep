@@ -72,7 +72,10 @@ test('scan reports on a real project and changes nothing', () => {
   }
   assert.match(stdout, /15 packages installed, 15 distinct names, from package-lock\.json \(v3\)/);
   assert.match(stdout, /10 of 15 installed names are reachable only through 3 packages/);
-  assert.match(stdout, /\n2 high \| 1 medium \| 1 low \| 1 note\n$/);
+  // Two low findings, not one: five of this tree's names are in a supply-chain incident
+  // whose affected releases the advisory table does not record, which is a note about
+  // names and says so in its own sentence.
+  assert.match(stdout, /\n2 high \| 1 medium \| 2 low \| 1 note\n$/);
 });
 
 test('the report goes to stdout, plain, so it can be piped', () => {
@@ -115,8 +118,27 @@ test('scan documents itself as a finished command', () => {
   const { stdout } = run(['scan', '--help']);
   assert.match(stdout, /report replaceable dependencies and their blast radius/);
   assert.match(stdout, /\[path\] {2}project directory to read \(default: the current one\)/);
+  assert.match(stdout, /--exclude <string\.\.\.> {2}glob pattern of files to skip, repeatable/);
+  assert.match(stdout, /--include <string\.\.\.> {2}glob pattern of files to read, repeatable/);
   // The command list is where "pending" is claimed or not, and scan's row carries no
   // marker. The footer explaining the marker appears on every help screen, including this
   // one, so a bare search for the word would pass on a command that was never written.
   assert.match(run(['help']).stdout, /\n {2}scan {2,}report replaceable dependencies/);
+});
+
+test('the file selection is a glob pattern, matched by the module that replaces minimatch', () => {
+  const root = plant(TREE.tree);
+  const all = run(['scan', root]).stdout;
+  assert.match(all, /5 packages imported by this project's own source, out of 3 files read/);
+  // A file skipped is a file the report stops claiming anything about: the admission that
+  // one file would not parse is gone, because that file is no longer part of the question.
+  const some = run(['scan', root, '--exclude', 'src/broken.mjs']).stdout;
+  assert.match(some, /4 packages imported by this project's own source, out of 2 files read/);
+  assert.equal(/would not parse/.test(some), false);
+
+  // A bare directory name prunes the subtree, and --include is the same matcher asked the
+  // other way round. Both are repeatable, which is why they are declared `multiple`.
+  assert.match(run(['scan', root, '--exclude', 'src']).stdout, /out of 0 files read/);
+  assert.match(run(['scan', root, '--include', 'src/cli.mjs']).stdout, /out of 1 file read/);
+  assert.match(run(['scan', root, '--include', 'src/{cli,self}.mjs']).stdout, /out of 2 files read/);
 });

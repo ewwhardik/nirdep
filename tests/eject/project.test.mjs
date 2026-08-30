@@ -54,7 +54,7 @@ function ran(plan, options = {}) {
 
 test('the modules on offer are the ones package.json exports, not a list typed here', () => {
   const modules = catalogue();
-  assert.deepEqual(modules.map((one) => one.name), ['args', 'colour', 'semver']);
+  assert.deepEqual(modules.map((one) => one.name), ['args', 'colour', 'glob', 'semver']);
   for (const module of modules) {
     assert.equal(existsSync(module.source), true, `${module.name} resolves to a file that is there`);
     assert.equal(module.leaf, `${module.name}.mjs`);
@@ -96,7 +96,7 @@ test('a file already there and already identical is not a conflict', () => {
   assert.equal(entryFor(plan, 'semver').state, STATE.SAME);
   const { run, wrote } = ran(plan, { write: true });
   assert.equal(run.counts.skipped, 1);
-  assert.deepEqual(wrote, ['args.mjs', 'colour.mjs'], 'the other two are missing, so they are written');
+  assert.deepEqual(wrote, ['args.mjs', 'colour.mjs', 'glob.mjs'], 'the rest are missing, so they are written');
   assert.equal(ejectExitCode(run), 0, 're-running eject is free, not an error');
 });
 
@@ -132,7 +132,7 @@ test('a destination that is there and unreadable is not a destination to overwri
 
 test('a dry run writes nothing at all, including the directory', () => {
   const { run, wrote, made } = ran(planFor(), { write: false });
-  assert.equal(run.counts.wouldWrite, 3);
+  assert.equal(run.counts.wouldWrite, catalogue().length);
   assert.deepEqual(wrote, []);
   assert.deepEqual(made, [], 'an empty directory left behind is still a change to the tree');
   assert.equal(run.wrote, false);
@@ -141,7 +141,7 @@ test('a dry run writes nothing at all, including the directory', () => {
 
 test('the directory is made once, and only when there is something to put in it', () => {
   const all = ran(planFor(), { write: true });
-  assert.equal(all.run.counts.written, 3);
+  assert.equal(all.run.counts.written, catalogue().length);
   assert.equal(all.made.length, 1, 'once, not once per file');
   const planned = entryFor(planFor(), 'colour').text;
   const same = ran(planFor({ modules: ['colour'], files: { 'colour.mjs': planned } }), { write: true });
@@ -168,7 +168,7 @@ test('an unknown module name is collected rather than guessed at', () => {
   const text = ejectReport(run);
   assert.match(text, /no such runtime module: colur {2}did you mean colour\?/);
   assert.match(text, /no such runtime module: chalk\n/, 'and no suggestion where there is no near miss');
-  assert.match(text, /there are 3: args, colour, semver/);
+  assert.match(text, /there are 4: args, colour, glob, semver/);
 });
 
 test('where the files go is where apply expects to find them', () => {

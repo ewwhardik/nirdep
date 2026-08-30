@@ -17,12 +17,13 @@
 // Nothing here formats anything. src/scan/report.mjs does that.
 
 import { readFileSync } from 'node:fs';
-import { walk, displayPath } from '../fs/walk.mjs';
+import { selectFiles, displayPath } from '../fs/walk.mjs';
 import { analyse } from '../lex/bindings.mjs';
 import { auditSource, classify, packageOf } from '../audit/imports.mjs';
 import { SOURCE_EXTENSIONS, readManifest } from '../apply/project.mjs';
 import { ACTION, ruleFor } from '../rules/registry.mjs';
 import { readLock } from './lockfile.mjs';
+import { auditTree } from './advisories.mjs';
 import { assess, summarise } from './risk.mjs';
 
 /**
@@ -54,7 +55,7 @@ const EMPTY = Object.freeze([]);
 function readSource(root, options) {
   const read = options.read ?? ((file) => readFileSync(file, 'utf8'));
   const selfNames = new Set(options.selfNames ?? EMPTY);
-  const found = options.files ?? [...walk(root, { ignore: options.ignore, extensions: SOURCE_EXTENSIONS })];
+  const found = selectFiles(root, { ...options, extensions: SOURCE_EXTENSIONS });
   const byPackage = new Map();
   const unparsed = [];
   const unanalysable = [];
@@ -207,7 +208,10 @@ function radiusFor(name, world) {
  * Read a project three ways and report where the three disagree.
  *
  * @param {string} root
- * @param {{ files?: string[], ignore?: Set<string>, read?: (file: string) => string }} [options]
+ * @param {{
+ *   files?: string[], ignore?: Set<string>, exclude?: string|string[], include?: string|string[],
+ *   read?: (file: string) => string,
+ * }} [options]
  */
 export function scanProject(root, options = {}) {
   const manifest = readManifest(root);
@@ -220,7 +224,11 @@ export function scanProject(root, options = {}) {
   // answer there; npm's and pnpm's do, and theirs includes what a workspace declared.
   const roots = new Set([...lock.roots, ...manifest.dependencies]);
   const used = new Set(source.byPackage.keys());
-  const findings = assess({ manifest, lock, used, direct: roots.size });
+  // Crossed once and handed to both places that want it: the findings list, which
+  // turns hits into sentences, and the record, which is what `guard` and any
+  // programmatic caller read instead of parsing our own report back.
+  const advisories = auditTree({ lock, manifest });
+  const findings = assess({ manifest, lock, used, direct: roots.size, advisories });
 
   const radius = [...roots].map((name) => radiusFor(name, { graph, roots, manifest, lock, byPackage: source.byPackage }))
     .sort((a, b) => Number(b.replaceable) - Number(a.replaceable)
@@ -259,6 +267,7 @@ export function scanProject(root, options = {}) {
         .sort((a, b) => b.sites.length - a.sites.length || a.name.localeCompare(b.name))),
     }),
     findings,
+    advisories,
     summary: summarise(findings),
     radius: Object.freeze(radius),
     // What a whole migration is worth, as one subtraction rather than a sum of rows.

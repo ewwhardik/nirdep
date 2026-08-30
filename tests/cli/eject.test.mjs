@@ -100,7 +100,7 @@ test('a module that does not exist is a usage error with one suggestion', () => 
   const { code, stdout } = run(['eject', 'colours'], { cwd: bare() });
   assert.equal(code, 2);
   assert.match(stdout, /no such runtime module: colours {2}did you mean colour\?/);
-  assert.match(stdout, /there are 3: args, colour, semver/);
+  assert.match(stdout, /there are 4: args, colour, glob, semver/);
 });
 
 test('--list names the modules and what each one replaces', () => {

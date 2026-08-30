@@ -11,7 +11,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { conformancePlan } from '../../src/conformance/plan.mjs';
+import { conformancePlan, MODULES } from '../../src/conformance/plan.mjs';
 import { conformanceExitCode, parseTap, runConformance } from '../../src/conformance/run.mjs';
 
 /** A TAP stream, as Node writes one: the summary at column zero, everything else indented. */
@@ -56,8 +56,8 @@ test('a stream with no summary in it is not a stream with no failures', () => {
 test('a clean run is a pass per module and one exit code for the lot', () => {
   const result = runConformance(plan(), { spawn: spawning(tap({ pass: 12 })) });
   assert.equal(result.ran, true);
-  assert.equal(result.modules.length, 3);
-  assert.equal(result.totals.tests, 36, 'three modules, twelve tests each');
+  assert.equal(result.modules.length, MODULES.length);
+  assert.equal(result.totals.tests, MODULES.length * 12, 'one module per corpus, twelve tests each');
   assert.equal(result.totals.fail, 0);
   // The case count comes from the plan, not from the runner: they measure different things
   // and the page prints both.
@@ -67,14 +67,14 @@ test('a clean run is a pass per module and one exit code for the lot', () => {
 
 test('one failing case fails the command', () => {
   const result = runConformance(plan(), { spawn: spawning(tap({ pass: 11, fail: 1, failures: ['coerce, right to left'] }), 1) });
-  assert.equal(result.totals.fail, 3, 'once per module, since every module got the same stub');
+  assert.equal(result.totals.fail, MODULES.length, 'once per module, since every module got the same stub');
   assert.equal(conformanceExitCode(result), 1);
   assert.deepEqual(result.modules[0].failures, ['coerce, right to left']);
 });
 
 test('a skip is reported and does not fail the build', () => {
   const result = runConformance(plan(), { spawn: spawning(tap({ pass: 11, skipped: 1 })) });
-  assert.equal(result.totals.skipped, 3);
+  assert.equal(result.totals.skipped, MODULES.length);
   assert.equal(conformanceExitCode(result), 0, 'an admitted gap is a thing to print, not a red build');
 });
 
@@ -118,9 +118,9 @@ test('each module is its own child process, so one crash keeps the other numbers
         : { stdout: tap({ pass: 5 }), status: 0, error: null };
     },
   });
-  assert.equal(seen.length, 3);
-  assert.equal(result.modules.filter((one) => one.ran).length, 2);
-  assert.equal(result.totals.pass, 10, 'the two that ran still report what they found');
+  assert.equal(seen.length, MODULES.length);
+  assert.equal(result.modules.filter((one) => one.ran).length, MODULES.length - 1);
+  assert.equal(result.totals.pass, (MODULES.length - 1) * 5, 'the ones that ran still report what they found');
   assert.match(result.modules.find((one) => one.name === 'semver').note, /spawn failed/);
   assert.equal(conformanceExitCode(result), 2);
 });

@@ -8,13 +8,20 @@
 // neither (a line that has been broken since it was written). Each of those is a different
 // conversation, so each is reported as its own signal rather than folded into one boolean.
 //
+// There is a second question, and it is the one a build machine is better placed to ask than
+// a person: is any version in this lockfile one the advisory table already knows about? A
+// dependency coming back is a decision somebody made and can defend. A malicious release
+// arriving four levels down is neither, and it is why this command has a policy key of its
+// own for it rather than a flag somebody remembers to pass.
+//
 // What this deliberately does not do is check whether the replacement is being used. A
 // project can pass the guard with none of nirdep in it, which is correct: the policy is
 // about what is absent, and "you must depend on us instead" is not a guard, it is a lock-in.
 
 import { scanProject } from '../scan/project.mjs';
+import { KIND, VERDICT, highestFixed } from '../scan/advisories.mjs';
 import { ruleFor } from '../rules/registry.mjs';
-import { SIGNAL, readPolicy } from './policy.mjs';
+import { ADVISORY, SIGNAL, readPolicy } from './policy.mjs';
 
 const EMPTY = Object.freeze([]);
 
@@ -62,6 +69,76 @@ function inspect(name, world) {
 }
 
 /**
+ * A malicious release in your tree is the one thing on this page nobody chose. An exemption
+ * written against a package name is consent to its being installed, which is not the same
+ * conversation: "the logo needs 256 colours" is not consent to ship a wallet stealer. So a
+ * flaw with a fix can be waived by name with a reason beside it, and an exact release
+ * published to do harm cannot be waived at all -- only the level can silence one, and
+ * writing `advisories: "off"` in a committed file is a loud thing to have done.
+ */
+const unwaivable = (row) => row.kind === KIND.INCIDENT && row.verdict === VERDICT.HIT;
+
+/** One row per package and version, from the advisory findings the level admits. */
+function group(rows) {
+  const groups = new Map();
+  for (const one of rows) {
+    const key = `${one.package}@${one.version ?? ''}`;
+    const found = groups.get(key);
+    if (found === undefined) groups.set(key, [one]);
+    else found.push(one);
+  }
+  return [...groups.values()];
+}
+
+/**
+ * What the advisory table says about this tree, narrowed to what this policy fails on.
+ *
+ * Grouped by package and version rather than by advisory row, because one stale lodash
+ * answers five CVEs and a build log that prints it five times has buried whatever came after
+ * it. The findings arrive severity-first, so the first of a group is the one worth quoting,
+ * and the fix is the highest across the whole group: clearing one advisory while staying
+ * inside another is the upgrade nobody notices they did not finish.
+ */
+function alarmsFrom(audit, policy) {
+  const level = policy.advisories;
+  if (level === ADVISORY.OFF) return { alarms: EMPTY, waived: EMPTY };
+  const rows = level === ADVISORY.INCIDENTS
+    ? audit.hits.filter((one) => one.advisory.kind === KIND.INCIDENT)
+    : [...audit.hits];
+  if (level === ADVISORY.ALL) rows.push(...audit.unversioned, ...audit.unknown);
+
+  const alarms = [];
+  const waived = [];
+  for (const all of group(rows)) {
+    const [first] = all;
+    const row = {
+      name: first.package,
+      package: first.package,
+      version: first.version,
+      verdict: first.verdict,
+      kind: first.advisory.kind,
+      severity: first.advisory.severity,
+      id: first.advisory.id,
+      when: first.advisory.when,
+      hand: first.advisory.hand,
+      what: first.advisory.what,
+      unrecorded: first.advisory.unrecorded,
+      fixed: highestFixed(all),
+      advisories: all.length,
+      dev: first.dev,
+      place: first.places.length > 0 ? first.places[0] : null,
+      allowed: policy.allow.has(first.package),
+      replaceable: first.replaceable,
+      action: ruleFor(first.package)?.action ?? null,
+      target: ruleFor(first.package)?.target ?? null,
+    };
+    if (row.allowed && !unwaivable(row)) waived.push(Object.freeze({ ...row, reason: policy.allow.get(row.name) }));
+    else alarms.push(Object.freeze(row));
+  }
+  return { alarms: Object.freeze(alarms), waived: Object.freeze(waived) };
+}
+
+/**
  * Run the policy over a project.
  *
  * @param {string} root
@@ -74,7 +151,7 @@ export function guardProject(root, options = {}) {
   if (found.problems.length > 0) {
     return Object.freeze({
       root, policy: found, ran: false, breaches: EMPTY, exempt: EMPTY, quiet: EMPTY, counts: Object.freeze({
-        guarded: 0, breached: 0, exempt: 0, direct: 0,
+        guarded: 0, breached: 0, exempt: 0, alarming: 0, direct: 0,
       }),
     });
   }
@@ -99,22 +176,55 @@ export function guardProject(root, options = {}) {
   const direct = scan.counts.direct;
   const over = policy.max !== null && direct > policy.max;
 
+  // The fourth reader, and the only one here that can fail a build over something nobody
+  // chose. `scan` has already crossed the table against this tree, so this reads the record
+  // it left rather than auditing again: two answers to one question is one answer too many.
+  // A scan that carried no advisory pass is reported as unchecked, never as clean.
+  const audit = scan.advisories ?? null;
+  const { alarms, waived } = audit === null ? { alarms: EMPTY, waived: EMPTY } : alarmsFrom(audit, policy);
+  const advisories = Object.freeze({
+    level: policy.advisories,
+    ran: audit !== null && policy.advisories !== ADVISORY.OFF,
+    source: audit?.source ?? null,
+    reviewed: audit?.reviewed ?? null,
+    coverage: audit?.coverage ?? null,
+    matched: audit?.matched ?? 0,
+    alarms,
+    waived,
+    counts: Object.freeze({
+      alarming: alarms.length,
+      waived: waived.length,
+      hits: audit?.counts.hits ?? 0,
+      incidents: audit?.counts.incidents ?? 0,
+      flaws: audit?.counts.flaws ?? 0,
+      unversioned: audit?.counts.unversioned ?? 0,
+      unknown: audit?.counts.unknown ?? 0,
+    }),
+  });
+
   return Object.freeze({
     root,
     policy: found,
     ran: true,
     // Kept whole so the report can quote the lockfile's own caveats rather than restate
     // them: "installed" means something weaker when the lockfile was not understood.
-    lock: Object.freeze({ kind: scan.lock.kind, understood: scan.lock.understood, note: scan.lock.note ?? null }),
+    lock: Object.freeze({
+      kind: scan.lock.kind,
+      file: scan.lock.file ?? null,
+      understood: scan.lock.understood,
+      note: scan.lock.note ?? null,
+    }),
     source: Object.freeze({ counts: scan.source.counts, unparsed: scan.source.unparsed }),
     breaches: Object.freeze(breaches),
     exempt: Object.freeze(exempt),
     quiet: Object.freeze(quiet),
+    advisories,
     max: Object.freeze({ limit: policy.max, direct, over }),
     counts: Object.freeze({
       guarded: rows.length,
       breached: breaches.length,
       exempt: exempt.length,
+      alarming: alarms.length,
       direct,
     }),
   });
@@ -123,5 +233,5 @@ export function guardProject(root, options = {}) {
 /** 0 clean, 1 a breach, 2 a policy we could not read. */
 export function guardExitCode(result) {
   if (!result.ran) return 2;
-  return result.counts.breached > 0 || result.max.over ? 1 : 0;
+  return result.counts.breached > 0 || result.max.over || result.counts.alarming > 0 ? 1 : 0;
 }

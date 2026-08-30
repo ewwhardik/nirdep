@@ -13,7 +13,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { basename } from 'node:path';
 import {
-  DEFAULT_POLICY, POLICY_FILE, SIGNAL, SOURCE, readPolicy, validatePolicy,
+  ADVISORY, DEFAULT_POLICY, POLICY_FILE, SIGNAL, SOURCE, readPolicy, validatePolicy,
 } from '../../src/guard/policy.mjs';
 import { REPLACEABLE } from '../../src/rules/registry.mjs';
 
@@ -164,4 +164,34 @@ test('flags with no policy on disk are their own source', () => {
   const found = readPolicy('/p', { read: reader({}), overrides: { max: 0 } });
   assert.equal(found.source, SOURCE.FLAGS);
   assert.equal(found.policy.max, 0, 'zero is a cap, not an absent one');
+});
+
+test('the advisory level is a ladder, and the default is on', () => {
+  // Default-on is the claim: a version the table already names is a regression whether or not
+  // anybody chose to install it, so silence has to be something somebody wrote down.
+  assert.equal(DEFAULT_POLICY.advisories, ADVISORY.HITS);
+  assert.equal(validatePolicy(undefined).policy.advisories, ADVISORY.HITS);
+
+  for (const level of Object.values(ADVISORY)) {
+    const checked = validatePolicy({ advisories: level });
+    assert.deepEqual(checked.problems, []);
+    assert.equal(checked.policy.advisories, level);
+  }
+});
+
+test('true and false are a second spelling of the two ends of that ladder', () => {
+  // Nobody types "hits" the first time. Both booleans map onto a level that already exists,
+  // so the report still prints one word and there is no third state to reason about.
+  assert.equal(validatePolicy({ advisories: true }).policy.advisories, ADVISORY.HITS);
+  assert.equal(validatePolicy({ advisories: false }).policy.advisories, ADVISORY.OFF);
+  assert.deepEqual(validatePolicy({ advisories: true }).problems, []);
+});
+
+test('a level nobody defined is a problem with a suggestion, not a shrug', () => {
+  assert.match(only({ advisories: 'incident' })[0], /unknown advisory level "incident", did you mean "incidents"\?/);
+  assert.match(only({ advisories: 'incident' })[0], /the four are off, incidents, hits, all/);
+  assert.match(only({ advisories: 42 })[0], /unknown advisory level 42/);
+  // And the policy handed back is still usable, so a caller that ignores problems fails
+  // closed rather than reading undefined as "off".
+  assert.equal(validatePolicy({ advisories: 'nope' }).policy.advisories, ADVISORY.HITS);
 });

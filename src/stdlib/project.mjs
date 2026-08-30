@@ -26,7 +26,7 @@ import { dirname, resolve } from 'node:path';
 import { findSpecifiers } from '../audit/imports.mjs';
 import { SOURCE_EXTENSIONS } from '../apply/project.mjs';
 import { catalogue } from '../eject/project.mjs';
-import { displayPath, walk } from '../fs/walk.mjs';
+import { displayPath, selectFiles } from '../fs/walk.mjs';
 import { RULES } from '../rules/registry.mjs';
 
 /** The file this command writes, unless told otherwise. */
@@ -63,7 +63,7 @@ const VENDORED = /vendored from nirdep\/runtime\/([a-z0-9-]+)/;
  */
 export function stdlibAdoption(root, options = {}) {
   const read = options.read ?? ((file) => readFileSync(file, 'utf8'));
-  const files = options.files ?? [...walk(root, { ignore: options.ignore, extensions: SOURCE_EXTENSIONS })];
+  const files = selectFiles(root, { ...options, extensions: SOURCE_EXTENSIONS });
   const found = new Map();
   // Where each module's one true copy lives, taken off our own exports map rather than off a
   // guess at the layout. An import that lands on one of these paths is the runtime itself.

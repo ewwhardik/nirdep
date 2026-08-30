@@ -27,7 +27,8 @@ import { ejectReport, ejectList, ejectExitCode } from '../src/eject/report.mjs';
 import { explainPackage, explainReport, explainList, explainExitCode } from '../src/explain/report.mjs';
 import { guardProject, guardExitCode } from '../src/guard/project.mjs';
 import { guardReport } from '../src/guard/report.mjs';
-import { POLICY_FILE } from '../src/guard/policy.mjs';
+import { annotate } from '../src/guard/annotate.mjs';
+import { ADVISORY, POLICY_FILE } from '../src/guard/policy.mjs';
 import { conformancePlan, onlyModules } from '../src/conformance/plan.mjs';
 import { runConformance, conformanceExitCode } from '../src/conformance/run.mjs';
 import { conformanceReport } from '../src/conformance/report.mjs';
@@ -87,6 +88,29 @@ function about() {
   ].join('\n');
 }
 
+// Which files the three reading commands look at. Glob patterns rather than names, because
+// "not the fixtures under tests" is the request people actually have, and they are matched by
+// src/runtime/glob.mjs -- the module in this repository that replaces minimatch. A flag
+// running on our own matcher is the cheapest honest proof that the matcher works.
+const SELECT_OPTIONS = {
+  exclude: {
+    type: 'string',
+    multiple: true,
+    describe: 'glob pattern of files to skip, repeatable; a directory that matches is not entered',
+  },
+  include: {
+    type: 'string',
+    multiple: true,
+    describe: 'glob pattern of files to read, repeatable; everything else is left alone',
+  },
+};
+
+/** The two selection flags, absent unless typed, so a default cannot overrule a caller. */
+const selectionFrom = (context) => ({
+  exclude: context.provided.has('exclude') ? context.options.exclude : undefined,
+  include: context.provided.has('include') ? context.options.include : undefined,
+});
+
 // `plan` and `apply` are the same walk with one bit flipped, so they share their
 // options and their reader. Keeping them one function is not a saving of lines; it
 // is the guarantee that the diff you were shown is the diff that gets written.
@@ -101,6 +125,7 @@ const WORK_OPTIONS = {
   // spelling the negative form out as its own option would have produced two flags that
   // disagree with each other the first time somebody passed both.
   diff: { type: 'boolean', default: true, describe: 'include the unified diff' },
+  ...SELECT_OPTIONS,
 };
 
 const WORK_POSITIONALS = [
@@ -125,7 +150,7 @@ function unreadableRoot(root) {
 function work(context, { write }) {
   const root = projectRoot(context);
   if (root === null) return EXIT.USAGE;
-  const plan = planProject(root, { runtimeDir: context.options.runtime ?? null });
+  const plan = planProject(root, { runtimeDir: context.options.runtime ?? null, ...selectionFrom(context) });
   if (!write) {
     context.out(planReport(plan, {
       style: context.style,
@@ -153,7 +178,7 @@ function projectRoot(context) {
 function scan(context) {
   const root = projectRoot(context);
   if (root === null) return EXIT.USAGE;
-  const result = scanProject(root);
+  const result = scanProject(root, selectionFrom(context));
   context.out(scanReport(result, { style: context.style }));
   return scanExitCode(result);
 }
@@ -185,6 +210,17 @@ function eject(context) {
 function guard(context) {
   const root = projectRoot(context);
   if (root === null) return EXIT.USAGE;
+  // The flag is checked here rather than in the policy reader, because a policy file with a
+  // bad level in it is a problem with the repository and a bad flag is a typo at the keyboard.
+  // The first earns exit 2 and a report; the second earns a usage error and no run at all.
+  const levels = Object.values(ADVISORY);
+  if (context.provided.has('advisories') && !levels.includes(context.options.advisories)) {
+    const near = suggest(String(context.options.advisories), levels);
+    context.err(`${context.errStyle.red('nirdep:')} guard: no advisory level `
+      + `${context.errStyle.bold(String(context.options.advisories))}`
+      + `${near.length > 0 ? `, did you mean ${near.join(' or ')}?` : `. There are ${levels.join(', ')}.`}\n`);
+    return EXIT.USAGE;
+  }
   const result = guardProject(root, {
     policyFile: context.options.policy ?? null,
     overrides: {
@@ -193,9 +229,13 @@ function guard(context) {
       dev: context.provided.has('dev') ? context.options.dev : undefined,
       max: context.provided.has('max') ? context.options.max : undefined,
       allow: context.provided.has('allow') ? context.options.allow : undefined,
+      advisories: context.provided.has('advisories') ? context.options.advisories : undefined,
     },
   });
   context.out(guardReport(result, { style: context.style }));
+  // Annotations after the report, not instead of it. The workflow command lines are noise in
+  // a terminal and the report is noise in a diff, and a build log is read by both.
+  if (context.options.annotate === true) context.out(annotate(result));
   return guardExitCode(result);
 }
 
@@ -224,8 +264,9 @@ function conformance(context) {
 function stdlibmd(context) {
   const root = projectRoot(context);
   if (root === null) return EXIT.USAGE;
-  const document = stdlibDocument(scanProject(root), {
-    adoption: stdlibAdoption(root),
+  const selection = selectionFrom(context);
+  const document = stdlibDocument(scanProject(root, selection), {
+    adoption: stdlibAdoption(root, selection),
     version: meta.manifest.version,
   });
   if (context.options.write !== true) {
@@ -283,6 +324,7 @@ const app = createCli({
   commands: {
     scan: {
       describe: 'report replaceable dependencies and their blast radius',
+      options: SELECT_OPTIONS,
       positionals: WORK_POSITIONALS,
       run: (context) => scan(context),
     },
@@ -322,6 +364,11 @@ const app = createCli({
         dev: { type: 'boolean', default: true, describe: 'count devDependencies as dependencies' },
         max: { type: 'number', describe: 'fail above this many direct dependencies' },
         allow: { type: 'string', multiple: true, describe: 'a package to permit this run, repeatable' },
+        advisories: {
+          type: 'string',
+          describe: `how much of the advisory table fails the build: ${Object.values(ADVISORY).join(', ')}`,
+        },
+        annotate: { type: 'boolean', describe: 'also print GitHub workflow annotations' },
       },
       positionals: WORK_POSITIONALS,
       run: (context) => guard(context),
@@ -340,6 +387,7 @@ const app = createCli({
         out: { type: 'string', default: STDLIB_FILE, describe: 'file to write, relative to the project' },
         force: { type: 'boolean', describe: 'replace a file that says something else' },
         'dry-run': { type: 'boolean', describe: 'say what would be written and write nothing' },
+        ...SELECT_OPTIONS,
       },
       positionals: WORK_POSITIONALS,
       run: (context) => stdlibmd(context),

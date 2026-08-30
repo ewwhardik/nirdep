@@ -102,7 +102,14 @@ function judge(analysis, dependency, rule, target) {
       }
       continue;
     }
-    if (shape.as === AS.NAMED) {
+    // AS.DUAL is for a package whose default export changed meaning between majors:
+    // minimatch v3 exported the matcher itself, v10 exports an object of names. The file
+    // settles it. A binding that is called is the function, and becomes a named import; a
+    // binding that is only read from is the object, and needs no edit at all, because the
+    // replacement's default export carries the same names. Either way the members it
+    // reaches for are checked below, so a v10 file asking for Minimatch is still refused.
+    if (shape.as === AS.NAMED || (shape.as === AS.DUAL
+      && membersReached(analysis, index, rule.chained) === null)) {
       const local = binding.name;
       const clause = local === shape.name ? `{ ${shape.name} }` : `{ ${shape.name} as ${local} }`;
       edits.push({

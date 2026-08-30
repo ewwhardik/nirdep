@@ -10,7 +10,8 @@
 
 import { pad, plural, styleOf, wrap, WIDTH } from '../text/format.mjs';
 import { ACTION } from '../rules/registry.mjs';
-import { SIGNAL, SOURCE } from './policy.mjs';
+import { KIND, VERDICT } from '../scan/advisories.mjs';
+import { ADVISORY, SIGNAL, SOURCE } from './policy.mjs';
 
 /** Two nouns spelled by splitting a string, for the reason src/scan/report.mjs gives:
  * the word `import` followed by a quote is what tools/verify.mjs counts as a dependency. */
@@ -109,6 +110,105 @@ function remedyLines(row, s, gutter) {
   ], COLUMNS - gutter.length, s).map((one) => `${gutter}${one.text}`);
 }
 
+/** What to cite beside a version: the identifier if the advisory has one, and otherwise the
+ * fact that this row is a name and a date rather than a verdict about your tree. */
+function citeOf(row) {
+  if (row.verdict === VERDICT.UNVERSIONED) return `named in an incident, ${row.when}`;
+  if (row.verdict === VERDICT.UNKNOWN) return `in the table, and this version cannot be read`;
+  if (row.kind === KIND.INCIDENT) {
+    return row.hand === 'author'
+      ? `published by its own maintainer, ${row.when}`
+      : `published to do harm, ${row.when}`;
+  }
+  return `${row.id ?? 'no identifier'}, ${row.severity}, ${row.when}`;
+}
+
+/** The story, as the table already tells it. Every `what` in the table is written to follow a
+ * colon -- lower case, ending in a stop -- and it is left that way here: the line sits under a
+ * bolded `name@version`, so it reads as a continuation of it. Capitalising the first letter
+ * would be tidier for three rows and would spell `defaultsDeep` and `toNumber` wrong. */
+function storyOf(row) {
+  const parts = [row.what];
+  if (row.advisories > 1) {
+    parts.push(`${plural(row.advisories - 1, 'further advisory', 'further advisories')} `
+      + `${row.advisories - 1 === 1 ? 'names' : 'name'} this version.`);
+  }
+  if (row.unrecorded !== null) parts.push(`Note that ${row.unrecorded}.`);
+  return parts.join(' ');
+}
+
+/** Every line one alarming version costs the page: the subject, the story, the fix if there is
+ * one, and the way out if nirdep has one. */
+function alarmLines(row, s) {
+  const subject = row.version === null ? row.package : `${row.package}@${row.version}`;
+  const cite = citeOf(row);
+  const lines = packed([
+    { plain: subject, text: s.bold(subject) },
+    { plain: cite, text: s.dim(cite) },
+  ], COLUMNS - 2, s).map((one) => `  ${one.text}`);
+  lines.push(...note(storyOf(row), '    ', s.dim));
+  if (row.fixed !== null) lines.push(...note(`Fixed in ${row.fixed}.`, '    ', s.dim));
+  else if (row.verdict === VERDICT.HIT) {
+    lines.push(...note('No version fixes this one: the release itself was the payload, so the '
+      + 'only move is off it.', '    ', s.dim));
+  }
+  // An exemption is about a package being present. This row is about which release of it you
+  // have, and saying so here is cheaper than the support thread that follows silence.
+  if (row.allowed) {
+    lines.push(...note('Allowed by name, which does not cover a release published to do harm.', '    ', s.yellow));
+  }
+  if (row.replaceable) lines.push(...remedyLines(row, s, '    '));
+  return lines;
+}
+
+/** The block, above everything else on the page. A wallet stealer printed under "chalk came
+ * back" is a wallet stealer nobody read. */
+function alarmBlock(advisories, s) {
+  const lines = [];
+  if (advisories.alarms.length > 0) {
+    lines.push(s.bold(`${plural(advisories.alarms.length, 'version')} the advisory table names`));
+    for (const row of advisories.alarms) lines.push(...alarmLines(row, s));
+  }
+  if (advisories.waived.length > 0) {
+    if (lines.length > 0) lines.push('');
+    lines.push(s.bold(`${plural(advisories.waived.length, 'advisory', 'advisories')} allowed by name`));
+    for (const row of advisories.waived) {
+      const subject = row.version === null ? row.package : `${row.package}@${row.version}`;
+      lines.push(...packed([
+        { plain: subject, text: s.bold(subject) },
+        { plain: citeOf(row), text: s.dim(citeOf(row)) },
+      ], COLUMNS - 2, s).map((one) => `  ${one.text}`));
+      lines.push(...note(row.reason ?? 'no reason recorded', '    ', s.dim));
+    }
+  }
+  if (lines.length > 0) lines.push('');
+  return lines;
+}
+
+/** What the level fails on, in the words of the thing it is looking at. */
+function whatFails(level) {
+  if (level === ADVISORY.INCIDENTS) return 'A release published to do harm fails this build';
+  if (level === ADVISORY.ALL) return 'A version the table names fails this build, and so does a bare name match';
+  return 'A version the table names fails this build';
+}
+
+/** The footer line that keeps a green page from being read as a clean audit. The coverage and
+ * the review date travel with the claim, never in a footnote: this table is one neighbourhood
+ * of npm on purpose, and a reader who does not know that has been misled by a PASS. */
+function advisoryLines(advisories, s) {
+  const indent = ' '.repeat(10);
+  const body = advisories.coverage === null
+    ? 'not checked: this run was handed a scan with no advisory pass in it.'
+    : advisories.level === ADVISORY.OFF
+      ? `not checked: this policy says off, and ${advisories.coverage.packages} packages in the `
+        + `table went unread.`
+      : `${plural(advisories.coverage.packages, 'package')} in the table, reviewed `
+        + `${advisories.reviewed}, ${advisories.matched} matched here. ${whatFails(advisories.level)}. `
+        + 'This is one neighbourhood of npm and not an audit of your whole tree.';
+  return wrap(body, COLUMNS - indent.length, '').split('\n')
+    .map((line, index) => (index === 0 ? `${s.dim('advisory')}  ${s.dim(line)}` : `${indent}${s.dim(line)}`));
+}
+
 /** Where the policy came from, including the part flags overrode. Folded rather than allowed
  * to run off the terminal: this is the line somebody reads when they want to argue with the
  * result, and a line that has scrolled sideways cannot be argued with. */
@@ -158,7 +258,9 @@ export function guardReport(result, options = {}) {
   // Capped, because a column as wide as the longest name somebody ever denied would indent
   // every other row past the point of being readable.
   const width = Math.min(24, Math.max(12, ...rows.map((one) => one.name.length)));
-  const lines = [];
+  // Above the breach table, not below it. A dependency that came back is a decision somebody
+  // made and can defend; a release published to do harm is neither, and it goes first.
+  const lines = alarmBlock(result.advisories, s);
 
   if (result.breaches.length > 0) {
     lines.push(s.bold(`${plural(result.breaches.length, 'package')} came back`));
@@ -212,6 +314,7 @@ export function guardReport(result, options = {}) {
 
   lines.push('');
   lines.push(...policyLines(found, s));
+  lines.push(...advisoryLines(result.advisories, s));
   lines.push(`${s.dim('read')}      ${result.lock.understood
     ? `${result.lock.kind} lockfile, ${plural(result.source.counts.scanned, 'source file')} scanned`
     : `${s.yellow('no usable lockfile')}, so only package.json and `
@@ -221,12 +324,27 @@ export function guardReport(result, options = {}) {
   }
 
   lines.push('');
-  const failed = result.counts.breached > 0 || result.max.over;
-  lines.push(failed
-    ? `${s.red('FAIL')}: ${result.counts.breached > 0
-      ? `${result.counts.breached} of ${plural(result.counts.guarded, 'watched package')} present`
-      : `${result.max.direct} direct dependencies, over the cap of ${result.max.limit}`}.`
-    : `${s.green('PASS')}: ${plural(result.counts.guarded, 'package')} watched, `
+  // Every reason at once. A log is read from the bottom up, and a verdict that names the first
+  // of three problems buys a second run to find the second one.
+  const reasons = [];
+  if (result.counts.breached > 0) {
+    reasons.push(`${result.counts.breached} of ${plural(result.counts.guarded, 'watched package')} present`);
+  }
+  if (result.max.over) {
+    reasons.push(`${result.max.direct} direct dependencies, over the cap of ${result.max.limit}`);
+  }
+  if (result.counts.alarming > 0) {
+    reasons.push(`${plural(result.counts.alarming, 'version')} the advisory table names`);
+  }
+  if (reasons.length > 0) {
+    // Folded before it is painted, and at six columns because that is the width of "FAIL: ":
+    // a reason that wraps should line up under the first one, not under the verdict.
+    const body = wrap(`${reasons.join('; ')}.`, COLUMNS - 6, '').split('\n');
+    lines.push(`${s.red('FAIL')}: ${body[0]}`);
+    for (const line of body.slice(1)) lines.push(`${' '.repeat(6)}${line}`);
+  } else {
+    lines.push(`${s.green('PASS')}: ${plural(result.counts.guarded, 'package')} watched, `
       + `${result.counts.exempt > 0 ? `${result.counts.exempt} allowed by name, ` : ''}nothing to report.`);
+  }
   return `${lines.join('\n')}\n`;
 }

@@ -13,6 +13,7 @@
 
 import { pad, plural, styleOf, wrap, WIDTH } from '../text/format.mjs';
 import { ACTION } from '../rules/registry.mjs';
+import { SOURCE } from './advisories.mjs';
 import { SEVERITY } from './risk.mjs';
 
 // Two nouns, spelled by splitting one string. Written as its own quoted literal the
@@ -32,6 +33,9 @@ const MARK = Object.freeze({
 
 const paintSeverity = (severity, s) => {
   const text = MARK[severity] ?? pad(severity, 6);
+  // The one level that gets two effects, because a release published to steal from
+  // you and a ReDoS in a whitespace trim should not arrive in the same colour.
+  if (severity === SEVERITY.CRITICAL) return s.bold(s.red(text));
   if (severity === SEVERITY.HIGH) return s.red(text);
   if (severity === SEVERITY.MEDIUM) return s.yellow(text);
   if (severity === SEVERITY.LOW) return s.cyan(text);
@@ -116,7 +120,8 @@ function radius(scan, s) {
     // number against the row above believes the next one for free.
     const others = removable.stranded.filter((name) => !removable.direct.includes(name)).length;
     const head = `${n} of ${removable.of}`;
-    const sentence = `${head} installed ${n === 1 ? 'name is' : 'names are'} reachable `
+    const sentence = `${head} installed ${removable.of === 1 ? 'name' : 'names'} `
+      + `${n === 1 ? 'is' : 'are'} reachable `
       + `only through ${plural(direct, 'package')} this tool replaces`
       + (others === 0
         ? '.'
@@ -137,7 +142,10 @@ function risks(scan, s) {
   if (scan.findings.length === 0) return [s.bold('findings'), `  ${s.green('nothing to report')}`];
   const lines = [s.bold('findings')];
   for (const one of scan.findings) {
-    lines.push(`  ${paintSeverity(one.severity, s)}  ${s.dim(one.code)}`);
+    // The advisory identifier rides in the margin where there is one, because a claim
+    // about somebody else's package should be checkable somewhere that is not here.
+    const cite = one.id === null || one.id === undefined ? '' : `  ${one.id}`;
+    lines.push(`  ${paintSeverity(one.severity, s)}  ${s.dim(`${one.code}${cite}`)}`);
     lines.push(`    ${wrap(one.detail)}`);
   }
   return lines;
@@ -150,8 +158,16 @@ function risks(scan, s) {
  */
 function limits(scan, s) {
   const lines = [s.bold('what this scan did not check')];
-  lines.push(`    ${wrap('Known vulnerabilities. That needs an advisory database and a network request, and '
-    + 'this tool makes neither, so a clean report here is not a clean report from npm audit.')}`);
+  const { advisories } = scan;
+  // The first line is the one people misread, so it states the scope twice: how many
+  // packages the table covers, and the day somebody last read it against its sources.
+  lines.push(`    ${wrap('Known vulnerabilities beyond a curated table. '
+    + `${plural(advisories.coverage.packages, 'package')} `
+    + `${advisories.coverage.packages === 1 ? 'is' : 'are'} in it, reviewed ${advisories.reviewed}, and `
+    + `${advisories.matched} of ${advisories.source === SOURCE.LOCK ? 'the installed names' : 'the declared names'} `
+    + 'matched. That is the neighbourhood nirdep offers to replace and the incidents that happened beside it. '
+    + 'npm audit mirrors the whole advisory database over the network; this makes no request, so a clean '
+    + 'report here is not a clean report from npm audit.')}`);
   lines.push(`    ${wrap(scan.lock.kind === 'none'
     ? 'Everything above comes from package.json alone: no lockfile is committed, so the transitive tree is '
       + 'invisible from here and every count above stops at the direct dependencies.'
@@ -190,7 +206,11 @@ export function scanReport(scan, options = {}) {
   const s = styleOf(options.style);
   const blocks = [overview(scan, s), radius(scan, s), risks(scan, s), limits(scan, s)];
   const { summary } = scan;
+  // `critical` is omitted when it is zero rather than printed as a reassuring nought:
+  // the level exists for malware in a lockfile, and a column that is almost always
+  // empty teaches people to stop reading the row it lives in.
   const tally = [
+    ...(summary.critical > 0 ? [`${summary.critical} critical`] : []),
     `${summary.high} high`,
     `${summary.medium} medium`,
     `${summary.low} low`,

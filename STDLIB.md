@@ -294,6 +294,64 @@ The six cells where the reference contradicts itself are marked
 asserted by name in the test file instead, so the table never quietly records an
 answer we believe is wrong.
 
+**Glob matching.** Node 22 added `fs.globSync`, which walks a disk. It does not
+answer the question every tool actually asks first — *does this string match this
+pattern* — and it has no brace expansion options, no `partial`, no reusable
+compiled matcher. `runtime/glob.mjs` is 1149 lines and exports 17 names, matching
+`minimatch@10.2.6` name for name and covering the matching half of `glob`.
+Together those two are a transitive dependency of most of the registry, which is
+the reason this module exists rather than a third replacement for something
+fashionable.
+
+*No regular expressions, again.* This is the same story as semver, told twice,
+which is what turns a lucky fix into a policy. minimatch's ReDoS —
+CVE-2022-3517 — was its own compiled pattern backtracking on an adversarial
+brace body, in the package node-semver depends on. Both are answered here the
+same way: two nested state-set simulations, one over path segments and one over
+the characters of a segment, so the work is bounded by positions times tokens and
+there is nothing to backtrack. Same proof as semver, too — the test strips the
+comments and fails if one `/` survives, and there is nothing left in the file
+that could put one there: the separator itself is a character code and nothing
+divides.
+
+*Bounded means enforced.* Three ceilings, because unbounded work refused late is
+still unbounded work: 65536 pattern characters (`TOO_LONG`), 8192 brace
+expansions (`TOO_MANY_EXPANSIONS`), 16 levels of brace or extglob nesting
+(`TOO_DEEP`). A pattern that merely *looks* wrong is not an error — an
+unterminated `[` is literal text, exactly as it is in a shell — so the only thing
+refused is cost. `makeRe()` exists and throws `NO_REGEXP` naming
+`matcher(pattern)` as the replacement: a rewritten call site that wanted a
+`RegExp` should fail at the call, not hours later with `undefined is not a
+function`.
+
+*How it was checked.* The same shape of harness as semver, calling
+`minimatch@10.2.6` as a black box from outside this repository: **222,495
+matching checks and 6,357 surface checks; 697 disagree.** Every one of the 697
+has a recorded cause, and the causes are pinned by count so a new disagreement
+cannot arrive quietly — it lands in `unknown`, and `unknown` is asserted empty.
+**576** are `[[:print:]]`, which compiles there to the same thing as
+`[[:cntrl:]]`, the inverse of what POSIX says. **91** are non-ASCII characters in
+a POSIX class: ours are ASCII tables plus case mapping, so `中` is not
+`[[:alpha:]]` — a stated limit rather than a bug, and the only one worth knowing
+before adopting this module. **18** are `partial`, where theirs descends into
+directories that cannot match. **12** are brace expansion: their expander
+reserves backslash as an internal sentinel, so `{A..z}` loses ASCII 92 and then
+matches the empty path. Ours keeps all 58 characters of that span.
+
+*And it is used here.* A pattern layer built on a package we tell other people to
+delete would be a joke, so `src/fs/walk.mjs` compiles this module's `matcher()`
+for both of its filters. `ignore` stays a Set of bare names — one hash lookup per
+entry, right for the five names every project has — while `exclude` and `include`
+are patterns matched against the root-relative path, which is the only way to say
+"not `tests/fixtures`" without also losing `src/fixtures`. Pruning follows
+`globSync`'s rule: a directory that matches an exclude is never opened, and a
+directory is only entered when some include could still match inside it, which is
+`partial: true` doing real work in the shipped tool. Sorting is untouched by
+either, so `make repro` still compares byte for byte. One `selectFiles()` serves
+`scan`, `plan`, `apply` and `stdlibmd`, because a file the codemod never read is
+not a file the scan may report as rewritten. Pointed at itself: 84 files,
+`--exclude 'tests/**'` 38, `--include 'src/runtime/**'` 4.
+
 **A JavaScript reader. Node parses JavaScript and will not tell you about it.**
 This is the gap that decided the shape of the whole project. `node:vm` will
 compile a string and throw if it is not valid, which is a yes-or-no answer;
@@ -544,9 +602,12 @@ in the report and its blunt answer is kept rather than dropped, tagged
 The report ends with a block headed *what this scan did not check*, and it is
 printed even when nothing was found, because "nothing found" means very little
 without "and here is what I could not have found". Four limits are stated there
-and are worth repeating here. There is no vulnerability check: that needs an
-advisory database and a network request, and this tool makes neither, so a clean
-`nirdep scan` is not a clean `npm audit`. The dependency graph is keyed by package
+and are worth repeating here. The vulnerability check is a curated table and not
+the advisory database: `src/scan/advisories.mjs` holds 40 rows across 34 packages
+— the ones nirdep offers to replace and the incidents that happened beside them —
+so a clean `nirdep scan` is not a clean `npm audit`, and the report prints the
+coverage figure, the date the table was last reviewed and how many names matched
+right next to the claim. The dependency graph is keyed by package
 name rather than by name and version, so a package installed at two versions is
 one node, which makes every "would leave with it" count an **upper bound** — the
 alternative needs each edge's resolved range, which two of the three lockfile
@@ -555,6 +616,33 @@ than from `node_modules` as installed. And only the root `package.json` is read,
 so a monorepo has to be scanned one package at a time; workspace roots declared
 in npm's and pnpm's lockfiles are picked up, but a workspace member's own
 dependency fields are not.
+
+That table is the one place in this project where the standard library is not the
+question — nothing in Node knows which releases were malicious — so the design
+decisions are worth stating. It is a source file, dated, frozen, and offline by
+construction; a test reads the module's own bytes and fails if `fetch`,
+`node:http` or a URL appears in it, because "makes no network request" is a
+property of the file rather than of a run. It holds two record kinds. A **flaw**
+has a CVE, an affected range and a fix, and is matched with `runtime/semver` —
+the module that replaces the package with the ReDoS is the module that decides
+whether you are still exposed to it — with `includePrerelease`, because
+`7.5.1-rc.1` is affected even if no resolver would have chosen it. An
+**incident** has exact versions and deliberately no "fixed in": a malicious
+release sits between two innocent ones, so there is no upper bound to be below,
+only an artefact to not have. Its `hand` field records whether the hand was an
+attacker's or the maintainer's own, which changes the advice rather than the
+severity: no review of the version you approved can find what was in the version
+you got.
+
+There are four verdicts and not a boolean. `hit` and `clear` are the easy two.
+`unversioned` means the table names the package but not the affected releases —
+true of the September 2025 phishing wave, where the honest answer is a name match
+and the finding says so in its own sentence rather than in a footnote. `unknown`
+means the lockfile recorded a git URL, a path or a tag, so no comparison applies.
+Inventing a version number would be worse than either gap. The single most
+valuable test in `tests/scan/advisories.test.mjs` asserts that every row's own
+`fixed` version does *not* satisfy that row's affected range: a range with a typo
+in it reads perfectly and quietly tells somebody they are safe.
 
 One field is less tidy than the rest and should be said out loud rather than
 discovered: `source.packages[].forms` mixes the lexer's names for a statement
@@ -643,7 +731,50 @@ pattern matching, it is a sorted list of names; and when no lockfile was
 understood, installed-but-undeclared packages cannot be seen from there at all,
 which the report prints instead of quietly reporting nothing.
 
-### Answering "why": `src/explain/` — the one file in `src/` that can go stale
+The fourth thing guard fails on is the one nobody chose. `scan` already crosses
+the lockfile against the advisory table, so guard reads that record rather than
+re-auditing: a scan handed over with no advisory pass in it reports "unchecked",
+never "clean". The policy key is a ladder — `off`, `incidents`, `hits`, `all` —
+so the footer prints one word and there is no third state to reason about, and it
+defaults to `hits` because a version the table already names is a regression
+whether or not anybody chose to install it. `true` and `false` are accepted as a
+second spelling of the two ends, since nobody types `hits` the first time.
+
+An allow list cannot waive an incident, and that asymmetry is the point of the
+block. Naming a package is consent to it being *installed*; it is not consent to
+the release of it that was published to steal wallet keys, and a tool that treats
+those as the same sentence turns a two-year-old waiver into a hole. So an
+exemption moves a flaw into an "allowed by name" block with its reason attached,
+and leaves a malicious release exactly where it was, with a line saying why the
+waiver did not reach it. Alarms print above the breach table for the same reason:
+a wallet stealer under a table of chalk imports is a wallet stealer nobody read.
+
+`--annotate` is the one output format in this project that is not ours, and
+`src/guard/annotate.mjs` is a translation and nothing else — every field is one
+the verdict already held. The escaping is the whole file: a newline inside a
+workflow command ends it early and prints the rest of the sentence as build
+output, so `%`, CR and LF are encoded in messages and `:` and `,` additionally in
+property values. Findings attach to the line that imports the package, or to the
+lockfile a version came from — never to a path inside `node_modules`, which is
+not a file in the repository, and never to a guessed line, because a wrong line
+number sends a reader somewhere worse than no line at all. GitHub shows ten
+annotations per level and silently drops the rest, so nirdep prints nine and one
+line saying how many are in the log.
+
+`action.yml` is where this repository ends and somebody else's YAML begins. It is
+a composite action with no install step, which is the argument: the thing it runs
+is this repository's JavaScript under the Node the runner already has, and an
+action that `npm install`s a dependency checker has added dependencies to the
+build it is auditing. What it depends on, stated rather than assumed: the
+runner's Node — checked for 22.17.0 with a sentence naming the version it found,
+because a stack trace from inside `src/` is a worse first impression than a
+requirement; `bash`, `cat` and `grep` from the runner image, which are the shell
+the action is written in and not something the tool loads at runtime; and
+`GITHUB_OUTPUT`, `GITHUB_STEP_SUMMARY` and `RUNNER_TEMP`, each with a fallback or
+a guard. Inputs arrive as environment variables and are never interpolated into
+`run:` — a package name is a string somebody else controls, and `run:` is a
+shell.
+
 
 `nirdep explain chalk` prints what the standard library already gives you, what it
 does not, and — for a package the codemod rewrites — which import forms will be
@@ -760,6 +891,18 @@ are captured output, and the six cells where its output contradicts its own
 lives in an unrelated project's `node_modules`; the harness that calls it lives
 outside this repository and ships with nothing.
 
+The glob vectors in `tests/vectors/glob/` are the semver story again, and the
+same disclosure applies. Five tables, 2035 cases: the input columns — 105 paths,
+and the patterns crossed against them — were chosen by hand, one per rule that
+has a wrong answer. **The expectation columns were filled in by calling
+`minimatch@10.2.6` as a black box**, for the same reason: glob syntax has no
+specification, and the only available definition of "correct" is what the package
+the ecosystem already installed does. No line of its source was read and no line
+of its test suite was copied. The 697 cells where its answer is one this project
+declines to reproduce are marked `except` / `ours` in the tables and argued by
+name and by count in `tests/runtime/glob.test.mjs`, so a borrowed expectation is
+never silently overwritten with our own.
+
 The 75 colour vectors in `tests/vectors/colour/` were written by hand from
 ECMA-48 and the close-code conventions chalk established, not copied from chalk's
 test suite and not captured from our own output. Vectors are data; the
@@ -780,13 +923,28 @@ berry, pnpm 5 and 9, and one deliberately corrupt file — written by hand to ca
 one awkward case each: a package with no integrity hash, a git install, a plain
 HTTP tarball, a linked directory, an install script, a deprecation message that
 wraps, and pnpm's peer-suffixed key `/react-dom/18.2.0_react@18.2.0`, which is
-what caught a real bug in the key parser. `tree.json` holds two whole projects,
+what caught a real bug in the key parser. `tree.json` holds three whole projects,
 manifest and lockfile and source together, so the end-to-end numbers are asserted
 against a tree somebody can read rather than against a snapshot. Nothing was
 captured from a package manager's output and no package manager's test suite was
 read. They live in JSON for the reason the lexer vectors do: a real specifier
 inside a `.mjs` file would make `tools/verify.mjs` report this project as having a
-dependency it does not have.
+dependency it does not have. The third of those projects, `unlucky`, pins three
+malicious releases, a five-times-vulnerable lodash and a git-installed
+`minimatch`, so all four advisory verdicts are exercised against a tree rather
+than against a mock.
+
+The advisory table in `src/scan/advisories.mjs` borrows no data and no code, and
+that needs a sentence of its own because it is the one place in this project that
+makes a claim about somebody else's package. Each row was written by hand from the
+public record — the CVE identifier, the affected range, the fixed version, the
+date and a plain description of what went wrong. Nothing was mirrored from an
+advisory feed, no database was downloaded and no `npm audit` output was captured;
+the identifiers are printed in the report precisely so a reader can go and check
+each claim at a source that is not this repository. The versions were not taken
+from a package's own metadata either, which is why the test suite re-derives the
+one invariant that matters — every `fixed` must sit outside its own range — rather
+than trusting the typing.
 
 The patch tests borrow nothing at all: the inputs are three-line files and seeded
 random letters. Two oracles were used while writing them and both are stated

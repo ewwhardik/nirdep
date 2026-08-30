@@ -9,7 +9,8 @@
 // Two places to put it, in order: `.nirdeprc.json` beside the manifest, or a `nirdep.guard`
 // object inside package.json for projects that would rather not add a dotfile. With
 // neither, the default is the honest one for this tool: every package nirdep can replace is
-// denied, in all three of the places a dependency can hide.
+// denied, in all three of the places a dependency can hide, and a version the advisory table
+// already knows about fails the build whether or not anybody chose to install it.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -26,11 +27,26 @@ export const SOURCE = Object.freeze({ DEFAULT: 'default', FILE: 'file', MANIFEST
 
 export const POLICY_FILE = '.nirdeprc.json';
 
-const KEYS = Object.freeze(['deny', 'allow', 'dev', 'signals', 'max']);
+/**
+ * How much of the advisory table is allowed to fail a build.
+ *
+ * A ladder rather than a set: each level contains the one below it, so the report can print
+ * the policy as one word and a reader can tell at a glance which way to move it. `incidents`
+ * is the level for a project that cannot upgrade today but would still like to know if it is
+ * shipping a wallet stealer.
+ */
+export const ADVISORY = Object.freeze({
+  OFF: 'off', INCIDENTS: 'incidents', HITS: 'hits', ALL: 'all',
+});
+
+const LEVELS = Object.freeze(Object.values(ADVISORY));
+
+const KEYS = Object.freeze(['deny', 'allow', 'dev', 'signals', 'max', 'advisories']);
 
 /**
  * No policy on disk is not "no opinion". The default is the claim this tool makes: these
- * packages have replacements, so their coming back is a regression like any other.
+ * packages have replacements, so their coming back is a regression like any other -- and a
+ * version the table already knows about is a regression whether or not anybody chose it.
  */
 export const DEFAULT_POLICY = Object.freeze({
   deny: Object.freeze([...REPLACEABLE]),
@@ -38,6 +54,7 @@ export const DEFAULT_POLICY = Object.freeze({
   dev: true,
   signals: Object.freeze([...SIGNALS]),
   max: null,
+  advisories: ADVISORY.HITS,
 });
 
 const isPlain = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -119,6 +136,20 @@ export function validatePolicy(raw) {
     } else max = raw.max;
   }
 
+  let advisories = null;
+  if (raw.advisories !== undefined && raw.advisories !== null) {
+    // `true` and `false` are what people actually type in a CI config, and reading them as
+    // the two ends of the ladder is a second spelling rather than a shrug: both map onto a
+    // level that already exists, and the report prints the level rather than the boolean.
+    if (typeof raw.advisories === 'boolean') advisories = raw.advisories ? ADVISORY.HITS : ADVISORY.OFF;
+    else if (typeof raw.advisories !== 'string' || !LEVELS.includes(raw.advisories)) {
+      const near = typeof raw.advisories === 'string' ? suggest(raw.advisories, LEVELS, 1) : [];
+      problems.push(`unknown advisory level ${JSON.stringify(raw.advisories)}`
+        + `${near.length > 0 ? `, did you mean "${near[0]}"?` : ''}`
+        + ` -- the four are ${LEVELS.join(', ')}`);
+    } else advisories = raw.advisories;
+  }
+
   return {
     policy: Object.freeze({
       deny: Object.freeze(deny ?? DEFAULT_POLICY.deny),
@@ -126,6 +157,7 @@ export function validatePolicy(raw) {
       dev: dev ?? DEFAULT_POLICY.dev,
       signals: Object.freeze(signals ?? DEFAULT_POLICY.signals),
       max: max ?? null,
+      advisories: advisories ?? DEFAULT_POLICY.advisories,
     }),
     problems,
   };

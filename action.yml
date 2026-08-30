@@ -1,0 +1,156 @@
+# nirdep guard, as a step in somebody else's build.
+#
+# Published by Nastik AI. Developed by Hardik.
+#
+# There is no install step in this action, and that is the whole point: the thing it runs is
+# the JavaScript in this repository, executed by the Node the runner already has. An action
+# that npm-installs a dependency checker has added dependencies to the build it is auditing.
+#
+# The exit code is the product. 0 clean, 1 something came back, 2 a policy that could not be
+# read -- and 2 is a failure on purpose, because a check that did not run is not a check that
+# passed. `fail: false` is there for the first run on an existing project, where the honest
+# thing is a report and a green build rather than a red one nobody asked for.
+
+name: nirdep guard
+description: >-
+  Fail the build if a dependency you replaced comes back, or if a version in the lockfile is one
+  the advisory table already names.
+author: Nastik AI
+
+branding:
+  icon: scissors
+  color: purple
+
+inputs:
+  path:
+    description: The project directory to read.
+    required: false
+    default: .
+  policy:
+    description: A policy file to read instead of .nirdeprc.json, then package.json.
+    required: false
+    default: ''
+  advisories:
+    description: >-
+      How much of the advisory table fails this build: off, incidents, hits, all. Empty leaves it
+      to the committed policy, which is the reviewable place for it.
+    required: false
+    default: ''
+  max:
+    description: Fail above this many direct dependencies. Empty leaves it to the policy.
+    required: false
+    default: ''
+  allow:
+    description: Space-separated package names to permit for this run only.
+    required: false
+    default: ''
+  dev:
+    description: Count devDependencies as dependencies. true, false, or empty for the policy's answer.
+    required: false
+    default: ''
+  annotate:
+    description: Attach findings to the diff as GitHub annotations.
+    required: false
+    default: 'true'
+  summary:
+    description: Write the report to the job summary.
+    required: false
+    default: 'true'
+  fail:
+    description: >-
+      Fail the step when guard exits non-zero. false reports and leaves the job green, which is
+      the honest first run on a project that has not been cleaned up yet.
+    required: false
+    default: 'true'
+
+outputs:
+  exit-code:
+    description: 0 clean, 1 something came back, 2 the policy could not be read.
+    value: ${{ steps.guard.outputs.exit-code }}
+  report:
+    description: The path the full report was written to.
+    value: ${{ steps.guard.outputs.report }}
+
+runs:
+  using: composite
+  steps:
+    # Some runner images still ship Node 20, and `node --run` and the parser this tool leans on
+    # are not there. Better a sentence naming the version than a stack trace from inside src/.
+    - name: Check the Node the runner has
+      shell: bash
+      run: |
+        set -euo pipefail
+        have="$(node -p 'const [a, b] = process.versions.node.split(".").map(Number); a * 1000 + b')"
+        if [ "$have" -lt 22017 ]; then
+          echo "::error title=nirdep::nirdep needs Node 22.17.0 or newer and this runner has $(node -v). Put actions/setup-node with node-version: 22 before this step."
+          exit 1
+        fi
+
+    # Inputs arrive as environment variables and are never interpolated into this script: a
+    # package name is a string somebody else controls, and `run:` is a shell.
+    - name: Guard
+      id: guard
+      shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_POLICY: ${{ inputs.policy }}
+        INPUT_ADVISORIES: ${{ inputs.advisories }}
+        INPUT_MAX: ${{ inputs.max }}
+        INPUT_ALLOW: ${{ inputs.allow }}
+        INPUT_DEV: ${{ inputs.dev }}
+        INPUT_ANNOTATE: ${{ inputs.annotate }}
+      run: |
+        set -uo pipefail
+        args=(guard "$INPUT_PATH")
+        if [ -n "$INPUT_POLICY" ]; then args+=(--policy "$INPUT_POLICY"); fi
+        if [ -n "$INPUT_ADVISORIES" ]; then args+=(--advisories "$INPUT_ADVISORIES"); fi
+        if [ -n "$INPUT_MAX" ]; then args+=(--max "$INPUT_MAX"); fi
+        if [ "$INPUT_DEV" = "true" ]; then args+=(--dev); fi
+        if [ "$INPUT_DEV" = "false" ]; then args+=(--no-dev); fi
+        if [ "$INPUT_ANNOTATE" = "true" ]; then args+=(--annotate); fi
+        # Word-split on purpose: this input is a list of package names, which cannot contain a
+        # space. Anything that arrives with one is a mistake worth failing on rather than
+        # quietly reading as one long name.
+        for name in $INPUT_ALLOW; do args+=(--allow "$name"); done
+
+        report="${RUNNER_TEMP:-/tmp}/nirdep-guard.txt"
+        code=0
+        node "$GITHUB_ACTION_PATH/bin/nirdep.mjs" "${args[@]}" > "$report" 2>&1 || code=$?
+        # Printed rather than piped, so the annotations in it reach GitHub and the report
+        # reaches the log, from one file that both later steps read.
+        cat "$report"
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+        echo "report=$report" >> "$GITHUB_OUTPUT"
+
+    - name: Write the summary
+      if: ${{ inputs.summary == 'true' }}
+      shell: bash
+      env:
+        REPORT: ${{ steps.guard.outputs.report }}
+      run: |
+        set -uo pipefail
+        {
+          echo "### nirdep guard"
+          echo
+          echo '```'
+          # The annotation lines are already attached to the diff; printing them twice turns a
+          # readable summary into a wall of workflow commands.
+          grep -v '^::' "$REPORT" || true
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    # The exit code, last, so the two steps above still run on a red build. A verdict nobody
+    # can read is the failure mode this whole action exists to avoid.
+    - name: The verdict
+      shell: bash
+      env:
+        CODE: ${{ steps.guard.outputs.exit-code }}
+        FAIL: ${{ inputs.fail }}
+      run: |
+        set -uo pipefail
+        if [ "$CODE" = "0" ]; then exit 0; fi
+        if [ "$FAIL" != "true" ]; then
+          echo "::warning title=nirdep::guard exited $CODE. This step was asked not to fail, so the job stays green."
+          exit 0
+        fi
+        exit "$CODE"

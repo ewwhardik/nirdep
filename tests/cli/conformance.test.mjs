@@ -44,7 +44,7 @@ test('the whole corpus runs green, and the page counts what is on disk', () => {
   const plan = conformancePlan();
   const { code, stdout } = run(['conformance']);
   assert.equal(code, 0, stdout);
-  assert.match(stdout, new RegExp(`^3 runtime modules, ${plan.totals.cases} vector cases, \\d+ tests$`, 'm'));
+  assert.match(stdout, new RegExp(`^${plan.totals.modules} runtime modules, ${plan.totals.cases} vector cases, \\d+ tests$`, 'm'));
   assert.match(flat(stdout), new RegExp(`PASS: ${plan.totals.packages} packages replaced, `
     + `${plan.totals.cases} cases checked, nothing came back wrong\\.`));
   // The provenance, which is the reason a case count is worth printing at all.
@@ -80,7 +80,7 @@ test('a module name we do not have is a usage error with a suggestion', () => {
 test('a name with nothing near it is told what there is', () => {
   const { code, stderr } = run(['conformance', 'lodash']);
   assert.equal(code, 2);
-  assert.match(stderr, /no runtime module lodash\. There are colour, semver, args\./);
+  assert.match(stderr, /no runtime module lodash\. There are colour, semver, glob, args\./);
 });
 
 test('conformance documents itself, and is no longer one of the pending commands', () => {

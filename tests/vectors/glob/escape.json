@@ -1,0 +1,3265 @@
+{
+ "note": "escape, unescape, and the round trip. `trip` is unescape(escape(x)) and has to be x wherever escape was reversible at all.",
+ "cases": [
+  {
+   "in": "a",
+   "when": [
+    {}
+   ],
+   "escape": "a",
+   "unescape": "a",
+   "trip": "a"
+  },
+  {
+   "in": "a",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a",
+   "unescape": "a",
+   "trip": "a"
+  },
+  {
+   "in": "a/b",
+   "when": [
+    {}
+   ],
+   "escape": "a/b",
+   "unescape": "a/b",
+   "trip": "a/b"
+  },
+  {
+   "in": "a/b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/b",
+   "unescape": "a/b",
+   "trip": "a/b"
+  },
+  {
+   "in": "a/b/c",
+   "when": [
+    {}
+   ],
+   "escape": "a/b/c",
+   "unescape": "a/b/c",
+   "trip": "a/b/c"
+  },
+  {
+   "in": "a/b/c",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/b/c",
+   "unescape": "a/b/c",
+   "trip": "a/b/c"
+  },
+  {
+   "in": "x.js",
+   "when": [
+    {}
+   ],
+   "escape": "x.js",
+   "unescape": "x.js",
+   "trip": "x.js"
+  },
+  {
+   "in": "x.js",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "x.js",
+   "unescape": "x.js",
+   "trip": "x.js"
+  },
+  {
+   "in": "z.txt",
+   "when": [
+    {}
+   ],
+   "escape": "z.txt",
+   "unescape": "z.txt",
+   "trip": "z.txt"
+  },
+  {
+   "in": "z.txt",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "z.txt",
+   "unescape": "z.txt",
+   "trip": "z.txt"
+  },
+  {
+   "in": "",
+   "when": [
+    {}
+   ],
+   "escape": "",
+   "unescape": "",
+   "trip": ""
+  },
+  {
+   "in": "",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "",
+   "unescape": "",
+   "trip": ""
+  },
+  {
+   "in": ".",
+   "when": [
+    {}
+   ],
+   "escape": ".",
+   "unescape": ".",
+   "trip": "."
+  },
+  {
+   "in": ".",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": ".",
+   "unescape": ".",
+   "trip": "."
+  },
+  {
+   "in": "./a",
+   "when": [
+    {}
+   ],
+   "escape": "./a",
+   "unescape": "./a",
+   "trip": "./a"
+  },
+  {
+   "in": "./a",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "./a",
+   "unescape": "./a",
+   "trip": "./a"
+  },
+  {
+   "in": "*",
+   "when": [
+    {}
+   ],
+   "escape": "\\*",
+   "unescape": "*",
+   "trip": "*"
+  },
+  {
+   "in": "*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*]",
+   "unescape": "*",
+   "trip": "*"
+  },
+  {
+   "in": "*.js",
+   "when": [
+    {}
+   ],
+   "escape": "\\*.js",
+   "unescape": "*.js",
+   "trip": "*.js"
+  },
+  {
+   "in": "*.js",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*].js",
+   "unescape": "*.js",
+   "trip": "*.js"
+  },
+  {
+   "in": "a*",
+   "when": [
+    {}
+   ],
+   "escape": "a\\*",
+   "unescape": "a*",
+   "trip": "a*"
+  },
+  {
+   "in": "a*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a[*]",
+   "unescape": "a*",
+   "trip": "a*"
+  },
+  {
+   "in": "*a",
+   "when": [
+    {}
+   ],
+   "escape": "\\*a",
+   "unescape": "*a",
+   "trip": "*a"
+  },
+  {
+   "in": "*a",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*]a",
+   "unescape": "*a",
+   "trip": "*a"
+  },
+  {
+   "in": "a*b",
+   "when": [
+    {}
+   ],
+   "escape": "a\\*b",
+   "unescape": "a*b",
+   "trip": "a*b"
+  },
+  {
+   "in": "a*b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a[*]b",
+   "unescape": "a*b",
+   "trip": "a*b"
+  },
+  {
+   "in": "*/*",
+   "when": [
+    {}
+   ],
+   "escape": "\\*/\\*",
+   "unescape": "*/*",
+   "trip": "*/*"
+  },
+  {
+   "in": "*/*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*]/[*]",
+   "unescape": "*/*",
+   "trip": "*/*"
+  },
+  {
+   "in": "*/*/*",
+   "when": [
+    {}
+   ],
+   "escape": "\\*/\\*/\\*",
+   "unescape": "*/*/*",
+   "trip": "*/*/*"
+  },
+  {
+   "in": "*/*/*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*]/[*]/[*]",
+   "unescape": "*/*/*",
+   "trip": "*/*/*"
+  },
+  {
+   "in": "a/*",
+   "when": [
+    {}
+   ],
+   "escape": "a/\\*",
+   "unescape": "a/*",
+   "trip": "a/*"
+  },
+  {
+   "in": "a/*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/[*]",
+   "unescape": "a/*",
+   "trip": "a/*"
+  },
+  {
+   "in": "a/*/c",
+   "when": [
+    {}
+   ],
+   "escape": "a/\\*/c",
+   "unescape": "a/*/c",
+   "trip": "a/*/c"
+  },
+  {
+   "in": "a/*/c",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/[*]/c",
+   "unescape": "a/*/c",
+   "trip": "a/*/c"
+  },
+  {
+   "in": "**",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\*",
+   "unescape": "**",
+   "trip": "**"
+  },
+  {
+   "in": "**",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][*]",
+   "unescape": "**",
+   "trip": "**"
+  },
+  {
+   "in": "**/*",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\*/\\*",
+   "unescape": "**/*",
+   "trip": "**/*"
+  },
+  {
+   "in": "**/*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][*]/[*]",
+   "unescape": "**/*",
+   "trip": "**/*"
+  },
+  {
+   "in": "**/*.js",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\*/\\*.js",
+   "unescape": "**/*.js",
+   "trip": "**/*.js"
+  },
+  {
+   "in": "**/*.js",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][*]/[*].js",
+   "unescape": "**/*.js",
+   "trip": "**/*.js"
+  },
+  {
+   "in": "**/a",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\*/a",
+   "unescape": "**/a",
+   "trip": "**/a"
+  },
+  {
+   "in": "**/a",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][*]/a",
+   "unescape": "**/a",
+   "trip": "**/a"
+  },
+  {
+   "in": "a/**",
+   "when": [
+    {}
+   ],
+   "escape": "a/\\*\\*",
+   "unescape": "a/**",
+   "trip": "a/**"
+  },
+  {
+   "in": "a/**",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/[*][*]",
+   "unescape": "a/**",
+   "trip": "a/**"
+  },
+  {
+   "in": "a/**/b",
+   "when": [
+    {}
+   ],
+   "escape": "a/\\*\\*/b",
+   "unescape": "a/**/b",
+   "trip": "a/**/b"
+  },
+  {
+   "in": "a/**/b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/[*][*]/b",
+   "unescape": "a/**/b",
+   "trip": "a/**/b"
+  },
+  {
+   "in": "a/**/*/b",
+   "when": [
+    {}
+   ],
+   "escape": "a/\\*\\*/\\*/b",
+   "unescape": "a/**/*/b",
+   "trip": "a/**/*/b"
+  },
+  {
+   "in": "a/**/*/b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/[*][*]/[*]/b",
+   "unescape": "a/**/*/b",
+   "trip": "a/**/*/b"
+  },
+  {
+   "in": "**/**",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\*/\\*\\*",
+   "unescape": "**/**",
+   "trip": "**/**"
+  },
+  {
+   "in": "**/**",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][*]/[*][*]",
+   "unescape": "**/**",
+   "trip": "**/**"
+  },
+  {
+   "in": "**/",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\*/",
+   "unescape": "**/",
+   "trip": "**/"
+  },
+  {
+   "in": "**/",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][*]/",
+   "unescape": "**/",
+   "trip": "**/"
+  },
+  {
+   "in": "/**",
+   "when": [
+    {}
+   ],
+   "escape": "/\\*\\*",
+   "unescape": "/**",
+   "trip": "/**"
+  },
+  {
+   "in": "/**",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "/[*][*]",
+   "unescape": "/**",
+   "trip": "/**"
+  },
+  {
+   "in": "/",
+   "when": [
+    {}
+   ],
+   "escape": "/",
+   "unescape": "/",
+   "trip": "/"
+  },
+  {
+   "in": "/",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "/",
+   "unescape": "/",
+   "trip": "/"
+  },
+  {
+   "in": "**/node_modules/**",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\*/node_modules/\\*\\*",
+   "unescape": "**/node_modules/**",
+   "trip": "**/node_modules/**"
+  },
+  {
+   "in": "**/node_modules/**",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][*]/node_modules/[*][*]",
+   "unescape": "**/node_modules/**",
+   "trip": "**/node_modules/**"
+  },
+  {
+   "in": "**/.*",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\*/.\\*",
+   "unescape": "**/.*",
+   "trip": "**/.*"
+  },
+  {
+   "in": "**/.*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][*]/.[*]",
+   "unescape": "**/.*",
+   "trip": "**/.*"
+  },
+  {
+   "in": ".*",
+   "when": [
+    {}
+   ],
+   "escape": ".\\*",
+   "unescape": ".*",
+   "trip": ".*"
+  },
+  {
+   "in": ".*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": ".[*]",
+   "unescape": ".*",
+   "trip": ".*"
+  },
+  {
+   "in": "*/**/*",
+   "when": [
+    {}
+   ],
+   "escape": "\\*/\\*\\*/\\*",
+   "unescape": "*/**/*",
+   "trip": "*/**/*"
+  },
+  {
+   "in": "*/**/*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*]/[*][*]/[*]",
+   "unescape": "*/**/*",
+   "trip": "*/**/*"
+  },
+  {
+   "in": "?",
+   "when": [
+    {}
+   ],
+   "escape": "\\?",
+   "unescape": "?",
+   "trip": "?"
+  },
+  {
+   "in": "?",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[?]",
+   "unescape": "?",
+   "trip": "?"
+  },
+  {
+   "in": "??",
+   "when": [
+    {}
+   ],
+   "escape": "\\?\\?",
+   "unescape": "??",
+   "trip": "??"
+  },
+  {
+   "in": "??",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[?][?]",
+   "unescape": "??",
+   "trip": "??"
+  },
+  {
+   "in": "a?",
+   "when": [
+    {}
+   ],
+   "escape": "a\\?",
+   "unescape": "a?",
+   "trip": "a?"
+  },
+  {
+   "in": "a?",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a[?]",
+   "unescape": "a?",
+   "trip": "a?"
+  },
+  {
+   "in": "?a",
+   "when": [
+    {}
+   ],
+   "escape": "\\?a",
+   "unescape": "?a",
+   "trip": "?a"
+  },
+  {
+   "in": "?a",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[?]a",
+   "unescape": "?a",
+   "trip": "?a"
+  },
+  {
+   "in": "a?c",
+   "when": [
+    {}
+   ],
+   "escape": "a\\?c",
+   "unescape": "a?c",
+   "trip": "a?c"
+  },
+  {
+   "in": "a?c",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a[?]c",
+   "unescape": "a?c",
+   "trip": "a?c"
+  },
+  {
+   "in": "?/?",
+   "when": [
+    {}
+   ],
+   "escape": "\\?/\\?",
+   "unescape": "?/?",
+   "trip": "?/?"
+  },
+  {
+   "in": "?/?",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[?]/[?]",
+   "unescape": "?/?",
+   "trip": "?/?"
+  },
+  {
+   "in": "**/?",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\*/\\?",
+   "unescape": "**/?",
+   "trip": "**/?"
+  },
+  {
+   "in": "**/?",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][*]/[?]",
+   "unescape": "**/?",
+   "trip": "**/?"
+  },
+  {
+   "in": "[a]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[a\\]",
+   "unescape": "a",
+   "trip": "[a]"
+  },
+  {
+   "in": "[a]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]a[]]",
+   "unescape": "a",
+   "trip": "[a]"
+  },
+  {
+   "in": "[a-a]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[a-a\\]",
+   "unescape": "[a-a]",
+   "trip": "[a-a]"
+  },
+  {
+   "in": "[a-a]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]a-a[]]",
+   "unescape": "[a-a]",
+   "trip": "[a-a]"
+  },
+  {
+   "in": "[ab]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[ab\\]",
+   "unescape": "[ab]",
+   "trip": "[ab]"
+  },
+  {
+   "in": "[ab]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]ab[]]",
+   "unescape": "[ab]",
+   "trip": "[ab]"
+  },
+  {
+   "in": "[a-c]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[a-c\\]",
+   "unescape": "[a-c]",
+   "trip": "[a-c]"
+  },
+  {
+   "in": "[a-c]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]a-c[]]",
+   "unescape": "[a-c]",
+   "trip": "[a-c]"
+  },
+  {
+   "in": "[!a]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[!a\\]",
+   "unescape": "[!a]",
+   "trip": "[!a]"
+  },
+  {
+   "in": "[!a]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]!a[]]",
+   "unescape": "[!a]",
+   "trip": "[!a]"
+  },
+  {
+   "in": "[^a]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[^a\\]",
+   "unescape": "[^a]",
+   "trip": "[^a]"
+  },
+  {
+   "in": "[^a]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]^a[]]",
+   "unescape": "[^a]",
+   "trip": "[^a]"
+  },
+  {
+   "in": "[!]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[!\\]\\]",
+   "unescape": "!]",
+   "trip": "[!]]"
+  },
+  {
+   "in": "[!]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]![]][]]",
+   "unescape": "!]",
+   "trip": "[!]]"
+  },
+  {
+   "in": "[]a]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\]a\\]",
+   "unescape": "[]a]",
+   "trip": "[]a]"
+  },
+  {
+   "in": "[]a]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][]]a[]]",
+   "unescape": "[]a]",
+   "trip": "[]a]"
+  },
+  {
+   "in": "[-]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[-\\]",
+   "unescape": "-",
+   "trip": "[-]"
+  },
+  {
+   "in": "[-]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]-[]]",
+   "unescape": "-",
+   "trip": "[-]"
+  },
+  {
+   "in": "[a-]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[a-\\]",
+   "unescape": "[a-]",
+   "trip": "[a-]"
+  },
+  {
+   "in": "[a-]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]a-[]]",
+   "unescape": "[a-]",
+   "trip": "[a-]"
+  },
+  {
+   "in": "[.]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[.\\]",
+   "unescape": ".",
+   "trip": "[.]"
+  },
+  {
+   "in": "[.]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[].[]]",
+   "unescape": ".",
+   "trip": "[.]"
+  },
+  {
+   "in": "[.]a",
+   "when": [
+    {}
+   ],
+   "escape": "\\[.\\]a",
+   "unescape": ".a",
+   "trip": "[.]a"
+  },
+  {
+   "in": "[.]a",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[].[]]a",
+   "unescape": ".a",
+   "trip": "[.]a"
+  },
+  {
+   "in": "[/]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[/\\]",
+   "unescape": "[/]",
+   "trip": "[/]"
+  },
+  {
+   "in": "[/]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]/[]]",
+   "unescape": "[/]",
+   "trip": "[/]"
+  },
+  {
+   "in": "a[/]",
+   "when": [
+    {}
+   ],
+   "escape": "a\\[/\\]",
+   "unescape": "a[/]",
+   "trip": "a[/]"
+  },
+  {
+   "in": "a[/]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a[[]/[]]",
+   "unescape": "a[/]",
+   "trip": "a[/]"
+  },
+  {
+   "in": "[\\\\]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\\\\\\\\\]",
+   "unescape": "[\\]",
+   "trip": "[\\\\]"
+  },
+  {
+   "in": "[\\\\]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]\\\\[]]",
+   "unescape": "[\\\\]",
+   "trip": "[\\\\]"
+  },
+  {
+   "in": "a[b]c",
+   "when": [
+    {}
+   ],
+   "escape": "a\\[b\\]c",
+   "unescape": "abc",
+   "trip": "a[b]c"
+  },
+  {
+   "in": "a[b]c",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a[[]b[]]c",
+   "unescape": "abc",
+   "trip": "a[b]c"
+  },
+  {
+   "in": "[b]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[b\\]",
+   "unescape": "b",
+   "trip": "[b]"
+  },
+  {
+   "in": "[b]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]b[]]",
+   "unescape": "b",
+   "trip": "[b]"
+  },
+  {
+   "in": "[abc]def",
+   "when": [
+    {}
+   ],
+   "escape": "\\[abc\\]def",
+   "unescape": "[abc]def",
+   "trip": "[abc]def"
+  },
+  {
+   "in": "[abc]def",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]abc[]]def",
+   "unescape": "[abc]def",
+   "trip": "[abc]def"
+  },
+  {
+   "in": "[",
+   "when": [
+    {}
+   ],
+   "escape": "\\[",
+   "unescape": "[",
+   "trip": "["
+  },
+  {
+   "in": "[",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[]",
+   "unescape": "[",
+   "trip": "["
+  },
+  {
+   "in": "[]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\]",
+   "unescape": "[]",
+   "trip": "[]"
+  },
+  {
+   "in": "[]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][]]",
+   "unescape": "[]",
+   "trip": "[]"
+  },
+  {
+   "in": "x[[:digit:]]y",
+   "when": [
+    {}
+   ],
+   "escape": "x\\[\\[:digit:\\]\\]y",
+   "unescape": "x[[:digit:]]y",
+   "trip": "x[[:digit:]]y"
+  },
+  {
+   "in": "x[[:digit:]]y",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "x[[][[]:digit:[]][]]y",
+   "unescape": "x[[:digit:]]y",
+   "trip": "x[[:digit:]]y"
+  },
+  {
+   "in": "[[:alpha:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:alpha:\\]\\]",
+   "unescape": "[[:alpha:]]",
+   "trip": "[[:alpha:]]"
+  },
+  {
+   "in": "[[:alpha:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:alpha:[]][]]",
+   "unescape": "[[:alpha:]]",
+   "trip": "[[:alpha:]]"
+  },
+  {
+   "in": "[[:digit:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:digit:\\]\\]",
+   "unescape": "[[:digit:]]",
+   "trip": "[[:digit:]]"
+  },
+  {
+   "in": "[[:digit:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:digit:[]][]]",
+   "unescape": "[[:digit:]]",
+   "trip": "[[:digit:]]"
+  },
+  {
+   "in": "[[:alnum:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:alnum:\\]\\]",
+   "unescape": "[[:alnum:]]",
+   "trip": "[[:alnum:]]"
+  },
+  {
+   "in": "[[:alnum:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:alnum:[]][]]",
+   "unescape": "[[:alnum:]]",
+   "trip": "[[:alnum:]]"
+  },
+  {
+   "in": "[[:upper:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:upper:\\]\\]",
+   "unescape": "[[:upper:]]",
+   "trip": "[[:upper:]]"
+  },
+  {
+   "in": "[[:upper:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:upper:[]][]]",
+   "unescape": "[[:upper:]]",
+   "trip": "[[:upper:]]"
+  },
+  {
+   "in": "[[:lower:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:lower:\\]\\]",
+   "unescape": "[[:lower:]]",
+   "trip": "[[:lower:]]"
+  },
+  {
+   "in": "[[:lower:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:lower:[]][]]",
+   "unescape": "[[:lower:]]",
+   "trip": "[[:lower:]]"
+  },
+  {
+   "in": "[[:space:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:space:\\]\\]",
+   "unescape": "[[:space:]]",
+   "trip": "[[:space:]]"
+  },
+  {
+   "in": "[[:space:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:space:[]][]]",
+   "unescape": "[[:space:]]",
+   "trip": "[[:space:]]"
+  },
+  {
+   "in": "[[:blank:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:blank:\\]\\]",
+   "unescape": "[[:blank:]]",
+   "trip": "[[:blank:]]"
+  },
+  {
+   "in": "[[:blank:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:blank:[]][]]",
+   "unescape": "[[:blank:]]",
+   "trip": "[[:blank:]]"
+  },
+  {
+   "in": "[[:cntrl:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:cntrl:\\]\\]",
+   "unescape": "[[:cntrl:]]",
+   "trip": "[[:cntrl:]]"
+  },
+  {
+   "in": "[[:cntrl:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:cntrl:[]][]]",
+   "unescape": "[[:cntrl:]]",
+   "trip": "[[:cntrl:]]"
+  },
+  {
+   "in": "[[:print:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:print:\\]\\]",
+   "unescape": "[[:print:]]",
+   "trip": "[[:print:]]"
+  },
+  {
+   "in": "[[:print:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:print:[]][]]",
+   "unescape": "[[:print:]]",
+   "trip": "[[:print:]]"
+  },
+  {
+   "in": "[[:graph:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:graph:\\]\\]",
+   "unescape": "[[:graph:]]",
+   "trip": "[[:graph:]]"
+  },
+  {
+   "in": "[[:graph:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:graph:[]][]]",
+   "unescape": "[[:graph:]]",
+   "trip": "[[:graph:]]"
+  },
+  {
+   "in": "[[:punct:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:punct:\\]\\]",
+   "unescape": "[[:punct:]]",
+   "trip": "[[:punct:]]"
+  },
+  {
+   "in": "[[:punct:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:punct:[]][]]",
+   "unescape": "[[:punct:]]",
+   "trip": "[[:punct:]]"
+  },
+  {
+   "in": "[[:xdigit:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:xdigit:\\]\\]",
+   "unescape": "[[:xdigit:]]",
+   "trip": "[[:xdigit:]]"
+  },
+  {
+   "in": "[[:xdigit:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:xdigit:[]][]]",
+   "unescape": "[[:xdigit:]]",
+   "trip": "[[:xdigit:]]"
+  },
+  {
+   "in": "[[:word:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:word:\\]\\]",
+   "unescape": "[[:word:]]",
+   "trip": "[[:word:]]"
+  },
+  {
+   "in": "[[:word:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:word:[]][]]",
+   "unescape": "[[:word:]]",
+   "trip": "[[:word:]]"
+  },
+  {
+   "in": "[[:bogus:]]",
+   "when": [
+    {}
+   ],
+   "escape": "\\[\\[:bogus:\\]\\]",
+   "unescape": "[[:bogus:]]",
+   "trip": "[[:bogus:]]"
+  },
+  {
+   "in": "[[:bogus:]]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[[][[]:bogus:[]][]]",
+   "unescape": "[[:bogus:]]",
+   "trip": "[[:bogus:]]"
+  },
+  {
+   "in": "{a}",
+   "when": [
+    {}
+   ],
+   "escape": "{a}",
+   "unescape": "{a}",
+   "trip": "{a}"
+  },
+  {
+   "in": "{a}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{a}",
+   "unescape": "{a}",
+   "trip": "{a}"
+  },
+  {
+   "in": "{}",
+   "when": [
+    {}
+   ],
+   "escape": "{}",
+   "unescape": "{}",
+   "trip": "{}"
+  },
+  {
+   "in": "{}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{}",
+   "unescape": "{}",
+   "trip": "{}"
+  },
+  {
+   "in": "{,}",
+   "when": [
+    {}
+   ],
+   "escape": "{,}",
+   "unescape": "{,}",
+   "trip": "{,}"
+  },
+  {
+   "in": "{,}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{,}",
+   "unescape": "{,}",
+   "trip": "{,}"
+  },
+  {
+   "in": "{a,}",
+   "when": [
+    {}
+   ],
+   "escape": "{a,}",
+   "unescape": "{a,}",
+   "trip": "{a,}"
+  },
+  {
+   "in": "{a,}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{a,}",
+   "unescape": "{a,}",
+   "trip": "{a,}"
+  },
+  {
+   "in": "{,a}",
+   "when": [
+    {}
+   ],
+   "escape": "{,a}",
+   "unescape": "{,a}",
+   "trip": "{,a}"
+  },
+  {
+   "in": "{,a}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{,a}",
+   "unescape": "{,a}",
+   "trip": "{,a}"
+  },
+  {
+   "in": "x{,}",
+   "when": [
+    {}
+   ],
+   "escape": "x{,}",
+   "unescape": "x{,}",
+   "trip": "x{,}"
+  },
+  {
+   "in": "x{,}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "x{,}",
+   "unescape": "x{,}",
+   "trip": "x{,}"
+  },
+  {
+   "in": "{a,b}",
+   "when": [
+    {}
+   ],
+   "escape": "{a,b}",
+   "unescape": "{a,b}",
+   "trip": "{a,b}"
+  },
+  {
+   "in": "{a,b}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{a,b}",
+   "unescape": "{a,b}",
+   "trip": "{a,b}"
+  },
+  {
+   "in": "{a,b}/c",
+   "when": [
+    {}
+   ],
+   "escape": "{a,b}/c",
+   "unescape": "{a,b}/c",
+   "trip": "{a,b}/c"
+  },
+  {
+   "in": "{a,b}/c",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{a,b}/c",
+   "unescape": "{a,b}/c",
+   "trip": "{a,b}/c"
+  },
+  {
+   "in": "a/{b,c}",
+   "when": [
+    {}
+   ],
+   "escape": "a/{b,c}",
+   "unescape": "a/{b,c}",
+   "trip": "a/{b,c}"
+  },
+  {
+   "in": "a/{b,c}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/{b,c}",
+   "unescape": "a/{b,c}",
+   "trip": "a/{b,c}"
+  },
+  {
+   "in": "{a,b}{c,d}",
+   "when": [
+    {}
+   ],
+   "escape": "{a,b}{c,d}",
+   "unescape": "{a,b}{c,d}",
+   "trip": "{a,b}{c,d}"
+  },
+  {
+   "in": "{a,b}{c,d}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{a,b}{c,d}",
+   "unescape": "{a,b}{c,d}",
+   "trip": "{a,b}{c,d}"
+  },
+  {
+   "in": "{a/b,c}",
+   "when": [
+    {}
+   ],
+   "escape": "{a/b,c}",
+   "unescape": "{a/b,c}",
+   "trip": "{a/b,c}"
+  },
+  {
+   "in": "{a/b,c}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{a/b,c}",
+   "unescape": "{a/b,c}",
+   "trip": "{a/b,c}"
+  },
+  {
+   "in": "{1..3}",
+   "when": [
+    {}
+   ],
+   "escape": "{1..3}",
+   "unescape": "{1..3}",
+   "trip": "{1..3}"
+  },
+  {
+   "in": "{1..3}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{1..3}",
+   "unescape": "{1..3}",
+   "trip": "{1..3}"
+  },
+  {
+   "in": "{3..1}",
+   "when": [
+    {}
+   ],
+   "escape": "{3..1}",
+   "unescape": "{3..1}",
+   "trip": "{3..1}"
+  },
+  {
+   "in": "{3..1}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{3..1}",
+   "unescape": "{3..1}",
+   "trip": "{3..1}"
+  },
+  {
+   "in": "{1..3..2}",
+   "when": [
+    {}
+   ],
+   "escape": "{1..3..2}",
+   "unescape": "{1..3..2}",
+   "trip": "{1..3..2}"
+  },
+  {
+   "in": "{1..3..2}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{1..3..2}",
+   "unescape": "{1..3..2}",
+   "trip": "{1..3..2}"
+  },
+  {
+   "in": "{1..3..0}",
+   "when": [
+    {}
+   ],
+   "escape": "{1..3..0}",
+   "unescape": "{1..3..0}",
+   "trip": "{1..3..0}"
+  },
+  {
+   "in": "{1..3..0}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{1..3..0}",
+   "unescape": "{1..3..0}",
+   "trip": "{1..3..0}"
+  },
+  {
+   "in": "{A..C}",
+   "when": [
+    {}
+   ],
+   "escape": "{A..C}",
+   "unescape": "{A..C}",
+   "trip": "{A..C}"
+  },
+  {
+   "in": "{A..C}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{A..C}",
+   "unescape": "{A..C}",
+   "trip": "{A..C}"
+  },
+  {
+   "in": "{A..z}",
+   "when": [
+    {}
+   ],
+   "escape": "{A..z}",
+   "unescape": "{A..z}",
+   "trip": "{A..z}"
+  },
+  {
+   "in": "{A..z}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{A..z}",
+   "unescape": "{A..z}",
+   "trip": "{A..z}"
+  },
+  {
+   "in": "{01..03}",
+   "when": [
+    {}
+   ],
+   "escape": "{01..03}",
+   "unescape": "{01..03}",
+   "trip": "{01..03}"
+  },
+  {
+   "in": "{01..03}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{01..03}",
+   "unescape": "{01..03}",
+   "trip": "{01..03}"
+  },
+  {
+   "in": "{1..3}{a,b}",
+   "when": [
+    {}
+   ],
+   "escape": "{1..3}{a,b}",
+   "unescape": "{1..3}{a,b}",
+   "trip": "{1..3}{a,b}"
+  },
+  {
+   "in": "{1..3}{a,b}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{1..3}{a,b}",
+   "unescape": "{1..3}{a,b}",
+   "trip": "{1..3}{a,b}"
+  },
+  {
+   "in": "**/*.{js,mjs}",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\*/\\*.{js,mjs}",
+   "unescape": "**/*.{js,mjs}",
+   "trip": "**/*.{js,mjs}"
+  },
+  {
+   "in": "**/*.{js,mjs}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][*]/[*].{js,mjs}",
+   "unescape": "**/*.{js,mjs}",
+   "trip": "**/*.{js,mjs}"
+  },
+  {
+   "in": "{a,b\\,c}",
+   "when": [
+    {}
+   ],
+   "escape": "{a,b\\\\,c}",
+   "unescape": "{a,b,c}",
+   "trip": "{a,b\\,c}"
+  },
+  {
+   "in": "{a,b\\,c}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{a,b\\,c}",
+   "unescape": "{a,b\\,c}",
+   "trip": "{a,b\\,c}"
+  },
+  {
+   "in": "\\{a,b}",
+   "when": [
+    {}
+   ],
+   "escape": "\\\\{a,b}",
+   "unescape": "{a,b}",
+   "trip": "\\{a,b}"
+  },
+  {
+   "in": "\\{a,b}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "\\{a,b}",
+   "unescape": "\\{a,b}",
+   "trip": "\\{a,b}"
+  },
+  {
+   "in": "{a\\,b}",
+   "when": [
+    {}
+   ],
+   "escape": "{a\\\\,b}",
+   "unescape": "{a,b}",
+   "trip": "{a\\,b}"
+  },
+  {
+   "in": "{a\\,b}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{a\\,b}",
+   "unescape": "{a\\,b}",
+   "trip": "{a\\,b}"
+  },
+  {
+   "in": "{a,b}\\,c",
+   "when": [
+    {}
+   ],
+   "escape": "{a,b}\\\\,c",
+   "unescape": "{a,b},c",
+   "trip": "{a,b}\\,c"
+  },
+  {
+   "in": "{a,b}\\,c",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{a,b}\\,c",
+   "unescape": "{a,b}\\,c",
+   "trip": "{a,b}\\,c"
+  },
+  {
+   "in": "a\\,b",
+   "when": [
+    {}
+   ],
+   "escape": "a\\\\,b",
+   "unescape": "a,b",
+   "trip": "a\\,b"
+  },
+  {
+   "in": "a\\,b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a\\,b",
+   "unescape": "a\\,b",
+   "trip": "a\\,b"
+  },
+  {
+   "in": "{a,{b,c}}",
+   "when": [
+    {}
+   ],
+   "escape": "{a,{b,c}}",
+   "unescape": "{a,{b,c}}",
+   "trip": "{a,{b,c}}"
+  },
+  {
+   "in": "{a,{b,c}}",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "{a,{b,c}}",
+   "unescape": "{a,{b,c}}",
+   "trip": "{a,{b,c}}"
+  },
+  {
+   "in": "@(a|b)",
+   "when": [
+    {}
+   ],
+   "escape": "@\\(a|b\\)",
+   "unescape": "@(a|b)",
+   "trip": "@(a|b)"
+  },
+  {
+   "in": "@(a|b)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "@[(]a|b[)]",
+   "unescape": "@(a|b)",
+   "trip": "@(a|b)"
+  },
+  {
+   "in": "?(a|b)",
+   "when": [
+    {}
+   ],
+   "escape": "\\?\\(a|b\\)",
+   "unescape": "?(a|b)",
+   "trip": "?(a|b)"
+  },
+  {
+   "in": "?(a|b)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[?][(]a|b[)]",
+   "unescape": "?(a|b)",
+   "trip": "?(a|b)"
+  },
+  {
+   "in": "*(a|b)",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\(a|b\\)",
+   "unescape": "*(a|b)",
+   "trip": "*(a|b)"
+  },
+  {
+   "in": "*(a|b)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][(]a|b[)]",
+   "unescape": "*(a|b)",
+   "trip": "*(a|b)"
+  },
+  {
+   "in": "+(a|b)",
+   "when": [
+    {}
+   ],
+   "escape": "+\\(a|b\\)",
+   "unescape": "+(a|b)",
+   "trip": "+(a|b)"
+  },
+  {
+   "in": "+(a|b)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "+[(]a|b[)]",
+   "unescape": "+(a|b)",
+   "trip": "+(a|b)"
+  },
+  {
+   "in": "!(a|b)",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(a|b\\)",
+   "unescape": "!(a|b)",
+   "trip": "!(a|b)"
+  },
+  {
+   "in": "!(a|b)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(]a|b[)]",
+   "unescape": "!(a|b)",
+   "trip": "!(a|b)"
+  },
+  {
+   "in": "!(a)",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(a\\)",
+   "unescape": "!(a)",
+   "trip": "!(a)"
+  },
+  {
+   "in": "!(a)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(]a[)]",
+   "unescape": "!(a)",
+   "trip": "!(a)"
+  },
+  {
+   "in": "!(a)*",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(a\\)\\*",
+   "unescape": "!(a)*",
+   "trip": "!(a)*"
+  },
+  {
+   "in": "!(a)*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(]a[)][*]",
+   "unescape": "!(a)*",
+   "trip": "!(a)*"
+  },
+  {
+   "in": "*!(a)",
+   "when": [
+    {}
+   ],
+   "escape": "\\*!\\(a\\)",
+   "unescape": "*!(a)",
+   "trip": "*!(a)"
+  },
+  {
+   "in": "*!(a)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*]![(]a[)]",
+   "unescape": "*!(a)",
+   "trip": "*!(a)"
+  },
+  {
+   "in": "a/!(b)/c",
+   "when": [
+    {}
+   ],
+   "escape": "a/!\\(b\\)/c",
+   "unescape": "a/!(b)/c",
+   "trip": "a/!(b)/c"
+  },
+  {
+   "in": "a/!(b)/c",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/![(]b[)]/c",
+   "unescape": "a/!(b)/c",
+   "trip": "a/!(b)/c"
+  },
+  {
+   "in": "@()",
+   "when": [
+    {}
+   ],
+   "escape": "@\\(\\)",
+   "unescape": "@()",
+   "trip": "@()"
+  },
+  {
+   "in": "@()",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "@[(][)]",
+   "unescape": "@()",
+   "trip": "@()"
+  },
+  {
+   "in": "!()",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(\\)",
+   "unescape": "!()",
+   "trip": "!()"
+  },
+  {
+   "in": "!()",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(][)]",
+   "unescape": "!()",
+   "trip": "!()"
+  },
+  {
+   "in": "*()",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\(\\)",
+   "unescape": "*()",
+   "trip": "*()"
+  },
+  {
+   "in": "*()",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][(][)]",
+   "unescape": "*()",
+   "trip": "*()"
+  },
+  {
+   "in": "+()",
+   "when": [
+    {}
+   ],
+   "escape": "+\\(\\)",
+   "unescape": "+()",
+   "trip": "+()"
+  },
+  {
+   "in": "+()",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "+[(][)]",
+   "unescape": "+()",
+   "trip": "+()"
+  },
+  {
+   "in": "?()",
+   "when": [
+    {}
+   ],
+   "escape": "\\?\\(\\)",
+   "unescape": "?()",
+   "trip": "?()"
+  },
+  {
+   "in": "?()",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[?][(][)]",
+   "unescape": "?()",
+   "trip": "?()"
+  },
+  {
+   "in": "@(a|)",
+   "when": [
+    {}
+   ],
+   "escape": "@\\(a|\\)",
+   "unescape": "@(a|)",
+   "trip": "@(a|)"
+  },
+  {
+   "in": "@(a|)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "@[(]a|[)]",
+   "unescape": "@(a|)",
+   "trip": "@(a|)"
+  },
+  {
+   "in": "@()b",
+   "when": [
+    {}
+   ],
+   "escape": "@\\(\\)b",
+   "unescape": "@()b",
+   "trip": "@()b"
+  },
+  {
+   "in": "@()b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "@[(][)]b",
+   "unescape": "@()b",
+   "trip": "@()b"
+  },
+  {
+   "in": "a!()b",
+   "when": [
+    {}
+   ],
+   "escape": "a!\\(\\)b",
+   "unescape": "a!()b",
+   "trip": "a!()b"
+  },
+  {
+   "in": "a!()b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a![(][)]b",
+   "unescape": "a!()b",
+   "trip": "a!()b"
+  },
+  {
+   "in": "?(a|b)*(c|d)",
+   "when": [
+    {}
+   ],
+   "escape": "\\?\\(a|b\\)\\*\\(c|d\\)",
+   "unescape": "?(a|b)*(c|d)",
+   "trip": "?(a|b)*(c|d)"
+  },
+  {
+   "in": "?(a|b)*(c|d)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[?][(]a|b[)][*][(]c|d[)]",
+   "unescape": "?(a|b)*(c|d)",
+   "trip": "?(a|b)*(c|d)"
+  },
+  {
+   "in": "+(a|b)/c",
+   "when": [
+    {}
+   ],
+   "escape": "+\\(a|b\\)/c",
+   "unescape": "+(a|b)/c",
+   "trip": "+(a|b)/c"
+  },
+  {
+   "in": "+(a|b)/c",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "+[(]a|b[)]/c",
+   "unescape": "+(a|b)/c",
+   "trip": "+(a|b)/c"
+  },
+  {
+   "in": "@(a|b|c)",
+   "when": [
+    {}
+   ],
+   "escape": "@\\(a|b|c\\)",
+   "unescape": "@(a|b|c)",
+   "trip": "@(a|b|c)"
+  },
+  {
+   "in": "@(a|b|c)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "@[(]a|b|c[)]",
+   "unescape": "@(a|b|c)",
+   "trip": "@(a|b|c)"
+  },
+  {
+   "in": "!(*.js)",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(\\*.js\\)",
+   "unescape": "!(*.js)",
+   "trip": "!(*.js)"
+  },
+  {
+   "in": "!(*.js)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(][*].js[)]",
+   "unescape": "!(*.js)",
+   "trip": "!(*.js)"
+  },
+  {
+   "in": "*(a)",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\(a\\)",
+   "unescape": "*(a)",
+   "trip": "*(a)"
+  },
+  {
+   "in": "*(a)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][(]a[)]",
+   "unescape": "*(a)",
+   "trip": "*(a)"
+  },
+  {
+   "in": "@(a/b)",
+   "when": [
+    {}
+   ],
+   "escape": "@\\(a/b\\)",
+   "unescape": "@(a/b)",
+   "trip": "@(a/b)"
+  },
+  {
+   "in": "@(a/b)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "@[(]a/b[)]",
+   "unescape": "@(a/b)",
+   "trip": "@(a/b)"
+  },
+  {
+   "in": "x!(a)",
+   "when": [
+    {}
+   ],
+   "escape": "x!\\(a\\)",
+   "unescape": "x!(a)",
+   "trip": "x!(a)"
+  },
+  {
+   "in": "x!(a)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "x![(]a[)]",
+   "unescape": "x!(a)",
+   "trip": "x!(a)"
+  },
+  {
+   "in": "x!(a)y",
+   "when": [
+    {}
+   ],
+   "escape": "x!\\(a\\)y",
+   "unescape": "x!(a)y",
+   "trip": "x!(a)y"
+  },
+  {
+   "in": "x!(a)y",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "x![(]a[)]y",
+   "unescape": "x!(a)y",
+   "trip": "x!(a)y"
+  },
+  {
+   "in": "!(a)*b",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(a\\)\\*b",
+   "unescape": "!(a)*b",
+   "trip": "!(a)*b"
+  },
+  {
+   "in": "!(a)*b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(]a[)][*]b",
+   "unescape": "!(a)*b",
+   "trip": "!(a)*b"
+  },
+  {
+   "in": "!(a|b)*",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(a|b\\)\\*",
+   "unescape": "!(a|b)*",
+   "trip": "!(a|b)*"
+  },
+  {
+   "in": "!(a|b)*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(]a|b[)][*]",
+   "unescape": "!(a|b)*",
+   "trip": "!(a|b)*"
+  },
+  {
+   "in": "!(ab)*",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(ab\\)\\*",
+   "unescape": "!(ab)*",
+   "trip": "!(ab)*"
+  },
+  {
+   "in": "!(ab)*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(]ab[)][*]",
+   "unescape": "!(ab)*",
+   "trip": "!(ab)*"
+  },
+  {
+   "in": "a/!(b)*/c",
+   "when": [
+    {}
+   ],
+   "escape": "a/!\\(b\\)\\*/c",
+   "unescape": "a/!(b)*/c",
+   "trip": "a/!(b)*/c"
+  },
+  {
+   "in": "a/!(b)*/c",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/![(]b[)][*]/c",
+   "unescape": "a/!(b)*/c",
+   "trip": "a/!(b)*/c"
+  },
+  {
+   "in": "!(a)?",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(a\\)\\?",
+   "unescape": "!(a)?",
+   "trip": "!(a)?"
+  },
+  {
+   "in": "!(a)?",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(]a[)][?]",
+   "unescape": "!(a)?",
+   "trip": "!(a)?"
+  },
+  {
+   "in": "!(a)b",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(a\\)b",
+   "unescape": "!(a)b",
+   "trip": "!(a)b"
+  },
+  {
+   "in": "!(a)b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(]a[)]b",
+   "unescape": "!(a)b",
+   "trip": "!(a)b"
+  },
+  {
+   "in": "*!(a)*",
+   "when": [
+    {}
+   ],
+   "escape": "\\*!\\(a\\)\\*",
+   "unescape": "*!(a)*",
+   "trip": "*!(a)*"
+  },
+  {
+   "in": "*!(a)*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*]![(]a[)][*]",
+   "unescape": "*!(a)*",
+   "trip": "*!(a)*"
+  },
+  {
+   "in": "!(!(a))",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(!\\(a\\)\\)",
+   "unescape": "!(!(a))",
+   "trip": "!(!(a))"
+  },
+  {
+   "in": "!(!(a))",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(]![(]a[)][)]",
+   "unescape": "!(!(a))",
+   "trip": "!(!(a))"
+  },
+  {
+   "in": "@(!(a))",
+   "when": [
+    {}
+   ],
+   "escape": "@\\(!\\(a\\)\\)",
+   "unescape": "@(!(a))",
+   "trip": "@(!(a))"
+  },
+  {
+   "in": "@(!(a))",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "@[(]![(]a[)][)]",
+   "unescape": "@(!(a))",
+   "trip": "@(!(a))"
+  },
+  {
+   "in": "!(a|b)/c",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(a|b\\)/c",
+   "unescape": "!(a|b)/c",
+   "trip": "!(a|b)/c"
+  },
+  {
+   "in": "!(a|b)/c",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(]a|b[)]/c",
+   "unescape": "!(a|b)/c",
+   "trip": "!(a|b)/c"
+  },
+  {
+   "in": "x!(a|b)y",
+   "when": [
+    {}
+   ],
+   "escape": "x!\\(a|b\\)y",
+   "unescape": "x!(a|b)y",
+   "trip": "x!(a|b)y"
+  },
+  {
+   "in": "x!(a|b)y",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "x![(]a|b[)]y",
+   "unescape": "x!(a|b)y",
+   "trip": "x!(a|b)y"
+  },
+  {
+   "in": "!(*)",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(\\*\\)",
+   "unescape": "!(*)",
+   "trip": "!(*)"
+  },
+  {
+   "in": "!(*)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(][*][)]",
+   "unescape": "!(*)",
+   "trip": "!(*)"
+  },
+  {
+   "in": "!(a*)",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(a\\*\\)",
+   "unescape": "!(a*)",
+   "trip": "!(a*)"
+  },
+  {
+   "in": "!(a*)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(]a[*][)]",
+   "unescape": "!(a*)",
+   "trip": "!(a*)"
+  },
+  {
+   "in": "!(*a)",
+   "when": [
+    {}
+   ],
+   "escape": "!\\(\\*a\\)",
+   "unescape": "!(*a)",
+   "trip": "!(*a)"
+  },
+  {
+   "in": "!(*a)",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![(][*]a[)]",
+   "unescape": "!(*a)",
+   "trip": "!(*a)"
+  },
+  {
+   "in": "!a",
+   "when": [
+    {}
+   ],
+   "escape": "!a",
+   "unescape": "!a",
+   "trip": "!a"
+  },
+  {
+   "in": "!a",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "!a",
+   "unescape": "!a",
+   "trip": "!a"
+  },
+  {
+   "in": "!!a",
+   "when": [
+    {}
+   ],
+   "escape": "!!a",
+   "unescape": "!!a",
+   "trip": "!!a"
+  },
+  {
+   "in": "!!a",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "!!a",
+   "unescape": "!!a",
+   "trip": "!!a"
+  },
+  {
+   "in": "!*",
+   "when": [
+    {}
+   ],
+   "escape": "!\\*",
+   "unescape": "!*",
+   "trip": "!*"
+  },
+  {
+   "in": "!*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "![*]",
+   "unescape": "!*",
+   "trip": "!*"
+  },
+  {
+   "in": "#a",
+   "when": [
+    {}
+   ],
+   "escape": "#a",
+   "unescape": "#a",
+   "trip": "#a"
+  },
+  {
+   "in": "#a",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "#a",
+   "unescape": "#a",
+   "trip": "#a"
+  },
+  {
+   "in": "#",
+   "when": [
+    {}
+   ],
+   "escape": "#",
+   "unescape": "#",
+   "trip": "#"
+  },
+  {
+   "in": "#",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "#",
+   "unescape": "#",
+   "trip": "#"
+  },
+  {
+   "in": "!",
+   "when": [
+    {}
+   ],
+   "escape": "!",
+   "unescape": "!",
+   "trip": "!"
+  },
+  {
+   "in": "!",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "!",
+   "unescape": "!",
+   "trip": "!"
+  },
+  {
+   "in": "\\*",
+   "when": [
+    {}
+   ],
+   "escape": "\\\\\\*",
+   "unescape": "*",
+   "trip": "\\*"
+  },
+  {
+   "in": "\\*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "\\[*]",
+   "unescape": "\\*",
+   "trip": "\\*"
+  },
+  {
+   "in": "\\?",
+   "when": [
+    {}
+   ],
+   "escape": "\\\\\\?",
+   "unescape": "?",
+   "trip": "\\?"
+  },
+  {
+   "in": "\\?",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "\\[?]",
+   "unescape": "\\?",
+   "trip": "\\?"
+  },
+  {
+   "in": "a\\*b",
+   "when": [
+    {}
+   ],
+   "escape": "a\\\\\\*b",
+   "unescape": "a*b",
+   "trip": "a\\*b"
+  },
+  {
+   "in": "a\\*b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a\\[*]b",
+   "unescape": "a\\*b",
+   "trip": "a\\*b"
+  },
+  {
+   "in": "\\[a]",
+   "when": [
+    {}
+   ],
+   "escape": "\\\\\\[a\\]",
+   "unescape": "[a]",
+   "trip": "\\[a]"
+  },
+  {
+   "in": "\\[a]",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "\\[[]a[]]",
+   "unescape": "\\a",
+   "trip": "\\[a]"
+  },
+  {
+   "in": "\\\\",
+   "when": [
+    {}
+   ],
+   "escape": "\\\\\\\\",
+   "unescape": "\\",
+   "trip": "\\\\"
+  },
+  {
+   "in": "\\\\",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "\\\\",
+   "unescape": "\\\\",
+   "trip": "\\\\"
+  },
+  {
+   "in": "a\\b",
+   "when": [
+    {}
+   ],
+   "escape": "a\\\\b",
+   "unescape": "ab",
+   "trip": "a\\b"
+  },
+  {
+   "in": "a\\b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a\\b",
+   "unescape": "a\\b",
+   "trip": "a\\b"
+  },
+  {
+   "in": "\\.",
+   "when": [
+    {}
+   ],
+   "escape": "\\\\.",
+   "unescape": ".",
+   "trip": "\\."
+  },
+  {
+   "in": "\\.",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "\\.",
+   "unescape": "\\.",
+   "trip": "\\."
+  },
+  {
+   "in": "a\\",
+   "when": [
+    {}
+   ],
+   "escape": "a\\\\",
+   "unescape": "a\\",
+   "trip": "a\\"
+  },
+  {
+   "in": "a\\",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a\\",
+   "unescape": "a\\",
+   "trip": "a\\"
+  },
+  {
+   "in": "A",
+   "when": [
+    {}
+   ],
+   "escape": "A",
+   "unescape": "A",
+   "trip": "A"
+  },
+  {
+   "in": "A",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "A",
+   "unescape": "A",
+   "trip": "A"
+  },
+  {
+   "in": "A/B",
+   "when": [
+    {}
+   ],
+   "escape": "A/B",
+   "unescape": "A/B",
+   "trip": "A/B"
+  },
+  {
+   "in": "A/B",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "A/B",
+   "unescape": "A/B",
+   "trip": "A/B"
+  },
+  {
+   "in": "a//b",
+   "when": [
+    {}
+   ],
+   "escape": "a//b",
+   "unescape": "a//b",
+   "trip": "a//b"
+  },
+  {
+   "in": "a//b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a//b",
+   "unescape": "a//b",
+   "trip": "a//b"
+  },
+  {
+   "in": "a/",
+   "when": [
+    {}
+   ],
+   "escape": "a/",
+   "unescape": "a/",
+   "trip": "a/"
+  },
+  {
+   "in": "a/",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/",
+   "unescape": "a/",
+   "trip": "a/"
+  },
+  {
+   "in": "/a",
+   "when": [
+    {}
+   ],
+   "escape": "/a",
+   "unescape": "/a",
+   "trip": "/a"
+  },
+  {
+   "in": "/a",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "/a",
+   "unescape": "/a",
+   "trip": "/a"
+  },
+  {
+   "in": "a/./b",
+   "when": [
+    {}
+   ],
+   "escape": "a/./b",
+   "unescape": "a/./b",
+   "trip": "a/./b"
+  },
+  {
+   "in": "a/./b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/./b",
+   "unescape": "a/./b",
+   "trip": "a/./b"
+  },
+  {
+   "in": "a/../b",
+   "when": [
+    {}
+   ],
+   "escape": "a/../b",
+   "unescape": "a/../b",
+   "trip": "a/../b"
+  },
+  {
+   "in": "a/../b",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/../b",
+   "unescape": "a/../b",
+   "trip": "a/../b"
+  },
+  {
+   "in": "a/b/c/d/e/f/g",
+   "when": [
+    {}
+   ],
+   "escape": "a/b/c/d/e/f/g",
+   "unescape": "a/b/c/d/e/f/g",
+   "trip": "a/b/c/d/e/f/g"
+  },
+  {
+   "in": "a/b/c/d/e/f/g",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "a/b/c/d/e/f/g",
+   "unescape": "a/b/c/d/e/f/g",
+   "trip": "a/b/c/d/e/f/g"
+  },
+  {
+   "in": "*/*/*/*",
+   "when": [
+    {}
+   ],
+   "escape": "\\*/\\*/\\*/\\*",
+   "unescape": "*/*/*/*",
+   "trip": "*/*/*/*"
+  },
+  {
+   "in": "*/*/*/*",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*]/[*]/[*]/[*]",
+   "unescape": "*/*/*/*",
+   "trip": "*/*/*/*"
+  },
+  {
+   "in": "**/**/**",
+   "when": [
+    {}
+   ],
+   "escape": "\\*\\*/\\*\\*/\\*\\*",
+   "unescape": "**/**/**",
+   "trip": "**/**/**"
+  },
+  {
+   "in": "**/**/**",
+   "when": [
+    {
+     "windowsPathsNoEscape": true
+    }
+   ],
+   "escape": "[*][*]/[*][*]/[*][*]",
+   "unescape": "**/**/**",
+   "trip": "**/**/**"
+  }
+ ]
+}

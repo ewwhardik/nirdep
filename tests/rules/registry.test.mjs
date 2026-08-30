@@ -8,6 +8,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { ACTION, AS, RULES, REPLACEABLE, REWRITABLE, ruleFor } from '../../src/rules/registry.mjs';
 import * as colour from '../../src/runtime/colour.mjs';
 import * as semver from '../../src/runtime/semver.mjs';
@@ -99,6 +100,9 @@ test('the two lists the README quotes agree with the table', () => {
 });
 
 test('every package named is one the runtime has an answer for', () => {
-  const subpaths = new Set(['runtime/colour', 'runtime/args', 'runtime/semver']);
+  // Read off the export map rather than typed here: a rule pointing at a subpath the
+  // package does not publish is a rewrite the consumer cannot resolve.
+  const manifest = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
+  const subpaths = new Set(Object.keys(manifest.exports).filter((one) => one !== '.').map((one) => one.slice(2)));
   for (const one of RULES) assert.ok(subpaths.has(one.subpath), `${one.package} points at ${one.subpath}`);
 });

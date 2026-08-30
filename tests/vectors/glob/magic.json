@@ -1,0 +1,7014 @@
+{
+ "note": "hasMagic. The reference has no such function at the top level -- it is a method on a compiled pattern -- so these were taken from `new Minimatch(p, o).hasMagic()`.",
+ "cases": [
+  {
+   "in": "a",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b/c",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b/c",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b/c",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b/c",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b/c",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "x.js",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "x.js",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "x.js",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "x.js",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "x.js",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "z.txt",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "z.txt",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "z.txt",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "z.txt",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "z.txt",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": ".",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": ".",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": ".",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": ".",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": ".",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "./a",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "./a",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "./a",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "./a",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "./a",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*.js",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "*.js",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*.js",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*.js",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*.js",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "a*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*a",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "*a",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*a",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*a",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*a",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a*b",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "a*b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a*b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a*b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a*b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*/*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*/*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*/*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*/*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*/*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "a/*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/*/c",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "a/*/c",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/*/c",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/*/c",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/*/c",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "**",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*.js",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*.js",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*.js",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*.js",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*.js",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/a",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "**/a",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/a",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/a",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/a",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**/b",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**/b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**/b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**/b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**/b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**/*/b",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**/*/b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**/*/b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**/*/b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/**/*/b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/**",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "**/**",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/**",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/**",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/**",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "**/",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "/**",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "/**",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "/**",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "/**",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "/**",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "/",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "/",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "/",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "/",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "/",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "**/node_modules/**",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "**/node_modules/**",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/node_modules/**",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/node_modules/**",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/node_modules/**",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/.*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "**/.*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/.*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/.*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/.*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": ".*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": ".*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": ".*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": ".*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": ".*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/**/*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "*/**/*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/**/*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/**/*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/**/*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "?",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "??",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "??",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "??",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "??",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "??",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a?",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "a?",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a?",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a?",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a?",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?a",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "?a",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?a",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?a",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?a",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a?c",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "a?c",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a?c",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a?c",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a?c",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?/?",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "?/?",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?/?",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?/?",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?/?",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/?",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "**/?",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/?",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/?",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/?",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[a]",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "[a]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[a]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[a]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[a]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[a-a]",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "[a-a]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[a-a]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[a-a]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[a-a]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[ab]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[ab]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[ab]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[ab]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[ab]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[a-c]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[a-c]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[a-c]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[a-c]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[a-c]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[!a]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[!a]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[!a]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[!a]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[!a]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[^a]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[^a]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[^a]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[^a]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[^a]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[!]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[!]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[!]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[!]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[!]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[]a]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[]a]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[]a]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[]a]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[]a]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[-]",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "[-]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[-]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[-]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[-]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[a-]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[a-]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[a-]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[a-]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[a-]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[.]",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "[.]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[.]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[.]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[.]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[.]a",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "[.]a",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[.]a",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[.]a",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[.]a",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[/]",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "[/]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[/]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[/]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[/]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a[/]",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a[/]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a[/]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a[/]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a[/]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[\\\\]",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "[\\\\]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[\\\\]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[\\\\]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[\\\\]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a[b]c",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a[b]c",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a[b]c",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a[b]c",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a[b]c",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[b]",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "[b]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[b]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[b]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[b]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[abc]def",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[abc]def",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[abc]def",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[abc]def",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[abc]def",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "[",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[]",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "[]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "[]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "x[[:digit:]]y",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "x[[:digit:]]y",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "x[[:digit:]]y",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "x[[:digit:]]y",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "x[[:digit:]]y",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:alpha:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:alpha:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:alpha:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:alpha:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:alpha:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:digit:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:digit:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:digit:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:digit:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:digit:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:alnum:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:alnum:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:alnum:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:alnum:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:alnum:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:upper:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:upper:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:upper:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:upper:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:upper:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:lower:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:lower:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:lower:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:lower:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:lower:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:space:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:space:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:space:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:space:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:space:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:blank:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:blank:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:blank:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:blank:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:blank:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:cntrl:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:cntrl:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:cntrl:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:cntrl:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:cntrl:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:print:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:print:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:print:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:print:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:print:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:graph:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:graph:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:graph:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:graph:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:graph:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:punct:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:punct:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:punct:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:punct:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:punct:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:xdigit:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:xdigit:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:xdigit:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:xdigit:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:xdigit:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:word:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:word:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:word:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:word:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:word:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:bogus:]]",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:bogus:]]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:bogus:]]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:bogus:]]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "[[:bogus:]]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{a}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{a}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{,}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{,}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{,}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{,}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{,}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{,a}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{,a}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{,a}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{,a}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{,a}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "x{,}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "x{,}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "x{,}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "x{,}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "x{,}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{a,b}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}/c",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}/c",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{a,b}/c",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}/c",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}/c",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/{b,c}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a/{b,c}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/{b,c}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/{b,c}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/{b,c}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}{c,d}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}{c,d}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{a,b}{c,d}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}{c,d}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}{c,d}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a/b,c}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{a/b,c}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{a/b,c}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a/b,c}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a/b,c}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{1..3}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{3..1}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{3..1}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{3..1}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{3..1}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{3..1}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3..2}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3..2}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{1..3..2}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3..2}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3..2}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3..0}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3..0}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{1..3..0}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3..0}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3..0}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{A..C}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{A..C}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{A..C}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{A..C}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{A..C}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{A..z}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{A..z}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{A..z}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{A..z}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{A..z}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{01..03}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{01..03}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{01..03}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{01..03}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{01..03}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3}{a,b}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3}{a,b}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{1..3}{a,b}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3}{a,b}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{1..3}{a,b}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "**/*.{js,mjs}",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*.{js,mjs}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*.{js,mjs}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*.{js,mjs}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/*.{js,mjs}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{a,b\\,c}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b\\,c}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{a,b\\,c}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b\\,c}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b\\,c}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\{a,b}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "\\{a,b}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\{a,b}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\{a,b}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\{a,b}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a\\,b}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{a\\,b}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a\\,b}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a\\,b}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a\\,b}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}\\,c",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}\\,c",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{a,b}\\,c",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}\\,c",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,b}\\,c",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\,b",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\,b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\,b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\,b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\,b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,{b,c}}",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,{b,c}}",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "{a,{b,c}}",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,{b,c}}",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "{a,{b,c}}",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "@(a|b)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "@(a|b)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@(a|b)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "@(a|b)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@(a|b)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?(a|b)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "?(a|b)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?(a|b)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?(a|b)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?(a|b)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*(a|b)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "*(a|b)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*(a|b)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*(a|b)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*(a|b)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "+(a|b)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "+(a|b)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "+(a|b)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "+(a|b)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "+(a|b)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a|b)",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a|b)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a|b)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a|b)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a|b)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*!(a)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "*!(a)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*!(a)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*!(a)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*!(a)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/!(b)/c",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "a/!(b)/c",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/!(b)/c",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/!(b)/c",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/!(b)/c",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@()",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "@()",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "@()",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "@()",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "@()",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!()",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "!()",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!()",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!()",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!()",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*()",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "*()",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "*()",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*()",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "*()",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "+()",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "+()",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "+()",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "+()",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "+()",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "?()",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "?()",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "?()",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?()",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "?()",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "@(a|)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "@(a|)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@(a|)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "@(a|)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@(a|)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@()b",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "@()b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@()b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "@()b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@()b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a!()b",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "a!()b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a!()b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a!()b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a!()b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?(a|b)*(c|d)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "?(a|b)*(c|d)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?(a|b)*(c|d)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?(a|b)*(c|d)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "?(a|b)*(c|d)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "+(a|b)/c",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "+(a|b)/c",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "+(a|b)/c",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "+(a|b)/c",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "+(a|b)/c",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@(a|b|c)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "@(a|b|c)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@(a|b|c)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "@(a|b|c)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@(a|b|c)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*.js)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*.js)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*.js)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*.js)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*.js)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*(a)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "*(a)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*(a)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*(a)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*(a)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@(a/b)",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "@(a/b)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "@(a/b)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "@(a/b)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "@(a/b)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "x!(a)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "x!(a)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "x!(a)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "x!(a)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "x!(a)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "x!(a)y",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "x!(a)y",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "x!(a)y",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "x!(a)y",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "x!(a)y",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)*b",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)*b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)*b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)*b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)*b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a|b)*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a|b)*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a|b)*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a|b)*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a|b)*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(ab)*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "!(ab)*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(ab)*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(ab)*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(ab)*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/!(b)*/c",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "a/!(b)*/c",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/!(b)*/c",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/!(b)*/c",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "a/!(b)*/c",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)?",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)?",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)?",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)?",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)?",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a)b",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a)b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a)b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a)b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a)b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*!(a)*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "*!(a)*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*!(a)*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*!(a)*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*!(a)*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(!(a))",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "!(!(a))",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(!(a))",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!(!(a))",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(!(a))",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@(!(a))",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "@(!(a))",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@(!(a))",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "@(!(a))",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "@(!(a))",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a|b)/c",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a|b)/c",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a|b)/c",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a|b)/c",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!(a|b)/c",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "x!(a|b)y",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "x!(a|b)y",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "x!(a|b)y",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "x!(a|b)y",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "x!(a|b)y",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a*)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a*)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a*)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a*)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(a*)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*a)",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*a)",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*a)",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*a)",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!(*a)",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!a",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "!a",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!a",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!a",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!a",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!!a",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "!!a",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!!a",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!!a",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!!a",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "!*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "!*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "#a",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "#a",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "#a",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "#a",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "#a",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "#",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "#",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "#",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "#",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "#",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "!",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "!",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\*",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "\\*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\?",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "\\?",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\?",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\?",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\?",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\*b",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\*b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\*b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\*b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\*b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\[a]",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "\\[a]",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\[a]",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\[a]",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\[a]",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\\\",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "\\\\",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\\\",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\\\",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\\\",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\b",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\.",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "\\.",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\.",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\.",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "\\.",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a\\",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "A",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "A",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "A",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "A",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "A",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "A/B",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "A/B",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "A/B",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "A/B",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "A/B",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a//b",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a//b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a//b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a//b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a//b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a/",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "/a",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "/a",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "/a",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "/a",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "/a",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/./b",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a/./b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/./b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/./b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/./b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/../b",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a/../b",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/../b",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/../b",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/../b",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b/c/d/e/f/g",
+   "when": [
+    {}
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b/c/d/e/f/g",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b/c/d/e/f/g",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b/c/d/e/f/g",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "a/b/c/d/e/f/g",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": false
+  },
+  {
+   "in": "*/*/*/*",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*/*/*",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*/*/*",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*/*/*",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "*/*/*/*",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/**/**",
+   "when": [
+    {}
+   ],
+   "out": true
+  },
+  {
+   "in": "**/**/**",
+   "when": [
+    {
+     "magicalBraces": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/**/**",
+   "when": [
+    {
+     "noext": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/**/**",
+   "when": [
+    {
+     "nobrace": true
+    }
+   ],
+   "out": true
+  },
+  {
+   "in": "**/**/**",
+   "when": [
+    {
+     "nonegate": true
+    }
+   ],
+   "out": true
+  }
+ ]
+}

@@ -201,6 +201,8 @@ test('the lockfile is quoted rather than restated, caveats and all', () => {
     scan: { ...scan, lock: { ...scan.lock, understood: false, kind: 'none', note: 'no lockfile' } },
     read: () => { throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' }); },
   });
-  assert.deepEqual(result.lock, { kind: 'none', understood: false, note: 'no lockfile' });
+  // `file` travels with the caveat because the annotations need somewhere to point: a version
+  // comes from the lockfile, and with no lockfile there is no file to attach it to.
+  assert.deepEqual(result.lock, { kind: 'none', file: null, understood: false, note: 'no lockfile' });
   assert.equal(result.source.counts.scanned, 3);
 });

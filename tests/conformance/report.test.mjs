@@ -38,12 +38,14 @@ function page(per, options = {}) {
 
 test('every row carries the size of the corpus it passed', () => {
   const text = page({ pass: 12 });
-  assert.match(text, /^3 runtime modules, \d{4} vector cases, 36 tests$/m);
+  assert.match(text, /^4 runtime modules, \d{4} vector cases, 48 tests$/m);
   assert.match(text, /^ {2}colour {5}74 cases in 2 files {2}12 tests, all passed$/m);
   assert.match(text, /^ {10}4 packages: chalk, strip-ansi, supports-color, ansi-styles$/m);
   assert.match(text, /^ {2}semver {3}1243 cases in 7 files {2}12 tests, all passed$/m);
   assert.match(text, /^ {10}1 package: semver$/m);
-  assert.match(text, /^PASS: 8 packages replaced, 1411 cases checked, nothing came back wrong\.$/m);
+  assert.match(text, /^ {2}glob {5}2035 cases in 5 files {2}12 tests, all passed$/m);
+  assert.match(text, /^ {10}2 packages: minimatch, glob$/m);
+  assert.match(text, /^PASS: 10 packages replaced, 3446 cases checked, nothing came back wrong\.$/m);
 });
 
 test('a failure is named where the row is, and the last line is the one CI quotes', () => {
@@ -53,7 +55,7 @@ test('a failure is named where the row is, and the last line is the one CI quote
   assert.match(text, /^ {2}semver {3}1243 cases in 7 files {2}16 tests, 14 passed, 2 failed$/m);
   assert.match(text, /^ {10}failed: ranges: a comparator set that selects nothing$/m);
   assert.match(text, /^ {10}failed: coerce, right to left$/m);
-  assert.match(text, /^FAIL: 2 of 40 tests came back wrong across 3 modules\.$/m);
+  assert.match(text, /^FAIL: 2 of 52 tests came back wrong across 4 modules\.$/m);
   assert.equal(/PASS/.test(text), false);
 });
 
@@ -69,7 +71,7 @@ test('a skip is on the page and not in the verdict', () => {
   const text = page((name) => (name === 'colour' ? { pass: 11, skipped: 1 } : { pass: 12 }));
   assert.match(text, /^ {2}colour {5}74 cases in 2 files {2}12 tests, 11 passed, 1 skipped$/m);
   // With a skip in it the verdict is 81 columns and folds, so it is read as a sentence.
-  assert.match(flat(text), /PASS: 8 packages replaced, 1411 cases checked, 1 skipped, nothing came back wrong\./);
+  assert.match(flat(text), /PASS: 10 packages replaced, 3446 cases checked, 1 skipped, nothing came back wrong\./);
 });
 
 test('the verdict column does not move between a file and two files', () => {
@@ -88,7 +90,7 @@ test('a module that could not be started says so instead of showing a nought', (
   // The two modules that did run are still on the page, and the last line still refuses to
   // call the run a pass: 94 cases had nobody look at them.
   assert.match(text, /^ {2}colour {5}74 cases in 2 files {2}12 tests, all passed$/m);
-  assert.match(text, /^NO VERDICT: 1 of 3 modules did not run; 94 cases went unchecked\.$/m);
+  assert.match(text, /^NO VERDICT: 1 of 4 modules did not run; 94 cases went unchecked\.$/m);
   assert.equal(/PASS|FAIL/.test(text), false);
 });
 
@@ -99,7 +101,7 @@ test('a module that did not run outranks the failures in the ones that did', () 
     return { pass: 12 };
   });
   assert.match(text, /^ {10}failed: coerce, right to left$/m);
-  assert.match(flat(text), /NO VERDICT: 1 of 3 modules did not run; 94 cases went unchecked, and 2 of the rest came back wrong\./);
+  assert.match(flat(text), /NO VERDICT: 1 of 4 modules did not run; 94 cases went unchecked, and 2 of the rest came back wrong\./);
 });
 
 test('the footer says what was read and sends the reader to the provenance', () => {

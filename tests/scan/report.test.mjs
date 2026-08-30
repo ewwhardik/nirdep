@@ -56,7 +56,7 @@ test('the four blocks arrive in the order somebody decides things', () => {
     .map((head) => text.indexOf(head));
   assert.ok(at.every((one) => one !== -1), 'every block is present');
   assert.deepEqual([...at].sort((a, b) => a - b), at, 'and none of them has moved');
-  assert.match(text, /\n2 high \| 1 medium \| 1 low \| 1 note\n$/, 'the tally is the last line');
+  assert.match(text, /\n2 high \| 1 medium \| 2 low \| 1 note\n$/, 'the tally is the last line');
 });
 
 test('the overview says what was read and where it came from', () => {
@@ -107,14 +107,35 @@ test('a project with nothing to replace gets a sentence, not an empty heading', 
 test('findings are printed worst first, each with its severity in the margin', () => {
   const text = reportOf(TREE.tree);
   const marks = text.split('\n')
-    .map((line) => line.match(/^ {2}(high|medium|low|note) {2,}([a-z-]+)$/))
+    // The margin holds a severity, a code, and where the claim came from an advisory
+    // number: a report that asserts something about somebody else's package has to be
+    // checkable somewhere that is not this repository.
+    .map((line) => line.match(/^ {2}(critical|high|medium|low|note) {2,}([a-z-]+)(?: {2}(CVE-[\d-]+))?$/))
     .filter(Boolean)
     .map((match) => [match[1], match[2]]);
   assert.deepEqual(marks, [
     ['high', 'no-integrity'], ['high', 'undeclared'], ['medium', 'deprecated'],
-    ['low', 'floating'], ['note', 'depth'],
+    ['low', 'floating'], ['low', 'in-incident'], ['note', 'depth'],
   ]);
   assert.match(text, /findings\n {2}high {4}no-integrity\n {4}1 registry package is recorded/);
+});
+
+test('a compromised release is critical, cited, and not the colour of a ReDoS', () => {
+  const text = reportOf(TREE.unlucky, { style: MARKED });
+  // Malware in a lockfile is the one level that gets two effects. A release published to
+  // steal from you and a hang in a whitespace trim must not arrive looking alike.
+  assert.match(text, /<b><r>critical<\/r><\/b> {2}<d>compromised<\/d>/);
+  assert.match(text, /<r>high {2}<\/r> {2}<d>vulnerable {2}CVE-2022-25883<\/d>/);
+  const plain = strip(text);
+  assert.match(flat(plain), /colors@1\.4\.44-liberty-2 is a release that was published to do harm/);
+  assert.match(flat(plain), /It arrived alongside flatmap-stream, which is worth checking too/);
+  assert.match(flat(plain), /semver@7\.5\.1 is inside 1 published advisory\. CVE-2022-25883:/,
+    'one advisory names its identifier once, not twice in two lines');
+  assert.match(flat(plain), /Fixed in 4\.17\.21\./, 'the highest fix across five lodash rows');
+  assert.match(flat(plain), /a match on a name and not a verdict on your versions/);
+  assert.match(flat(plain), /could not be checked against a version here: minimatch/);
+  assert.match(plain, /\n3 critical \| 2 high \| 1 medium \| 2 low \| 2 note\n$/);
+  for (const line of plain.split('\n')) assert.ok(line.length <= 80, `${line.length} columns: ${line}`);
 });
 
 test('a clean project still gets told what was not looked at', () => {
@@ -123,9 +144,14 @@ test('a clean project still gets told what was not looked at', () => {
     'index.mjs': 'export const answer = 42;\n',
   });
   assert.match(text, /findings\n {2}nothing to report\n/);
-  // "Nothing found" means very little without "and here is what I could not have found".
-  assert.match(text, /what this scan did not check\n {4}Known vulnerabilities\./);
+  // "Nothing found" means very little without "and here is what I could not have found",
+  // and the first line of it states the scope twice: how many packages the table covers,
+  // and the day somebody last read it against its sources.
+  assert.match(text, /what this scan did not check\n {4}Known vulnerabilities beyond a curated table\./);
+  assert.match(flat(text), /\d+ packages are in it, reviewed \d{4}-\d\d-\d\d, and 0 of the declared names matched\./);
   assert.match(flat(text), /not a clean report from npm audit\./);
+  // A tally of noughts, and no `0 critical`: the level exists for malware in a lockfile,
+  // and a column that is almost always empty teaches people to skim the row it lives in.
   assert.match(text, /\n0 high \| 0 medium \| 0 low \| 0 note\n$/);
   for (const line of text.split('\n')) assert.ok(line.length <= 80, `${line.length} columns: ${line}`);
 });

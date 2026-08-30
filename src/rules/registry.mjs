@@ -14,12 +14,15 @@
 
 import * as colour from '../runtime/colour.mjs';
 import * as semver from '../runtime/semver.mjs';
+import * as glob from '../runtime/glob.mjs';
 
 /** What we are prepared to do about a package. */
 export const ACTION = Object.freeze({ REWRITE: 'rewrite', ADVISE: 'advise' });
 
 /** What a default binding turns into on the other side. */
-export const AS = Object.freeze({ DEFAULT: 'default', NAMED: 'named', NAMESPACE: 'namespace' });
+export const AS = Object.freeze({
+  DEFAULT: 'default', NAMED: 'named', NAMESPACE: 'namespace', DUAL: 'dual',
+});
 
 /**
  * The chained builder's surface: every style in the table, plus the members that take
@@ -33,6 +36,20 @@ const COLOUR_MEMBERS = Object.freeze(new Set([
 
 /** Everything the semver replacement exports, straight from the module. */
 const SEMVER_MEMBERS = Object.freeze(new Set(Object.keys(semver.default)));
+
+/**
+ * The glob replacement's surface, minus `makeRe`. The module does export that
+ * name -- it has to, or a moved call site would fail later with `undefined is
+ * not a function` -- but it exports it as a throw, because there is no compiled
+ * pattern to hand back. So it is kept out of this list on purpose: a file that
+ * reaches for it is refused with DECLINE.MEMBER and the line is left alone,
+ * which is the difference between "we cannot do this" and a green run that
+ * breaks at midnight. `Minimatch` and `AST` are absent for the same reason from
+ * the other direction: a class and a syntax tree are not part of this surface.
+ */
+const GLOB_MEMBERS = Object.freeze(new Set(
+  Object.keys(glob.default).filter((name) => name !== 'makeRe'),
+));
 
 /**
  * The rules. `weekly` is the download figure that made the package worth writing a
@@ -91,6 +108,24 @@ export const RULES = Object.freeze([
     declines: Object.freeze({}),
   }),
   Object.freeze({
+    package: 'minimatch',
+    weekly: '348.9M',
+    action: ACTION.REWRITE,
+    target: 'nirdep/runtime/glob',
+    subpath: 'runtime/glob',
+    // A default import of this package means two different things depending on which
+    // major the file was written against, so the shape is read off the file rather than
+    // assumed: see AS.DUAL.
+    fromDefault: Object.freeze({ as: AS.DUAL, name: 'minimatch' }),
+    fromNamespace: Object.freeze({ as: AS.NAMESPACE }),
+    fromNamed: Object.freeze({ as: AS.NAMED }),
+    chained: false,
+    members: GLOB_MEMBERS,
+    note: 'the matcher takes the same arguments in the same order and answers the same, '
+      + 'with makeRe held out of the member list on purpose',
+    declines: Object.freeze({}),
+  }),
+  Object.freeze({
     package: 'supports-color',
     weekly: '317.5M',
     action: ACTION.ADVISE,
@@ -140,6 +175,19 @@ export const RULES = Object.freeze([
     advice: 'as with commander: createCli(descriptor) is declarative where yargs is fluent. '
       + 'The features that survive are the ones worth having; middleware and command '
       + 'modules are not implemented and are not planned.',
+  }),
+  Object.freeze({
+    package: 'glob',
+    weekly: '—',
+    action: ACTION.ADVISE,
+    target: 'nirdep/runtime/glob',
+    subpath: 'runtime/glob',
+    advice: 'globSync(patterns, options) walks and matches, and the pattern half is at '
+      + 'conformance with the matcher this package installs. What differs is everything '
+      + 'around it: there is no Glob class, no stream, no async iterator and no cache, the '
+      + 'result is always sorted so a build can compare two runs, and ignore takes patterns '
+      + 'rather than names. The weekly figure is left blank rather than guessed -- the one '
+      + 'quoted for minimatch is the one that could be checked.',
   }),
 ]);
 

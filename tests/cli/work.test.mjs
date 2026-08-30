@@ -141,6 +141,19 @@ test('both commands document their own options', () => {
     const { stdout } = run(['help', command]);
     assert.match(stdout, /--runtime/);
     assert.match(stdout, /--context/);
+    assert.match(stdout, /--exclude <string\.\.\.>/);
+    assert.match(stdout, /--include <string\.\.\.>/);
     assert.match(stdout, /\[path\]/);
   }
+});
+
+test('an excluded file is not rewritten, which is the codemod half of the same matcher', () => {
+  const root = plant();
+  // The rewrite the run would otherwise make, refused by a pattern rather than by a rule.
+  // Same flag, same matcher and same prune as `scan`, because it is the same selection.
+  const { code, stdout } = run(['apply', root, '--runtime', 'nirdep/runtime', '--exclude', 'src/deep/**']);
+  assert.equal(code, 0);
+  assert.equal(read(root, 'src/deep/plain.mjs'), TREE.project['src/deep/plain.mjs'], 'a skipped file was written');
+  assert.match(read(root, 'src/report.mjs'), /nirdep\/runtime\//, 'and the rest of the tree still moved');
+  assert.equal(/src\/deep/.test(stdout), false, 'a file nobody read has nothing to report');
 });

@@ -14,6 +14,10 @@ import assert from 'node:assert/strict';
 import { guardProject } from '../../src/guard/project.mjs';
 import { POLICY_FILE, SIGNAL } from '../../src/guard/policy.mjs';
 import { guardReport } from '../../src/guard/report.mjs';
+import { REPLACEABLE } from '../../src/rules/registry.mjs';
+
+/** The default deny list is the catalogue, so the count on the page follows it. */
+const WATCHED = REPLACEABLE.length;
 
 /** Whitespace-collapsed, so a folded sentence can be asserted as a sentence. */
 const flat = (text) => text.replace(/\s+/g, ' ');
@@ -66,7 +70,7 @@ test('a breach gets the package, the presence, the first line and the command', 
   // segments rather than one sentence so that a wide name column splits them instead of
   // running the row off the side of the terminal.
   assert.match(text, /^ {16}-> nirdep\/runtime\/colour {2}rewrite it: nirdep plan \.$/m);
-  assert.match(text, /^FAIL: 1 of 8 watched packages present\.$/m);
+  assert.match(text, new RegExp(`^FAIL: 1 of ${WATCHED} watched packages present\\.$`, 'm'));
 });
 
 test('a package that has to be moved by hand is sent to explain, not to plan', () => {
@@ -94,17 +98,17 @@ test('a signal the policy is not watching is printed dim rather than dropped', (
 test('a green report counts what it watched without contradicting the block below it', () => {
   const clean = page({});
   assert.match(clean, /^nothing came back$/m);
-  assert.match(clean, /^ {2}none of the 8 watched packages is declared, installed or imported$/m);
-  assert.match(clean, /^PASS: 8 packages watched, nothing to report\.$/m);
+  assert.match(clean, new RegExp(`^ {2}none of the ${WATCHED} watched packages is declared, installed or imported$`, 'm'));
+  assert.match(clean, new RegExp(`^PASS: ${WATCHED} packages watched, nothing to report\\.$`, 'm'));
 
   const allowed = page(
     { chalk: { declared: '^5.3.0', sites: [site('src/a.mjs', 1)] } },
     { policy: { guard: { allow: { chalk: 'DEP-14, the logo needs 256 colours' } } } },
   );
-  assert.match(allowed, /^ {2}none of the other 7 watched packages is declared, installed or imported$/m);
+  assert.match(allowed, new RegExp(`^ {2}none of the other ${WATCHED - 1} watched packages is declared, installed or imported$`, 'm'));
   assert.match(allowed, /^allowed by policy$/m);
   assert.match(allowed, /^ {16}DEP-14, the logo needs 256 colours$/m);
-  assert.match(allowed, /^PASS: 8 packages watched, 1 allowed by name, nothing to report\.$/m);
+  assert.match(allowed, new RegExp(`^PASS: ${WATCHED} packages watched, 1 allowed by name, nothing to report\\.$`, 'm'));
 });
 
 test('an exemption with no reason beside it says that, rather than nothing', () => {
@@ -140,13 +144,13 @@ test('a green build is auditable: the footer says who decided that', () => {
   // The prefix and the file name are a layout assertion; the rest is a sentence, and it
   // folds, so it is read through `flat`.
   assert.match(text, new RegExp(`^policy {4}${POLICY_FILE.replace('.', '\\.')}: `, 'm'));
-  assert.match(flat(text), new RegExp(`${POLICY_FILE.replace('.', '\\.')}: 8 packages denied, `
+  assert.match(flat(text), new RegExp(`${POLICY_FILE.replace('.', '\\.')}: ${WATCHED} packages denied, `
     + 'imported only, runtime only, at most 3 direct dependencies, 1 allowed'));
 });
 
 test('a file with no guard section in it is not somebody having chosen this', () => {
   const text = page({}, { policy: { eject: { into: 'lib' } } });
-  assert.match(flat(text), /has no guard section, so the default applies: 8 packages denied, all three signals/);
+  assert.match(flat(text), new RegExp(`has no guard section, so the default applies: ${WATCHED} packages denied, all three signals`));
 });
 
 test('a flag that overruled the policy is named in the same line as the policy', () => {

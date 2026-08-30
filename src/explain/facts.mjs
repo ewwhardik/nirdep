@@ -69,6 +69,28 @@ export const NODE_API = Object.freeze({
       'prerelease precedence, which is where a lexical comparison goes wrong first',
     ]),
   }),
+  'runtime/glob': Object.freeze({
+    has: Object.freeze([
+      Object.freeze({
+        module: 'node:fs',
+        path: 'globSync',
+        version: '22.0.0',
+        gives: 'a walk that matches, in whatever order the filesystem answered in',
+      }),
+      Object.freeze({
+        module: 'node:path',
+        path: 'matchesGlob',
+        version: '22.5.0',
+        gives: 'one path against one pattern, with no options and no reusable matcher',
+      }),
+    ]),
+    lacks: Object.freeze([
+      'a sorted result, without which two runs of a build cannot be compared',
+      'brace expansion, extglobs, POSIX classes, and a case-insensitive mode',
+      'a partial match, which is the answer a walk needs before it enters a directory',
+      'options at all: dot, ignore, nocase, maxDepth, mark, nodir and absolute',
+    ]),
+  }),
 });
 
 /** The floor this project asks for, quoted from our own manifest by the caller. */

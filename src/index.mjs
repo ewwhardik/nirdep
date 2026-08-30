@@ -12,9 +12,11 @@
 export * as colour from './runtime/colour.mjs';
 export * as args from './runtime/args.mjs';
 export * as semver from './runtime/semver.mjs';
+export * as glob from './runtime/glob.mjs';
 
 export { default as colourDefault } from './runtime/colour.mjs';
 export { default as semverDefault } from './runtime/semver.mjs';
+export { default as globDefault } from './runtime/glob.mjs';
 
 /** Attribution, kept here so a consumer can print it without reading our manifest. */
 export const ABOUT = Object.freeze({
@@ -22,5 +24,5 @@ export const ABOUT = Object.freeze({
   publisher: 'Nastik AI',
   developer: 'Hardik',
   licence: 'MIT',
-  runtime: Object.freeze(['runtime/colour', 'runtime/args', 'runtime/semver']),
+  runtime: Object.freeze(['runtime/colour', 'runtime/args', 'runtime/semver', 'runtime/glob']),
 });

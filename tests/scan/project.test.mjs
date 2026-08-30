@@ -166,12 +166,20 @@ test('what a whole migration is worth is one subtraction over the whole set', ()
 
 test('the findings are the disagreements between the three readers', () => {
   const scan = scanProject(plant(TREE.tree));
-  assert.deepEqual(codes(scan), ['no-integrity', 'undeclared', 'deprecated', 'floating', 'depth']);
-  assert.deepEqual(scan.summary, { high: 2, medium: 1, low: 1, note: 1, total: 5 });
+  assert.deepEqual(codes(scan),
+    ['no-integrity', 'undeclared', 'deprecated', 'floating', 'in-incident', 'depth']);
+  assert.deepEqual(scan.summary, { critical: 0, high: 2, medium: 1, low: 2, note: 1, total: 6 });
   const undeclared = scan.findings.find((one) => one.code === 'undeclared');
   assert.deepEqual(undeclared.subjects, ['express', 'lodash'], 'both readers contribute, and neither invents demo');
   // rimraf is declared, imported nowhere and named in `scripts.clean`, so it is not unused.
   assert.equal(codes(scan).includes('unused'), false);
+  // The advisory pass is a fourth reader, and its answer rides on the record rather than
+  // only in prose: `guard` and any other caller reads this instead of our own report.
+  assert.equal(scan.advisories.source, 'lock');
+  assert.equal(scan.advisories.counts.hits, 0, 'every version this tree pins is past its fix');
+  assert.equal(scan.advisories.matched, 7);
+  assert.deepEqual(scan.advisories.unversioned.map((one) => one.package).sort(),
+    ['ansi-styles', 'chalk', 'color-convert', 'color-name', 'supports-color']);
 });
 
 test('a project with no lockfile gets numbers that stop where the evidence does', () => {
@@ -188,7 +196,11 @@ test('a project with no lockfile gets numbers that stop where the evidence does'
   assert.deepEqual(scan.removable.direct, ['chalk']);
   assert.equal(rowFor(scan, 'chalk').installed, false);
   assert.deepEqual(rowFor(scan, 'chalk').versions, []);
-  assert.deepEqual(codes(scan), ['no-lockfile', 'unused']);
+  assert.deepEqual(codes(scan), ['no-lockfile', 'in-incident', 'unused']);
+  // With no lockfile the declared names are all there is to cross against the table, and a
+  // range is not a version: chalk is named in an incident, and nothing here is a hit.
+  assert.equal(scan.advisories.source, 'manifest');
+  assert.equal(scan.advisories.counts.hits, 0);
 });
 
 test('a file that cannot be read is reported rather than counted as clean', () => {

@@ -1,24 +1,33 @@
 // What a lockfile says about a project that nobody asked it.
 //
 // Every finding here is derived from files already on disk: no network, no
-// registry lookup, no advisory database. That rules out the one thing people
-// expect from the word "risk" -- known vulnerabilities -- and `scan` says so
-// rather than implying it checked. What is left is still worth printing, because
-// it is the part `npm audit` does not tell you: which packages run code when you
-// install them, which ones their own authors have abandoned, which ones arrive
-// without a hash to check, and which ones your source imports without ever
+// registry lookup, no live database. Two of them cross the tree against
+// src/scan/advisories.mjs, which is a dated table in a source file covering the
+// packages this project offers to replace and the incidents that happened beside
+// them -- a neighbourhood, not the ecosystem, and the report says which. The rest
+// is the part `npm audit` does not tell you at all: which packages run code when
+// you install them, which ones their own authors have abandoned, which ones
+// arrive without a hash to check, and which ones your source imports without ever
 // declaring.
 //
 // A finding is a sentence with a number in it. A severity with no sentence is a
 // colour, and a colour is not an argument.
 
+import { auditTree, HAND, highestFixed, KIND, SOURCE } from './advisories.mjs';
+
 const EMPTY = Object.freeze([]);
 
-export const SEVERITY = Object.freeze({ HIGH: 'high', MEDIUM: 'medium', LOW: 'low', NOTE: 'note' });
+export const SEVERITY = Object.freeze({
+  CRITICAL: 'critical', HIGH: 'high', MEDIUM: 'medium', LOW: 'low', NOTE: 'note',
+});
 
-const ORDER = Object.freeze({ high: 0, medium: 1, low: 2, note: 3 });
+const ORDER = Object.freeze({ critical: 0, high: 1, medium: 2, low: 3, note: 4 });
 
 export const FINDING = Object.freeze({
+  COMPROMISED: 'compromised',
+  VULNERABLE: 'vulnerable',
+  IN_INCIDENT: 'in-incident',
+  UNCHECKED: 'unchecked',
   INSTALL_SCRIPT: 'install-script',
   DEPRECATED: 'deprecated',
   NO_INTEGRITY: 'no-integrity',
@@ -31,10 +40,14 @@ export const FINDING = Object.freeze({
   DEPTH: 'depth',
 });
 
-const finding = (code, severity, detail, subjects = EMPTY) => Object.freeze({
+const finding = (code, severity, detail, subjects = EMPTY, id = null) => Object.freeze({
   code,
   severity,
   detail,
+  // The advisory identifier where one exists, so a reader can go and check the
+  // claim somewhere that is not this repository. Null everywhere else, because a
+  // finding derived from arithmetic has nothing to cite.
+  id,
   subjects: Object.freeze([...subjects]),
 });
 
@@ -198,16 +211,112 @@ function fromProject(world) {
   return found;
 }
 
+/** `name@version`, which is how a hit should be quoted back to whoever installed it. */
+const at = (one) => `${one.package}@${one.version}`;
+
+/**
+ * The two findings that come from the advisory table, and the two that come from
+ * the gaps in it.
+ *
+ * An incident hit is reported one row at a time, because each is a separate story
+ * and there are never many. A flaw hit is grouped by package, because one stale
+ * lodash answers five advisories and printing it five times would bury the rest
+ * of the report under a single dependency. Everything the table clears is silent.
+ *
+ * @param {Readonly<object>} audit the result of auditTree
+ * @returns {Array<object>}
+ */
+function fromAdvisories(audit) {
+  const found = [];
+  for (const hit of audit.hits) {
+    if (hit.advisory.kind !== KIND.INCIDENT) continue;
+    const { advisory } = hit;
+    found.push(finding(FINDING.COMPROMISED, SEVERITY.CRITICAL,
+      `${at(hit)} is a release that was published to do harm, on ${advisory.when}: ${advisory.what}`
+      + (advisory.hand === HAND.AUTHOR
+        ? " The hand was the maintainer's own, so no review of the version you approved would have found "
+          + 'what was in the one you got.'
+        : '')
+      + (advisory.also === null ? '' : ` It arrived alongside ${advisory.also}, which is worth checking too.`)
+      + (hit.places.length === 0 ? '' : ` Installed at ${list(hit.places)}.`),
+      [at(hit)], advisory.id));
+  }
+  const grouped = new Map();
+  for (const hit of audit.hits) {
+    if (hit.advisory.kind !== KIND.FLAW) continue;
+    const key = at(hit);
+    const rows = grouped.get(key);
+    if (rows === undefined) grouped.set(key, [hit]);
+    else rows.push(hit);
+  }
+  for (const [subject, rows] of grouped) {
+    // Worst severity, and the most recent of those, which is the one a reader is
+    // most likely to recognise and the one a fix has to clear anyway.
+    const ranked = [...rows].sort((a, b) => (ORDER[a.advisory.severity] - ORDER[b.advisory.severity])
+      || (a.advisory.when < b.advisory.when ? 1 : -1));
+    const worst = ranked[0].advisory;
+    const ids = ranked.map((one) => one.advisory.id).filter((one) => one !== null);
+    const fixed = highestFixed(rows);
+    const n = rows.length;
+    found.push(finding(FINDING.VULNERABLE, worst.severity,
+      `${subject} is inside ${count(n, 'published advisory', 'published advisories')}`
+      // The list is dropped when there is one of them, because the next sentence quotes
+      // that identifier anyway and printing it twice in two lines reads like a mail merge.
+      + `${ids.length === 0 || n === 1 ? '' : ` (${list(ids, 6)})`}. `
+      + `${n === 1 ? '' : 'The worst of them, '}${worst.id ?? worst.when}: ${worst.what}`
+      + (fixed === null ? '' : ` Fixed in ${fixed}.`)
+      + (rows[0].replaceable ? ' This is a package nirdep replaces outright.' : ''),
+      [subject], worst.id));
+  }
+  // A name match is not a verdict, and this is the finding that has to say so in
+  // its own sentence rather than in a footnote somebody scrolls past.
+  if (audit.unversioned.length > 0) {
+    const names = [...new Set(audit.unversioned.map((one) => one.package))].sort();
+    const n = names.length;
+    const dated = [...new Set(audit.unversioned.map((one) => one.advisory.when))].sort();
+    found.push(finding(FINDING.IN_INCIDENT, SEVERITY.LOW,
+      `${count(n, 'package')} in this tree ${is(n)} named in a supply-chain incident whose affected releases `
+      + `this table does not record: ${list(names, 8)}. `
+      // A colon, not a full stop: every story in the table is written to follow one, so
+      // joining with a stop would start a sentence in lower case.
+      + `${dated.length === 1 ? dated[0] : dated.join(', ')}: `
+      + `${audit.unversioned[0].advisory.what} This is a match on ${n === 1 ? 'a name' : 'names'} and not a `
+      + `verdict on your versions; go and look ${them(n)} up.`,
+      names));
+  }
+  if (audit.unknown.length > 0) {
+    const names = [...new Set(audit.unknown.map((one) => one.package))].sort();
+    const n = names.length;
+    found.push(finding(FINDING.UNCHECKED, SEVERITY.NOTE,
+      `${count(n, 'package')} in the advisory table could not be checked against a version here: `
+      + `${list(names, 8)}. `
+      + (audit.source === SOURCE.MANIFEST
+        ? 'No lockfile was read, so what is declared is a range and not the thing that gets installed.'
+        : 'The lockfile records something other than a version for '
+          + `${n === 1 ? 'it' : 'them'} -- a path, a URL, a tag -- so no range comparison applies.`),
+      names));
+  }
+  return found;
+}
+
 /**
  * Every finding, worst first, then alphabetically so two runs read the same.
  *
- * @param {{ manifest: object, lock: object, used?: Set<string>, direct?: number }} world
+ * @param {{ manifest: object, lock: object, used?: Set<string>, direct?: number,
+ *   advisories?: object }} world
  * @returns {ReadonlyArray<object>}
  */
 export function assess(world) {
   const used = world.used ?? new Set();
   const direct = world.direct ?? world.manifest.dependencies.size;
-  const found = [...fromLock(world.lock, direct), ...fromProject({ ...world, used })];
+  // Computed here when the caller did not, so `assess` is one call rather than a
+  // sequence somebody can get half right.
+  const audit = world.advisories ?? auditTree(world);
+  const found = [
+    ...fromAdvisories(audit),
+    ...fromLock(world.lock, direct),
+    ...fromProject({ ...world, used }),
+  ];
   found.sort((a, b) => (ORDER[a.severity] - ORDER[b.severity]) || a.code.localeCompare(b.code));
   return Object.freeze(found);
 }
@@ -216,10 +325,10 @@ export function assess(world) {
  * How many of each severity, for a headline that agrees with the list under it.
  *
  * @param {ReadonlyArray<object>} findings
- * @returns {Readonly<{ high: number, medium: number, low: number, note: number, total: number }>}
+ * @returns {Readonly<object>}
  */
 export function summarise(findings) {
-  const counts = { high: 0, medium: 0, low: 0, note: 0, total: findings.length };
+  const counts = { critical: 0, high: 0, medium: 0, low: 0, note: 0, total: findings.length };
   for (const one of findings) counts[one.severity] += 1;
   return Object.freeze(counts);
 }

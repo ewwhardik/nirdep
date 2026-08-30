@@ -88,6 +88,91 @@ test('a floating range is one that resolves on install day', () => {
   assert.equal(floats('github:a/b#semver:^1.0.0'), false);
 });
 
+test('a malicious release is one finding each, and quotes the day it was published', () => {
+  const findings = assess({
+    manifest: manifestOf({ dependencies: { 'event-stream': '3.3.6' } }),
+    lock: lockOf([
+      { name: 'event-stream', version: '3.3.6' },
+      { name: 'flatmap-stream', version: '0.1.1', depth: 2 },
+    ]),
+    used: new Set(['event-stream']),
+  });
+  // Two rows, two findings: each malicious release is a separate story with a separate
+  // date, and there are never so many of them that grouping would save a reader anything.
+  const bad = findings.filter((one) => one.code === FINDING.COMPROMISED);
+  assert.equal(bad.length, 2);
+  assert.equal(bad[0].severity, SEVERITY.CRITICAL);
+  assert.deepEqual(bad[0].subjects, ['event-stream@3.3.6']);
+  assert.match(bad[0].detail, /^event-stream@3\.3\.6 is a release that was published to do harm, on 2018-11-26: /);
+  assert.match(bad[0].detail, /It arrived alongside flatmap-stream, which is worth checking too\./);
+  assert.match(bad[0].detail, /Installed at node_modules\/event-stream\.$/);
+  // An incident has no "fixed in", so the finding must not invent one.
+  assert.equal(bad[0].detail.includes('Fixed in'), false);
+  assert.equal(bad[0].id, null, 'a supply-chain incident has no CVE to cite');
+});
+
+test('a maintainer who did it themselves gets the sentence a review cannot answer', () => {
+  const detail = detailFor({
+    manifest: manifestOf({ dependencies: { colors: '^1.4.0' } }),
+    lock: lockOf([{ name: 'colors', version: '1.4.44-liberty-2' }]),
+    used: new Set(['colors']),
+  }, FINDING.COMPROMISED);
+  assert.match(detail, /The hand was the maintainer's own, so no review of the version you approved/);
+});
+
+test('five advisories against one package are one finding at the worst of them', () => {
+  const findings = assess({
+    manifest: manifestOf({ dependencies: { lodash: '4.17.4' } }),
+    lock: lockOf([{ name: 'lodash', version: '4.17.4' }]),
+    used: new Set(['lodash']),
+  });
+  const flaw = pick(findings, FINDING.VULNERABLE);
+  assert.equal(flaw.severity, SEVERITY.HIGH);
+  assert.deepEqual(flaw.subjects, ['lodash@4.17.4']);
+  // One stale lodash answers five advisories. Printing it five times would bury the rest
+  // of the report under a single dependency.
+  assert.equal(findings.filter((one) => one.code === FINDING.VULNERABLE).length, 1);
+  assert.match(flaw.detail, /^lodash@4\.17\.4 is inside 5 published advisories \(CVE-/);
+  assert.match(flaw.detail, /The worst of them, CVE-2021-23337: /, 'the newest of the worst, not the oldest');
+  // The highest fix across all five, by version order: 4.17.9 sorts after 4.17.12 as text.
+  assert.match(flaw.detail, /Fixed in 4\.17\.21\.$/);
+  assert.equal(flaw.id, 'CVE-2021-23337', 'the margin cites what the sentence quotes');
+});
+
+test('a name match says it is a name match, in its own sentence', () => {
+  const findings = assess({
+    manifest: manifestOf(),
+    lock: lockOf([
+      { name: 'chalk', version: '5.6.0' },
+      { name: 'ansi-styles', version: '6.2.1', depth: 2 },
+      { name: 'minimatch', version: 'git+ssh://git@host/a.git#4f2a1f4', source: 'git' },
+    ]),
+  });
+  const named = pick(findings, FINDING.IN_INCIDENT);
+  assert.equal(named.severity, SEVERITY.LOW);
+  assert.match(named.detail, /^2 packages in this tree are named in a supply-chain incident whose affected/);
+  assert.match(named.detail, /record: ansi-styles, chalk\. 2025-09-08: a maintainer phished/);
+  assert.match(named.detail, /a match on names and not a verdict on your versions; go and look them up\.$/);
+  // And a version nothing can parse is unchecked rather than clear, at note severity,
+  // because it is a question about this tool's reach and not about the project.
+  const gap = pick(findings, FINDING.UNCHECKED);
+  assert.equal(gap.severity, SEVERITY.NOTE);
+  assert.match(gap.detail, /^1 package in the advisory table could not be checked against a version here: /);
+  assert.match(gap.detail, /The lockfile records something other than a version for it -- a path, a URL, a tag/);
+});
+
+test('a package the table clears produces no sentence at all', () => {
+  // Both of these are in the table and both are past their fixes. "Checked, fine" rows
+  // are how a report gets long enough that nobody reaches the line that mattered.
+  const findings = assess({
+    manifest: manifestOf({ dependencies: { semver: '^7.5.2', minimist: '^1.2.8' } }),
+    lock: lockOf([{ name: 'semver', version: '7.5.2' }, { name: 'minimist', version: '1.2.8' }]),
+    used: new Set(['semver', 'minimist']),
+  });
+  assert.deepEqual(codes(findings).filter((one) => one === FINDING.VULNERABLE), []);
+  assert.equal(summarise(findings).critical, 0);
+});
+
 test('install scripts and deprecations agree with their own counts', () => {
   const one = assess({
     manifest: manifestOf({ dependencies: { 'node-sass': '^4.14.1' } }),
@@ -277,10 +362,14 @@ test('no lockfile with no dependencies is not a finding', () => {
     used: new Set(),
   });
   assert.deepEqual(codes(findings), []);
-  assert.deepEqual(summarise(findings), { high: 0, medium: 0, low: 0, note: 0, total: 0 });
+  assert.deepEqual(summarise(findings), { critical: 0, high: 0, medium: 0, low: 0, note: 0, total: 0 });
 });
 
 test('findings come back worst first, then by code, and frozen', () => {
+  // This world is hand-built, and the advisory table is crossed against it anyway: the
+  // default version here is 1.0.0, which is inside minimist's prototype-pollution range
+  // and is the name of a package the 2025 phishing wave touched. Both are reported, which
+  // is the point -- `assess` audits whatever tree it is handed, not only real ones.
   const findings = assess({
     manifest: manifestOf({ dependencies: { minimist: '*', chalk: '^4.1.2' } }),
     lock: lockOf([
@@ -295,11 +384,11 @@ test('findings come back worst first, then by code, and frozen', () => {
     direct: 2,
   });
   assert.deepEqual(codes(findings), [
-    FINDING.INSTALL_SCRIPT, FINDING.NO_INTEGRITY, FINDING.UNDECLARED,
-    FINDING.DEPRECATED, FINDING.DUPLICATE, FINDING.FLOATING, FINDING.UNUSED,
-    FINDING.DEPTH,
+    FINDING.INSTALL_SCRIPT, FINDING.NO_INTEGRITY, FINDING.UNDECLARED, FINDING.VULNERABLE,
+    FINDING.DEPRECATED, FINDING.DUPLICATE, FINDING.FLOATING, FINDING.IN_INCIDENT,
+    FINDING.UNUSED, FINDING.DEPTH,
   ]);
-  assert.deepEqual(summarise(findings), { high: 3, medium: 1, low: 3, note: 1, total: 8 });
+  assert.deepEqual(summarise(findings), { critical: 0, high: 4, medium: 1, low: 4, note: 1, total: 10 });
   assert.equal(Object.isFrozen(findings), true);
   for (const one of findings) {
     assert.equal(Object.isFrozen(one), true);
