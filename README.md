@@ -4,7 +4,7 @@
 dependencies.
 
 <p align="center">
-  <img src="/nirdep-preview.png" alt="nirdep" width="750">
+  <img src="nirdep-preview.png" alt="nirdep" width="750">
 </p>
 
 <p align="center">
@@ -13,7 +13,7 @@ dependencies.
 </p>
 
 <p align="center">
-  <a href="https://github.com/ewwhardik/nirdep">
+  <a href="https://github.com/ewwhardik/nirdep/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/ewwhardik/nirdep?style=flat-square" alt="License">
   </a>
 </p>
@@ -35,7 +35,7 @@ node tools/verify.mjs
 ```
 
 <p align="center">
-  <img src="/zero-p.png" alt="nirdep" width="750">
+  <img src="zero-p.png" alt="nirdep verify: zero third-party runtime dependencies" width="750">
 </p>
 
 There is no install step, because there is nothing to install. `verify` does not
@@ -86,6 +86,18 @@ four vulnerability stories tied row-for-row to the advisory table, and the
 benchmark figures from `bench.json` as 3D bars. Save the page and it still works
 from a `file://` URL on a plane. `node tools/playground.mjs` rebuilds it, byte
 for byte, and GitHub Pages serves `docs/` as it stands.
+
+Prefer to read a diff:
+**<https://github.com/ewwhardik/nirdep-example>** holds one real project at both
+ends. `release-radar` arrives with six dependencies, four of them at versions
+with published advisories, and no `node_modules`, so it cannot start; the fixed
+tree is the same project with an empty dependency map, running. Its
+`WALKTHROUGH.md` is the seven steps between them, every command and every output
+pasted from a real run — including the two call sites nirdep refused to rewrite
+and handed back to a person, which is why the count is four of six and not six of
+six. It is a separate repository because the before tree imports six real
+packages, and `guard` below counts an import wherever it finds one; a fixture is
+not an excuse the tool should learn.
 
 ## Requirements
 
