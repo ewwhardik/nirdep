@@ -29,7 +29,7 @@
 // Run: node tools/playground.mjs            write docs/index.html
 //      node tools/playground.mjs --out X    write it somewhere else
 
-import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -63,11 +63,36 @@ const MARKED = Object.freeze(Object.fromEntries(
 /** Where the recording was actually made, filled in before anything is captured. */
 const CAPTURE = { root: FIXED_ROOT };
 
+/**
+ * Every spelling of one directory this machine might print.
+ *
+ * Windows is the reason. A GitHub runner's os.tmpdir() answers with the 8.3 short name
+ * (C:\Users\RUNNER~1\...) while a child process asked for its own cwd answers with the long
+ * one (C:\Users\runneradmin\...). Fold only the string we were handed and the other spelling
+ * survives, carrying a random mkdtemp suffix into the page -- which is invisible until the
+ * test that builds the page twice and compares bytes fails, on Windows, and nowhere else.
+ */
+function aliases(dir) {
+  const out = new Set();
+  const add = (value) => {
+    if (!value) return;
+    out.add(value);
+    out.add(value.split('\\').join('/'));
+  };
+  add(dir);
+  try { add(realpathSync(dir)); } catch { /* already removed: the one spelling is all we get */ }
+  return [...out].sort((a, b) => b.length - a.length);
+}
+
+const HERE = aliases(ROOT);
+
 /** A temporary path is not a fact about the product, so it is replaced by a fixed one. */
-const steady = (text) => String(text)
-  .split(CAPTURE.root).join(FIXED_ROOT)
-  .split(ROOT).join('/nirdep')
-  .split(ROOT.split('\\').join('/')).join('/nirdep');
+function steady(text) {
+  let out = String(text);
+  for (const one of aliases(CAPTURE.root)) out = out.split(one).join(FIXED_ROOT);
+  for (const one of HERE) out = out.split(one).join('/nirdep');
+  return out;
+}
 
 const escaped = (text) => String(text)
   .split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;');

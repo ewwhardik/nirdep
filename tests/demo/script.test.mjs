@@ -60,7 +60,7 @@ test('planting writes every fixture file through the save seam and touches no di
   assert.equal(at, '/nowhere');
   assert.equal(written.size, Object.keys(DEMO.project).length);
   for (const path of Object.keys(DEMO.project)) {
-    const key = [...written.keys()].find((one) => one.endsWith(path.split('/').join('/')));
+    const key = [...written.keys()].find((one) => one.split('\\').join('/').endsWith(path));
     assert.ok(key, `${path} was written`);
     assert.equal(written.get(key), DEMO.project[path]);
   }
