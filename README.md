@@ -3,6 +3,21 @@
 **nir** (Sanskrit निर्, "without") + **dep**. Say it "near-dep". It deletes your
 dependencies.
 
+<p align="center">
+  <img src="/nirdep-preview.png" alt="nirdep" width="750">
+</p>
+
+<p align="center">
+  <strong>Delete your dependencies.</strong><br>
+  A scope-aware JavaScript codemod and standard-library runtime.
+</p>
+
+<p align="center">
+  <a href="https://github.com/ewwhardik/nirdep">
+    <img src="https://img.shields.io/github/license/ewwhardik/nirdep?style=flat-square" alt="License">
+  </a>
+</p>
+
 nirdep is two things that need each other. It is a **runtime**: a small set of
 modules that do what the most-installed packages on npm do, written against the
 Node standard library and nothing else. And it is a **codemod**: a scope-aware
