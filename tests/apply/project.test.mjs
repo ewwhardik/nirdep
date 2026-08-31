@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import {
   OUTCOME, SOURCE_EXTENSIONS, applyProject, mayMention, planProject, readManifest, targetResolver,
 } from '../../src/apply/project.mjs';
+import { METHOD, checkByLexer } from '../../src/patch/gate.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TREE = JSON.parse(readFileSync(join(HERE, '..', 'vectors', 'rules', 'tree.json'), 'utf8'));
@@ -178,4 +179,17 @@ test('a save that fails is the file it failed on, not the run', () => {
 test('only source extensions are opened', () => {
   for (const extension of ['.mjs', '.cjs', '.js', '.jsx']) assert.ok(SOURCE_EXTENSIONS.has(extension));
   for (const extension of ['.json', '.ts', '.md']) assert.equal(SOURCE_EXTENSIONS.has(extension), false);
+});
+
+test('the syntax check is a seam, and the report says which check ran', () => {
+  // The browser playground has no parser to reach, so it hands in the lexer. What matters is
+  // that the verdict on the file names the check that made it -- a weaker claim, labelled.
+  const root = plant(TREE.project);
+  const plan = planProject(root, { runtimeDir: 'nirdep/runtime' });
+  const run = applyProject(plan, { write: false, check: checkByLexer });
+  const one = at(run, 'src/report.mjs');
+  assert.equal(one.outcome, OUTCOME.WOULD_WRITE);
+  assert.equal(one.gate.after.method, METHOD.LEX);
+  assert.equal(applyProject(plan, { write: false }).files.find((f) => f.gate !== null).gate.after.method !== METHOD.LEX,
+    true, 'and without the seam a real parser still answers');
 });

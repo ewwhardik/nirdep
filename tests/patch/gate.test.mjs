@@ -12,7 +12,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
-import { KIND, METHOD, checkSyntax, gate, kindFor } from '../../src/patch/gate.mjs';
+import { KIND, METHOD, checkByLexer, checkSyntax, gate, kindFor } from '../../src/patch/gate.mjs';
 
 const ROOT = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const PARSERS = new Set([METHOD.VM_MODULE, METHOD.NODE_CHECK]);
@@ -119,4 +119,35 @@ test('every module in this repository passes its own gate', () => {
     const verdict = checkSyntax(readFileSync(file, 'utf8'), { filename: file });
     assert.equal(verdict.ok, true, `${relative(ROOT, file)}: ${verdict.error?.message ?? 'ok'}`);
   }
+});
+
+// The lexer-only check exists for one host: a browser, where compiling without running is
+// not on offer. These tests pin what it can and cannot promise, because a check that
+// over-claims is worse than no check at all.
+
+test('the lexer-only check passes real source and says who checked it', () => {
+  const verdict = checkByLexer('export const a = `${1}`;\n');
+  assert.equal(verdict.ok, true);
+  assert.equal(verdict.method, METHOD.LEX);
+});
+
+test('the lexer-only check still catches what a lexer can see', () => {
+  const verdict = checkByLexer('export const a = "unterminated\n');
+  assert.equal(verdict.ok, false);
+  assert.equal(verdict.method, METHOD.LEX);
+  assert.equal(verdict.error.line, 1);
+  assert.equal(checkByLexer('function a() {\n').ok, false, 'an unclosed brace is a run it can count');
+});
+
+test('the lexer-only check admits what it cannot see, rather than pretending', () => {
+  // Grammar, not tokens: this is a SyntaxError to Node and four fine tokens to a lexer.
+  assert.equal(checkByLexer('let let = 1;\n').ok, true);
+  assert.equal(checkSyntax('let let = 1;\n').ok, false, 'and the real gate does catch it');
+});
+
+test('an injected check is the one that runs, and the verdict names it', () => {
+  const result = gate('export const = 1;\n', 'export const = 2;\n', { check: checkByLexer });
+  assert.equal(result.ok, true, 'the lexer has no complaint about either side');
+  assert.equal(result.before.method, METHOD.LEX);
+  assert.equal(gate('a\n', 'a\n').before.method !== METHOD.LEX, true, 'and the default is still a parser');
 });

@@ -10,7 +10,7 @@ JavaScript rewriter that finds where your code calls those packages and changes
 the call sites for you, so removing a dependency is a diff you can read rather
 than a weekend you lose.
 
-Zero Dependency Hackathon, track A. Published by Nastik AI. Developed by Hardik.
+Zero Dependency Hackathon, track A. Published by Nastik AI. Developed by Sai Ram Dash (Hardik).
 
 ## The claim, and how to check it in five seconds
 
@@ -32,6 +32,41 @@ builtin. It writes what it found to `deps-proof.txt`.
 
 That is a stronger statement than an empty manifest. An empty manifest says
 nobody declared a dependency. This says nobody imported one.
+
+## Watch it happen
+
+```
+nirdep demo
+```
+
+One command, no project of your own needed. It writes a small project to a
+temporary directory — six dependencies declared, a lockfile saying which versions
+were installed, four source files importing them, and no `node_modules` — then
+imports the entry file and lets Node refuse. From there it runs the real
+`scan`, `plan`, `eject` and `apply` over that tree and finishes by importing the
+rewritten files and calling their exports, printing the answers. Same file,
+refused at the top of the transcript and working at the bottom, with nothing
+installed in between.
+
+It is a composition, not a re-enactment: every stage calls the same function the
+matching command calls, so a demo that passes while a command is broken is not a
+state the code can be in. `--keep` or `--dir` leaves the project on disk to poke
+at, `--guide` folds in what each stage is and why, and the exit code is non-zero
+if any stage fails, including the last one that runs the code.
+
+Prefer to click: **<https://ewwhardik.github.io/nirdep/>**. That page is one
+HTML file with no requests in it, and it is careful about which of its three
+layers you are looking at. The terminal is a *replay*: fourteen commands really
+run at build time against a freshly planted demo project, colours and exit codes
+intact, state carried forward — so the quiet `scan` at the end is quiet because
+the `apply` above it happened. The walkthrough is a recording of the same demo.
+The sandboxes are neither: thirteen of nirdep's own modules load through blob
+URLs and answer you in your browser. Rewrite a file and read the diff, ask
+`semver` a range question, glob a fake tree, paint a string. Beside them are the
+four vulnerability stories tied row-for-row to the advisory table, and the
+benchmark figures from `bench.json` as 3D bars. Save the page and it still works
+from a `file://` URL on a plane. `node tools/playground.mjs` rebuilds it, byte
+for byte, and GitHub Pages serves `docs/` as it stands.
 
 ## Requirements
 
@@ -57,6 +92,7 @@ runtime modules underneath them.
 | `conformance` | works   | pass/fail/skip table for every runtime module        |
 | `stdlibmd`    | works   | generate the STDLIB log from the code, not by hand   |
 | `explain`     | works   | why a given rewrite is safe, or why it was refused   |
+| `demo`        | works   | plant a broken project, migrate it, run it — live    |
 
 The runtime modules declared in `package.json` are being written in that order.
 `nirdep/runtime/colour`, `nirdep/runtime/args`, `nirdep/runtime/semver`,
@@ -174,7 +210,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: nastik-ai/nirdep@v1
+      - uses: ewwhardik/nirdep@v1
         with:
           advisories: hits
           max: 0
@@ -503,6 +539,8 @@ make verify   # prove zero dependencies, write deps-proof.txt
 make test     # the whole suite, on node:test
 make build    # dist/nirdep/ and dist/nirdep-<version>.tar.gz
 make repro    # build twice, print both hashes, fail unless identical
+make page     # rebuild docs/index.html from the code and a real demo run
+make bench    # measure, rewrite bench.json, print the table
 ```
 
 `make build` writes its own tar. Not because writing a tar writer is fun, but
@@ -525,11 +563,15 @@ src/patch/         byte-range edits, Myers diff, and the syntax gate
 src/scan/          three readers, the blast radius, and the advisory table
 src/guard/         the policy, the verdict, and the GitHub dialect of it
 src/audit/         import extraction, and what counts as a builtin
+src/demo/          the fixture project, the walkthrough, and the guide text
 src/fs/            deterministic traversal, one ordering, one read seam
 src/text/          folding and padding, so a report fits a terminal
 src/meta/          reading our own submission metadata
 tools/verify.mjs   the dependency proof
 tools/build.mjs    the reproducible artifact
+tools/bench.mjs    the measurements, written to bench.json and committed as data
+tools/playground.mjs  docs/index.html: replayed console, recorded demo, live sandboxes
+docs/index.html    the built page, committed so GitHub Pages can serve it
 tests/             node:test, mirroring src/ one file at a time
 SECURITY.md        the forty advisories as four bugs, and what replaced each
 STDLIB.md          where the standard library was enough, and where it stopped
@@ -542,5 +584,5 @@ except the reports, and nothing in `bin/` decides anything.
 
 ## Licence
 
-MIT. Copyright (c) 2026 Hardik (Nastik AI). Take the runtime modules; that is
+MIT. Copyright (c) 2026 Sai Ram Dash (Hardik), Nastik AI. Take the runtime modules; that is
 what `nirdep eject` is for.

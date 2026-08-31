@@ -1,7 +1,7 @@
 // nirdep runtime: args -- the replacement for minimist, commander, yargs and
 // yargs-parser. Roughly 190 million downloads a week between them.
 //
-// Published by Nastik AI. Developed by Hardik.
+// Published by Nastik AI. Developed by Sai Ram Dash (Hardik).
 //
 // What Node already gives you: util.parseArgs. It is deliberately small --
 // strings and booleans, one flat result object, no subcommands, no counts, no
@@ -972,6 +972,14 @@ export function createCli(descriptor) {
       errStyle,
       help: () => commandHelp(command),
     });
+    // A command may be async, and commander needed a whole second entry point for
+    // that (parseAsync, plus a warning in its README about which one you called).
+    // Here the promise is handed back as it is: a caller that awaits gets the real
+    // exit code, and one that does not gets the same synchronous behaviour it had
+    // before, because every other command in the table still returns a number.
+    if (typeof code?.then === 'function') {
+      return code.then((value) => (typeof value === 'number' ? value : EXIT.OK));
+    }
     return typeof code === 'number' ? code : EXIT.OK;
   }
 

@@ -153,7 +153,7 @@ report says "unverified" rather than a plausible-looking million.
 
 ```
 node tools/verify.mjs               # 12 builtin modules, 0 packages
-node --test "tests/**/*.test.mjs"   # 585 tests, 585 pass
+node --test "tests/**/*.test.mjs"   # 624 tests, 624 pass
 node bin/nirdep.mjs conformance     # 11 packages, 3593 vector cases against the real packages
 node tools/build.mjs                # 47 files, sha256 of the tarball printed
 ```
@@ -173,4 +173,4 @@ The audit surface is unusually small, and that is the point: what you are review
 files in this repository and the Node you run them on. There is no transitive tree behind
 them, and no account but this one to compromise.
 
-Published by Nastik AI. Developed by Hardik.
+Published by Nastik AI. Developed by Sai Ram Dash (Hardik).

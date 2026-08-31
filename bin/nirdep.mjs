@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // nirdep -- delete your dependencies.
 //
-// Published by Nastik AI. Developed by Hardik.
+// Published by Nastik AI. Developed by Sai Ram Dash (Hardik).
 //
 // This entry point stays thin on purpose. It reads its own metadata, builds one
 // colour instance per stream, and hands a command table to createCli. Dispatch,
@@ -12,7 +12,8 @@
 // nirdep running on its own replacements for chalk, supports-color, minimist and
 // commander is the whole correctness argument -- see STDLIB.md.
 
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync, statSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { parseToml } from '../src/meta/toml.mjs';
@@ -36,6 +37,8 @@ import { conformanceReport } from '../src/conformance/report.mjs';
 import { stdlibDocument } from '../src/stdlib/document.mjs';
 import { stdlibAdoption, stdlibApply, stdlibPlan, STDLIB_FILE } from '../src/stdlib/project.mjs';
 import { stdlibReport, stdlibExitCode } from '../src/stdlib/report.mjs';
+import { DEMO, DEMO_STAGES, runDemo } from '../src/demo/script.mjs';
+import { demoHeader, demoStage, demoSummary, demoExitCode } from '../src/demo/report.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -80,7 +83,7 @@ function about() {
     'JavaScript codemod plus a standard-library runtime that replace the',
     'most-installed packages on npm.',
     '',
-    `Published by ${out.bold('Nastik AI')}. Developed by ${out.bold('Hardik')}.`,
+    `Published by ${out.bold('Nastik AI')}. Developed by ${out.bold('Sai Ram Dash (Hardik)')}.`,
     `${field('Licence')}${manifest.license}`,
     `${field('Requires')}Node ${manifest.engines.node}   ${out.dim(`(running ${process.version})`)}`,
     `${field('Runtime dependencies')}${out.green('0')}   ${out.dim('(run "make verify" for the proof)')}`,
@@ -296,6 +299,43 @@ function explain(context) {
   return explainExitCode(answer);
 }
 
+// `demo` is the only command that brings its own project. Judges and first-time readers
+// have no tree to point the other commands at, and a screenshot of a report proves nothing
+// about a report, so this one plants a project that cannot load, runs the real pipeline over
+// it, and ends by importing the rewritten files and calling them. It is a composition: every
+// stage calls the same function the matching command calls.
+async function demo(context) {
+  const asked = context.options.dir;
+  const chosen = asked !== undefined && asked !== '';
+  const root = chosen ? resolve(asked) : mkdtempSync(join(tmpdir(), 'nirdep-demo-'));
+  const keep = chosen || context.options.keep === true;
+  const guide = context.options.guide !== false;
+  const total = DEMO_STAGES.length;
+
+  context.out(demoHeader({ style: context.style, root, total, guide }));
+  const result = await runDemo({
+    root,
+    style: context.style,
+    context: context.options.context,
+    diff: context.options.diff !== false,
+    emit: (one) => context.out(demoStage(one, {
+      style: context.style, index: DEMO_STAGES.indexOf(one.name) + 1, total, guide,
+    })),
+  });
+  context.out(demoSummary(result, { style: context.style, tree: root, kept: keep, guide }));
+
+  if (!keep) {
+    // A demo that cannot tidy up after itself is not evidence of much, but a temporary
+    // directory that outlives the process is also not worth a non-zero exit.
+    try {
+      rmSync(root, { recursive: true, force: true });
+    } catch (error) {
+      context.err(`${context.errStyle.dim(`could not remove ${root}: ${error.message}`)}\n`);
+    }
+  }
+  return demoExitCode(result);
+}
+
 // Every command in the plan, and every one of them now implemented. The table used
 // to carry `ready: false` rows, which printed as (pending) and exited 3 rather than
 // pretending to work; the mechanism stays in src/runtime/args.mjs because a half
@@ -309,7 +349,7 @@ const app = createCli({
   describe: 'nir (Sanskrit, "without") + dep. A scope-aware JavaScript codemod and a '
     + 'standard-library runtime that together replace the most-installed packages on npm.',
   footer: 'Every command above is implemented. "make conformance" is the receipt.\n'
-    + 'Published by Nastik AI. Developed by Hardik.',
+    + 'Published by Nastik AI. Developed by Sai Ram Dash (Hardik).',
   out: (text) => process.stdout.write(text),
   err: (text) => process.stderr.write(text),
   style: styleOf(out),
@@ -400,6 +440,17 @@ const app = createCli({
       ],
       run: (context) => explain(context),
     },
+    demo: {
+      describe: 'plant a broken project, migrate it, and run it -- the whole pipeline, live',
+      options: {
+        keep: { type: 'boolean', describe: 'leave the demo project on disk when it finishes' },
+        dir: { type: 'string', describe: 'write it here instead of a temporary directory (implies --keep)' },
+        guide: { type: 'boolean', default: false, describe: 'add the what and why behind each stage (docs/index.html is the full guide)' },
+        diff: { type: 'boolean', default: true, describe: 'show the rewrite as a diff' },
+        context: { type: 'number', default: 2, describe: 'diff context lines' },
+      },
+      run: (context) => demo(context),
+    },
     about: { describe: 'attribution, version and supported Node range', run: (context) => { context.out(about()); } },
     help: { describe: 'this text', run: (context) => { context.out(app.help()); } },
   },
@@ -418,4 +469,7 @@ if (['--no-colour', '--no-color', '--colour=false', '--color=false'].some((flag)
 // --about is the spelling people try first, and createCli has no hook for a flag
 // that runs before dispatch. Rewriting it into the command it aliases is a line;
 // inventing a hook for one alias would be a feature.
-process.exitCode = app.run(argv[0] === '--about' ? ['about', ...argv.slice(1)] : argv);
+//
+// The await is for `demo`, the one command that has to import files it just wrote.
+// Every other command returns a number and this resolves immediately.
+process.exitCode = await app.run(argv[0] === '--about' ? ['about', ...argv.slice(1)] : argv);

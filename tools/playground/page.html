@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<!--
+  Built by tools/playground.mjs. Do not edit docs/index.html: edit this template and rebuild.
+
+  One file, no requests. The walkthrough is a recording of a real `nirdep demo` run, captured
+  at build time with its colours intact; the two sandboxes load nirdep's own modules as ES
+  modules through blob URLs and run them here, in your browser, on your input.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nirdep -- delete your dependencies, keep your code working</title>
+<meta name="description" content="A scope-aware codemod and a standard-library runtime that replace the most-installed npm packages. Zero dependencies, running in your browser.">
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #0d1013; --sunk: #090b0d; --card: #14181d; --line: #232a31;
+  --ink: #dde3e9; --soft: #8f9aa6; --faint: #5d666f;
+  --hot: #ffb454; --ok: #7fd18b; --cy: #6fc3d9; --no: #f2777a; --ye: #e6c877;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); }
+body { line-height: 1.55; -webkit-font-smoothing: antialiased; }
+a { color: var(--cy); }
+h1, h2, h3 { line-height: 1.25; margin: 0 0 .4rem; font-weight: 650; letter-spacing: -.01em; }
+p { margin: 0 0 .7rem; }
+code, pre, kbd { font-family: var(--mono); }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 1.1rem; }
+
+/* header */
+.top { border-bottom: 1px solid var(--line); background: linear-gradient(#12161a, var(--bg)); }
+.top .wrap { padding-top: 1.5rem; padding-bottom: 1.1rem; }
+.logo { font-family: var(--mono); font-size: 1.7rem; font-weight: 700; letter-spacing: -.03em; }
+.logo b { color: var(--hot); font-weight: 700; }
+.ver { font-family: var(--mono); font-size: .78rem; color: var(--faint); margin-left: .5rem; }
+.pitch { font-size: 1.05rem; color: var(--soft); max-width: 62ch; margin: .35rem 0 .8rem; }
+.pitch b { color: var(--ink); font-weight: 600; }
+.badges { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+.badge { font-family: var(--mono); font-size: .72rem; padding: .22rem .5rem; border: 1px solid var(--line);
+  border-radius: 999px; color: var(--soft); background: var(--card); text-decoration: none; }
+.badge.ok { color: var(--ok); border-color: #24402c; }
+.badge.btn { cursor: pointer; color: var(--hot); border-color: #4a3618; }
+.badge.btn:hover, .badge.link:hover { border-color: var(--hot); color: var(--hot); }
+
+/* tabs */
+.tabs { display: flex; gap: .2rem; border-bottom: 1px solid var(--line); background: var(--sunk);
+  position: sticky; top: 0; z-index: 20; overflow-x: auto; }
+.tabs .wrap { display: flex; gap: .2rem; padding: 0 1.1rem; }
+.tab { appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--soft);
+  padding: .7rem .8rem; font-size: .86rem; cursor: pointer; white-space: nowrap; font-family: inherit; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--hot); }
+.tab:hover { color: var(--ink); }
+main .panel { display: none; padding: 1.4rem 0 3rem; }
+main .panel.on { display: block; }
+
+/* cards */
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .9rem 1rem; }
+.card h3 { font-size: .95rem; }
+.lede { color: var(--soft); font-size: .92rem; max-width: 70ch; }
+.grid { display: grid; gap: 1rem; }
+@media (min-width: 900px) { .split { grid-template-columns: 260px 1fr; } .halves { grid-template-columns: 1fr 1fr; } }
+
+/* stage list */
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .25rem; }
+.steps button { width: 100%; text-align: left; display: flex; gap: .55rem; align-items: baseline; cursor: pointer;
+  background: none; border: 1px solid transparent; border-radius: 8px; color: var(--soft); padding: .45rem .55rem;
+  font-family: inherit; font-size: .87rem; }
+.steps button:hover { background: #171c22; color: var(--ink); }
+.steps button[aria-current="true"] { background: #171c22; border-color: #33404c; color: var(--ink); }
+.steps .n { font-family: var(--mono); font-size: .74rem; color: var(--faint); }
+.steps .dot { margin-left: auto; width: .5rem; height: .5rem; border-radius: 50%; background: var(--ok); flex: none; }
+.steps .dot.bad { background: var(--no); }
+
+/* terminal */
+.term { background: var(--sunk); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.term-bar { display: flex; gap: .6rem; align-items: center; padding: .5rem .7rem; border-bottom: 1px solid var(--line);
+  background: #0f1317; }
+.term-bar .dots { display: flex; gap: .3rem; }
+.term-bar .dots i { width: .6rem; height: .6rem; border-radius: 50%; background: #2b333b; display: block; }
+.term-bar .cmd { font-family: var(--mono); font-size: .8rem; color: var(--cy); overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; }
+.term-bar .cmd::before { content: "$ "; color: var(--faint); }
+.term pre { margin: 0; padding: .8rem .9rem 1rem; overflow-x: auto; font-size: .79rem; line-height: 1.5;
+  max-height: 60vh; white-space: pre; }
+.s-bold { font-weight: 700; color: #fff; } .s-dim { color: var(--faint); } .s-cyan { color: var(--cy); }
+.s-green { color: var(--ok); } .s-yellow { color: var(--ye); } .s-red { color: var(--no); }
+
+/* buttons */
+.row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin: .8rem 0 0; }
+button.go, .go { appearance: none; font-family: inherit; font-size: .84rem; cursor: pointer; border-radius: 8px;
+  padding: .42rem .8rem; background: #1b222a; border: 1px solid #2f3a45; color: var(--ink); }
+button.go:hover { border-color: var(--hot); color: var(--hot); }
+button.go.main { background: var(--hot); border-color: var(--hot); color: #17130c; font-weight: 600; }
+button.go.main:hover { filter: brightness(1.08); color: #17130c; }
+button.go:disabled { opacity: .4; cursor: default; }
+.hint { color: var(--faint); font-size: .78rem; }
+
+/* glossary chips + popover */
+.chips { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .6rem; }
+.chip { font-size: .74rem; font-family: var(--mono); background: #171d23; border: 1px dashed #39434e; color: var(--cy);
+  border-radius: 6px; padding: .18rem .45rem; cursor: help; }
+.chip:hover { border-color: var(--cy); }
+.field { display: grid; grid-template-columns: 4.6rem 1fr; gap: .1rem .6rem; font-size: .88rem; margin-bottom: .35rem; }
+.field span { color: var(--faint); font-family: var(--mono); font-size: .74rem; padding-top: .18rem; }
+.field p { margin: 0; }
+.field code { color: var(--cy); font-size: .82rem; }
+/* editors + output */
+textarea, input[type="text"] { width: 100%; background: var(--sunk); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 8px; padding: .6rem .7rem; font-family: var(--mono); font-size: .8rem; line-height: 1.5; }
+textarea { min-height: 15rem; resize: vertical; }
+input[type="text"]:focus, textarea:focus { outline: none; border-color: var(--hot); }
+label.lab { display: block; font-size: .74rem; color: var(--faint); font-family: var(--mono); margin: .6rem 0 .25rem; }
+.out { background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: .7rem .8rem; margin: 0;
+  font-size: .79rem; overflow-x: auto; white-space: pre; min-height: 3rem; }
+.d-add { color: var(--ok); } .d-del { color: var(--no); } .d-at { color: var(--cy); } .d-head { color: var(--faint); }
+.verdict { font-family: var(--mono); font-size: .82rem; }
+.verdict .yes { color: var(--ok); } .verdict .no { color: var(--no); }
+table.t { width: 100%; border-collapse: collapse; font-size: .82rem; }
+table.t th { text-align: left; color: var(--faint); font-weight: 500; font-size: .72rem; font-family: var(--mono);
+  border-bottom: 1px solid var(--line); padding: .3rem .5rem .3rem 0; }
+table.t td { padding: .3rem .5rem .3rem 0; border-bottom: 1px solid #1a2026; vertical-align: top; }
+table.t td.mono { font-family: var(--mono); font-size: .78rem; }
+.pill { font-family: var(--mono); font-size: .7rem; padding: .1rem .35rem; border-radius: 5px; background: #1c232a;
+  color: var(--soft); }
+.pill.rw { color: var(--ok); } .pill.no { color: var(--ye); }
+.files { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: .5rem; }
+.files button { font-family: var(--mono); font-size: .74rem; }
+
+/* modal + tour */
+#scrim { position: fixed; inset: 0; background: #05070999; backdrop-filter: blur(2px); z-index: 40; display: none; }
+#scrim.on { display: block; }
+.modal { position: fixed; z-index: 41; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(620px, 92vw);
+  background: var(--card); border: 1px solid #2c3542; border-radius: 12px; padding: 1.2rem 1.3rem;
+  box-shadow: 0 24px 60px #000a; display: none; max-height: 86vh; overflow-y: auto; }
+.modal.on { display: block; }
+.modal h2 { font-size: 1.15rem; }
+.modal .close { position: absolute; right: .7rem; top: .55rem; background: none; border: 0; color: var(--faint);
+  font-size: 1.1rem; cursor: pointer; }
+.modal dl { margin: .6rem 0 0; font-size: .88rem; }
+.modal dt { font-family: var(--mono); font-size: .78rem; color: var(--hot); margin-top: .55rem; }
+.modal dd { margin: .1rem 0 0; color: var(--soft); }
+.steps3 { counter-reset: s; list-style: none; padding: 0; margin: .5rem 0 0; }
+.steps3 li { counter-increment: s; position: relative; padding-left: 1.7rem; margin-bottom: .45rem; font-size: .9rem;
+  color: var(--soft); }
+.steps3 li::before { content: counter(s); position: absolute; left: 0; top: .05rem; width: 1.15rem; height: 1.15rem;
+  border-radius: 50%; background: #22292f; color: var(--hot); font-family: var(--mono); font-size: .7rem;
+  display: grid; place-items: center; }
+.spot { position: absolute; z-index: 42; border: 2px solid var(--hot); border-radius: 10px; pointer-events: none;
+  box-shadow: 0 0 0 9999px #050709cc; transition: all .18s ease; display: none; }
+.spot.on { display: block; }
+.coach { position: absolute; z-index: 43; width: min(320px, 88vw); background: var(--card); border: 1px solid #3a4451;
+  border-radius: 10px; padding: .75rem .85rem; display: none; box-shadow: 0 14px 36px #0009; }
+.coach.on { display: block; }
+.coach p { font-size: .86rem; margin: 0 0 .5rem; }
+.coach .row { margin: 0; }
+footer { border-top: 1px solid var(--line); color: var(--faint); font-size: .8rem; padding: 1.2rem 0 2.5rem; }
+footer .wrap > p { max-width: 74ch; }
+
+/* ---------- texture ----------
+   Two layers, both painted by the browser: a hairline grid and a slow warm bloom behind it.
+   No image, no request, and both switched off for anyone who asked for less motion. */
+body::before, body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+body::before {
+  background-image: linear-gradient(#ffffff05 1px, transparent 1px), linear-gradient(90deg, #ffffff05 1px, transparent 1px);
+  background-size: 46px 46px, 46px 46px;
+  mask-image: radial-gradient(120% 90% at 50% 0%, #000 20%, transparent 78%);
+}
+body::after {
+  background:
+    radial-gradient(52rem 26rem at 12% -8%, #ffb4541c, transparent 62%),
+    radial-gradient(44rem 22rem at 88% 4%, #6fc3d915, transparent 60%);
+  animation: bloom 26s ease-in-out infinite alternate;
+}
+@keyframes bloom { from { transform: translate3d(-1.4%, -1%, 0) scale(1); } to { transform: translate3d(1.6%, 1.4%, 0) scale(1.06); } }
+header, nav, main, footer { position: relative; z-index: 1; }
+@media (prefers-reduced-motion: reduce) {
+  body::after { animation: none; }
+  * { animation-duration: .001s !important; transition-duration: .001s !important; }
+}
+
+/* headline + numbers */
+.hero h1 { font-size: clamp(1.6rem, 4.4vw, 2.5rem); letter-spacing: -.025em; margin-bottom: .5rem; }
+.hero h1 em { font-style: normal; color: var(--hot); }
+.stats { display: grid; gap: .55rem; grid-template-columns: repeat(2, 1fr); margin: 1rem 0 0; }
+@media (min-width: 760px) { .stats { grid-template-columns: repeat(5, 1fr); } }
+.stat { background: linear-gradient(#161b21, #12161b); border: 1px solid var(--line); border-radius: 10px;
+  padding: .6rem .7rem; transition: border-color .2s, transform .2s; }
+.stat:hover { border-color: #3c4854; transform: translateY(-2px); }
+.stat b { display: block; font-family: var(--mono); font-size: 1.22rem; color: var(--hot); letter-spacing: -.02em; }
+.stat span { display: block; font-size: .73rem; color: var(--faint); line-height: 1.35; }
+.panel > h2 { font-size: 1.3rem; }
+.panel { animation: rise .34s cubic-bezier(.2, .7, .3, 1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.tab .badge-n { font-family: var(--mono); font-size: .68rem; color: var(--faint); margin-left: .3rem; }
+
+/* ---------- the console ---------- */
+.cli { background: #07090b; border: 1px solid #212831; border-radius: 12px; overflow: hidden;
+  box-shadow: inset 0 1px 0 #ffffff08, 0 18px 40px #0006; }
+.cli-bar { display: flex; align-items: center; gap: .6rem; padding: .5rem .75rem; border-bottom: 1px solid #1b222a;
+  background: linear-gradient(#141a20, #0e1317); }
+.cli-bar .dots { display: flex; gap: .32rem; }
+.cli-bar .dots i { width: .58rem; height: .58rem; border-radius: 50%; display: block; background: #2b333b; }
+.cli-bar .dots i:nth-child(1) { background: #4a2f31; } .cli-bar .dots i:nth-child(2) { background: #4a4130; }
+.cli-bar .dots i:nth-child(3) { background: #2f4436; }
+.cli-bar .who { font-family: var(--mono); font-size: .74rem; color: var(--faint); }
+.cli-bar .replay { margin-left: auto; font-family: var(--mono); font-size: .68rem; color: var(--ye);
+  border: 1px dashed #4a4130; border-radius: 999px; padding: .1rem .45rem; cursor: help; }
+.cli-scroll { max-height: 62vh; overflow-y: auto; padding: .8rem .9rem 1rem; scroll-behavior: smooth; }
+.cli-scroll pre { margin: 0; font-size: .78rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.cli-echo { font-family: var(--mono); font-size: .82rem; margin: .9rem 0 .35rem; color: var(--ink); }
+.cli-echo:first-child { margin-top: 0; }
+.cli-echo::before { content: "acme-release-notes $ "; color: var(--ok); }
+.cli-note { font-size: .78rem; color: var(--soft); border-left: 2px solid #2c3542; padding-left: .6rem;
+  margin: .5rem 0 .2rem; }
+.cli-code { font-family: var(--mono); font-size: .7rem; color: var(--faint); margin: .15rem 0 0; }
+.cli-code b { color: var(--ok); font-weight: 600; } .cli-code b.bad { color: var(--no); }
+.cli-form { display: flex; gap: .4rem; padding: .55rem .7rem; border-top: 1px solid #1b222a; background: #0a0e11; }
+.cli-form span { font-family: var(--mono); font-size: .82rem; color: var(--ok); padding-top: .35rem; }
+.cli-form input { border: 0; background: none; padding: .3rem 0; font-size: .82rem; }
+.cli-form input:focus { outline: none; }
+.caret { display: inline-block; width: .5rem; height: 1rem; background: var(--hot); vertical-align: -.16rem;
+  animation: blink 1.05s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.cli-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+.cli-chips .beat { width: 100%; font-family: var(--mono); font-size: .68rem; color: var(--faint); margin-top: .5rem; }
+.cli-chips button { font-family: var(--mono); font-size: .74rem; padding: .3rem .55rem; }
+.cli-chips button[aria-current="true"] { border-color: var(--hot); color: var(--hot); }
+
+/* ---------- stories ---------- */
+.story { border: 1px solid var(--line); border-radius: 12px; background: linear-gradient(#15191f, #12161a);
+  margin-bottom: .7rem; overflow: hidden; }
+.story > summary { list-style: none; cursor: pointer; padding: .85rem 1rem; display: grid; gap: .1rem .8rem;
+  grid-template-columns: 2.1rem 1fr; align-items: baseline; }
+.story > summary::-webkit-details-marker { display: none; }
+.story > summary:hover { background: #171d23; }
+.story .no { font-family: var(--mono); font-size: 1.3rem; color: #33404c; }
+.story .ttl { font-size: 1.05rem; font-weight: 600; }
+.story .hk { grid-column: 2; color: var(--hot); font-size: .84rem; font-family: var(--mono); }
+.story[open] .no { color: var(--hot); }
+.story .body { padding: 0 1rem 1rem; border-top: 1px solid #1c232a; animation: rise .3s ease both; }
+.story .body > .field { grid-template-columns: 5.4rem 1fr; margin-top: .7rem; }
+.rows { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .7rem; }
+.rowtag { font-family: var(--mono); font-size: .7rem; border: 1px solid #2a323b; border-radius: 6px;
+  padding: .14rem .4rem; color: var(--soft); cursor: help; }
+.rowtag.high { border-color: #4a2f31; color: #f2a0a2; } .rowtag.critical { border-color: #6b2f33; color: var(--no); }
+.rowtag.gone { border-color: #24402c; color: var(--ok); }
+.rowtag b { color: var(--faint); font-weight: 400; }
+
+/* ---------- benchmarks, in three dimensions ---------- */
+/* The tilt is on each bar, not on the row. A rotated row throws every column a
+   different distance from the eye, which slides the labels sideways until they
+   collide -- pretty for one screenshot, unreadable as a chart. */
+.stage3d { padding: 1.5rem .3rem .3rem; overflow-x: auto; overflow-y: hidden; }
+.deck { display: flex; gap: 1.05rem; align-items: flex-end; padding: 0 .5rem .2rem; }
+.col { width: 4.7rem; flex: none; display: flex; flex-direction: column; align-items: center; }
+.pair { display: flex; gap: .5rem; align-items: flex-end; height: 11rem; perspective: 900px; }
+.bar { --h: 4rem; --w: 1.35rem; --d: .55rem; --tilt: rotateX(8deg) rotateY(-17deg);
+  position: relative; width: var(--w); height: var(--h); transform-style: preserve-3d;
+  transform: var(--tilt); transform-origin: bottom center;
+  animation: grow .7s cubic-bezier(.2, .8, .25, 1) both; }
+@keyframes grow { from { transform: var(--tilt) scaleY(.03); } to { transform: var(--tilt) scaleY(1); } }
+.bar .f { position: absolute; inset: 0; background: var(--c1); border: 1px solid #0006; }
+.bar .r { width: var(--d); left: 100%; transform-origin: left center; transform: rotateY(90deg);
+  background: var(--c2); }
+.bar .t { height: var(--d); bottom: 100%; transform-origin: bottom center; transform: rotateX(90deg);
+  background: var(--c3); }
+.bar.ours { --c1: #d9963c; --c2: #a06d24; --c3: #ffc978; }
+.bar.theirs { --c1: #2c3742; --c2: #1e2731; --c3: #3f4c59; }
+.col .cap { font-family: var(--mono); font-size: .74rem; color: var(--ink); margin-bottom: .4rem;
+  white-space: nowrap; }
+.col .foot { margin-top: .55rem; font-family: var(--mono); font-size: .64rem; color: var(--faint);
+  text-align: center; line-height: 1.32; }
+.col .foot b { display: block; color: var(--soft); font-weight: 400; }
+.legend { display: flex; gap: .9rem; flex-wrap: wrap; font-size: .75rem; color: var(--soft); margin-top: 1rem; }
+.legend i { display: inline-block; width: .7rem; height: .7rem; border-radius: 2px; margin-right: .3rem; }
+.slower { color: var(--ye); } .faster { color: var(--ok); }
+.bigfig { font-family: var(--mono); font-size: 1.6rem; color: var(--hot); letter-spacing: -.02em; }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap hero">
+  <div><span class="logo">nir<b>dep</b></span><span class="ver">v{{VERSION}}</span></div>
+  <h1>Delete the dependency. <em>Keep the code working.</em></h1>
+  <p class="pitch">nirdep reads your imports, rewrites the ones it can prove are safe, refuses the
+    rest out loud, and hands you the replacements as plain files you own. Nothing is installed.
+    nirdep itself leaves nothing behind -- not even nirdep.</p>
+  <div class="badges">
+    <span class="badge ok">0 dependencies</span>
+    <span class="badge">Node 22.17+</span>
+    <span class="badge">MIT</span>
+    <a class="badge link" href="{{REPOSITORY}}" rel="noreferrer">source</a>
+    <button class="badge btn" data-open="welcome">new here? start with this</button>
+    <button class="badge btn" data-tour="start">show me around</button>
+  </div>
+  <div class="stats" id="stats"></div>
+</div></header>
+
+<nav class="tabs"><div class="wrap" role="tablist">
+  <button class="tab" role="tab" data-tab="console" aria-selected="true">1 &middot; Run the commands</button>
+  <button class="tab" role="tab" data-tab="walk" aria-selected="false">2 &middot; Watch a migration</button>
+  <button class="tab" role="tab" data-tab="stories" aria-selected="false">3 &middot; The four stories</button>
+  <button class="tab" role="tab" data-tab="bench" aria-selected="false">4 &middot; Measured</button>
+  <button class="tab" role="tab" data-tab="codemod" aria-selected="false">5 &middot; Rewrite your own file</button>
+  <button class="tab" role="tab" data-tab="modules" aria-selected="false">6 &middot; Try the replacements</button>
+  <button class="tab" role="tab" data-tab="story" aria-selected="false">7 &middot; Limits, and how to start</button>
+</div></nav>
+
+<main class="wrap">
+
+<section class="panel on" id="panel-console">
+  <h2>Fourteen commands, on one broken project</h2>
+  <p class="lede">A project called <code>acme-release-notes</code> that imports chalk, semver, lodash and
+    minimist. Every command below was really run against it while this page was being built -- by
+    spawning the actual <code>bin/nirdep.mjs</code>, in order, on one copy of the project, so
+    <code>scan</code> after <code>apply</code> is quiet because the <code>apply</code> above it really
+    happened. What you click is the replay: the bytes it printed, exit code and colours included.
+    Nothing executes in your browser here, and the page would rather say so than pretend.</p>
+  <div class="grid split" style="margin-top:1rem">
+    <div>
+      <div class="cli-chips" id="cli-chips"></div>
+      <p class="hint" style="margin-top:.8rem">Or type one. <code>help</code>, <code>clear</code> and
+        the names above work; anything else is answered honestly.</p>
+    </div>
+    <div class="cli" id="terminal-cli">
+      <div class="cli-bar">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <span class="who">acme-release-notes &mdash; nirdep v{{VERSION}}</span>
+        <span class="replay" data-open="how-console">replay, not execution</span>
+      </div>
+      <div class="cli-scroll" id="cli-scroll"></div>
+      <form class="cli-form" id="cli-form" autocomplete="off">
+        <span>$</span>
+        <input type="text" id="cli-in" aria-label="type a nirdep command" placeholder="nirdep scan .">
+        <button class="go" type="submit">run</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="panel-stories">
+  <h2>Four ways a dependency turns on you</h2>
+  <p class="lede">Every row in these stories comes out of <code>src/scan/advisories.mjs</code>, the same
+    table <code>nirdep scan</code> checks your lockfile against. The build fails unless all
+    <b id="story-rows">0</b> rows are claimed by exactly one story, so these cannot quietly go stale
+    while the table moves on. Open one and the advisories are listed underneath the argument.</p>
+  <div id="story-list" style="margin-top:1rem"></div>
+  <p class="hint">Reviewed <b id="story-when"></b>. This is a hand-kept table with a date on it, not a
+    feed. It is not <code>npm audit</code> and does not pretend to be complete.</p>
+</section>
+
+<section class="panel" id="panel-bench">
+  <h2>Measured, including where we lose</h2>
+  <p class="lede">Written by <code>node tools/bench.mjs</code> and committed as <code>bench.json</code>.
+    The page reads that file; it never runs the benchmark, because a number that changes every
+    time the page is built is a number nobody can check. Three of these are honestly slower than the
+    package they replace.</p>
+  <div class="card" id="bench-meta" style="margin-top:1rem"></div>
+  <div class="row"><span class="hint" id="bench-which"></span></div>
+  <div class="cli-chips" id="bench-tabs" style="margin-top:.4rem"></div>
+  <div class="stage3d"><div class="deck" id="deck"></div></div>
+  <div class="legend">
+    <span><i style="background:#d9963c"></i>nirdep</span>
+    <span><i style="background:#2c3742"></i>the package it replaces</span>
+    <span class="hint">Each pair is scaled to itself, so the two bars in one column can be compared and
+      two different columns cannot: operations per second only means something against the same work.
+      A missing grey bar means that package was not on the machine that ran this, and the figure is
+      left out rather than filled in.</span>
+  </div>
+  <div class="grid halves" style="margin-top:1.4rem">
+    <div class="card"><h3>What the five files cost you to keep</h3><div id="bench-modules"></div></div>
+    <div class="card"><h3>The whole tool, on 300 files</h3><div id="bench-pipeline"></div>
+      <p class="hint" style="margin-top:.6rem">The gap between those last two rows is the syntax gate:
+        every rewritten file goes to Node's own parser before it is written, which costs a process per
+        file. It is the most expensive thing nirdep does and the reason it can be trusted to write.</p></div>
+  </div>
+  <div class="card" style="margin-top:1rem"><h3>And what an install weighs</h3><div id="bench-install"></div></div>
+</section>
+
+<section class="panel" id="panel-walk">
+  <h2>A project that cannot run, then the same project running</h2>
+  <p class="lede">Seven stages, recorded by running the real commands on a real temporary project.
+    Nothing was installed in between, and nothing here is a screenshot: click a stage to read what
+    it does and see exactly what it printed.</p>
+  <div class="grid split" style="margin-top:1rem">
+    <div>
+      <ol class="steps" id="steps"></ol>
+      <div class="row" style="margin-top:.7rem">
+        <button class="go" id="prev">&larr; back</button>
+        <button class="go main" id="next">next stage &rarr;</button>
+      </div>
+      <p class="hint" id="progress"></p>
+    </div>
+    <div>
+      <div class="card" id="guide" style="margin-bottom:.8rem"></div>
+      <div class="term" id="terminal">
+        <div class="term-bar">
+          <span class="dots"><i></i><i></i><i></i></span>
+          <span class="cmd" id="cmd"></span>
+          <button class="go" id="copy" style="margin-left:auto;padding:.15rem .5rem;font-size:.72rem">copy</button>
+        </div>
+        <pre id="out"></pre>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="summary" style="margin-top:1rem"></div>
+</section>
+<section class="panel" id="panel-codemod">
+  <h2>Rewrite your own file</h2>
+  <p class="lede">This is not a mock-up. <code>src/rules/rewrite.mjs</code>, the lexer under it and the
+    diff printer are all loaded into this page and run on the text below, the same way the CLI runs them
+    on your disk. Edit it, break it, import something it refuses -- it will tell you which line and why.
+    <button class="go" style="padding:.1rem .45rem;font-size:.72rem" data-open="how-codemod">what am I looking at?</button>
+  </p>
+  <div class="row">
+    <span class="hint">start from:</span>
+    <span class="files" id="presets"></span>
+  </div>
+  <div class="grid halves" style="margin-top:.5rem">
+    <div>
+      <label class="lab" for="src">your file (JavaScript, ES modules or CommonJS)</label>
+      <textarea id="src" spellcheck="false"></textarea>
+      <div class="row">
+        <button class="go main" id="run">plan the rewrite</button>
+        <span class="hint" id="ran"></span>
+      </div>
+    </div>
+    <div>
+      <label class="lab">the diff it would apply</label>
+      <pre class="out" id="diff" style="min-height:15rem"></pre>
+      <label class="lab">what it changed, and what it refused</label>
+      <div id="verdict"></div>
+    </div>
+  </div>
+  <p class="hint" style="margin-top:.9rem">The one thing this page cannot do: the CLI parses every
+    rewritten file before it writes it, using <code>node:vm</code>, and a browser has no equivalent.
+    So the diff above is real and the syntax gate is not run here. In the CLI, a file that would not
+    parse is not written, and if any file fails the whole run writes nothing.</p>
+</section>
+
+<section class="panel" id="panel-modules">
+  <h2>Try the replacements</h2>
+  <p class="lede">Four of the five runtime modules, loaded from source and running here. Same functions
+    the rewritten project imports; no shims around them except a fake filesystem for the glob walk,
+    because a browser has no disk.
+    <button class="go" style="padding:.1rem .45rem;font-size:.72rem" data-open="how-modules">what am I looking at?</button>
+  </p>
+
+  <div class="grid halves" style="margin-top:1rem">
+    <div class="card" data-module="semver">
+      <h3>semver <span class="pill"></span></h3>
+      <p class="hint wk"></p>
+      <p class="hint">Ranges, comparators, prereleases. Not one regular expression anywhere in it --
+        which is how the ReDoS class of bug stops being possible rather than being patched.</p>
+      <label class="lab" for="sv-v">version</label><input type="text" id="sv-v" value="7.5.0">
+      <label class="lab" for="sv-r">range</label><input type="text" id="sv-r" value="^7.0.0">
+      <div class="row"><button class="go" id="sv-go">ask it</button></div>
+      <pre class="out" id="sv-out" style="margin-top:.6rem"></pre>
+    </div>
+    <div class="card" data-module="glob">
+      <h3>glob <span class="pill"></span></h3>
+      <p class="hint wk"></p>
+      <p class="hint">Segment-by-segment matching with no backtracking, over the tree on the right.
+        The walk is the real one; the filesystem under it is an object in this page.</p>
+      <label class="lab" for="gl-p">pattern</label><input type="text" id="gl-p" value="src/**/*.mjs">
+      <div class="row"><button class="go" id="gl-go">match</button>
+        <span class="hint">try <code>src/**/!(*.test).mjs</code> or <code>{src,test}/**</code></span></div>
+      <pre class="out" id="gl-out" style="margin-top:.6rem"></pre>
+    </div>
+    <div class="card" data-module="collect">
+      <h3>collect <span class="pill"></span></h3>
+      <p class="hint wk"></p>
+      <p class="hint">The subset people actually import: get, groupBy, isEqual, merge, cloneDeep,
+        debounce. Own properties only, so a rewritten path cannot walk into a prototype.</p>
+      <label class="lab" for="co-j">data (JSON)</label><textarea id="co-j" spellcheck="false" style="min-height:6rem"></textarea>
+      <label class="lab" for="co-p">expression</label><input type="text" id="co-p" value="groupBy(rows, 'meta.kind')">
+      <div class="row"><button class="go" id="co-go">evaluate</button>
+        <span class="hint">get, has, groupBy, keyBy, sortBy, uniqBy, chunk, isEqual, cloneDeep, merge, pick, omit</span></div>
+      <pre class="out" id="co-out" style="margin-top:.6rem"></pre>
+    </div>
+    <div class="card" data-module="colour">
+      <h3>colour <span class="pill"></span></h3>
+      <p class="hint wk"></p>
+      <p class="hint">Chalk's whole job is writing four bytes before your text and four after.
+        Here are the bytes, spelled out, from the module that writes them.</p>
+      <label class="lab" for="cl-t">text</label><input type="text" id="cl-t" value="build failed">
+      <div class="row" id="cl-styles"></div>
+      <div class="row"><button class="go" id="cl-go">paint it</button></div>
+      <pre class="out" id="cl-out" style="margin-top:.6rem"></pre>
+    </div>
+  </div>
+  <p class="hint" style="margin-top:.9rem">The fifth module, <code>args</code>, replaces minimist,
+    commander and yargs. It reads <code>process.argv</code>, so there is nothing for it to read in a
+    browser and no panel here pretends otherwise. <code>nirdep --help</code> is it, running.</p>
+</section>
+<section class="panel" id="panel-story">
+  <h2>Why, and what it will not do</h2>
+  <div class="grid halves" style="margin-top:1rem">
+    <div class="card">
+      <h3>The argument</h3>
+      <p class="lede">A dependency is not a library. It is a standing permission for somebody you have
+        never met to run code on your machine, every install, forever. Most of the ones at the top of
+        the list are doing something the standard library has done for years -- padding a string,
+        comparing two version numbers, colouring a line of output.</p>
+      <p class="lede">nirdep does not ask you to trust that argument. It shows you the imports, the
+        blast radius, the diff, and the two packages it will not touch, and then you decide.</p>
+    </div>
+    <div class="card">
+      <h3>The same bug, twice, in two packages</h3>
+      <p class="lede">semver and minimatch both had a denial-of-service bug of the identical shape: a
+        regular expression that backtracks on input somebody else controls. Patching one version of
+        that is a fix; removing the regular expression is the end of the class. Neither replacement
+        here contains one, and the tests prove the answers still match, hundreds of thousands of
+        comparisons at a time.</p>
+      <p class="lede">lodash had two advisories of its own, one of which compiled its input into a
+        function. The walkthrough's scan names all of them, per advisory, including the one against a
+        package nirdep refuses to rewrite -- because that one is still in the lockfile afterwards.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:1rem">
+    <h3>What is honest about this page</h3>
+    <ul class="lede" style="margin:.4rem 0 0;padding-left:1.1rem">
+      <li>The walkthrough is a <b>recording of a real run</b> made when the page was built, colours and
+        all. The counts, the diff and the error in stage 2 are what the commands printed.</li>
+      <li>The two sandboxes are <b>not recordings</b>. Eleven of nirdep's modules are embedded verbatim
+        and loaded as ES modules; what they print is what they computed from your input.</li>
+      <li>The syntax gate needs <code>node:vm</code>, so it does not run here. In the CLI it runs on
+        every file, and a run where one file fails writes none of them.</li>
+      <li>The glob panel walks a directory tree that is an object in this page. The traversal is the
+        real one; six functions of <code>node:fs</code>, <code>node:path</code> and
+        <code>node:util</code> are stood in for, and nothing else is.</li>
+      <li>No requests. This page works from a <code>file://</code> URL, on a plane, forever.</li>
+    </ul>
+  </div>
+
+  <div class="card" style="margin-top:1rem">
+    <h3>Run it on your own project</h3>
+    <div id="steps-own"></div>
+    <p class="hint" style="margin-top:.7rem">No install step, because there is nothing to install:
+      clone it and run <code>node bin/nirdep.mjs</code>. <code>scan</code> and <code>plan</code> only
+      read. <code>apply</code> is the only command that writes, and <code>guard</code> is the one you
+      put in CI so the packages you removed cannot come back in somebody's pull request.</p>
+  </div>
+
+  <div class="card" style="margin-top:1rem">
+    <h3>Words used on this page</h3>
+    <dl id="glossary-all" style="font-size:.9rem;margin:0"></dl>
+  </div>
+</section>
+
+</main>
+
+<div id="scrim"></div>
+
+<div class="modal" id="modal-welcome" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+  <button class="close" data-close="1" aria-label="close">&times;</button>
+  <h2 id="welcome-title">You are looking at a dependency removal tool, running</h2>
+  <p class="lede">Your <code>node_modules</code> has a few hundred packages in it. A handful of them do
+    something Node has done for years, and every one of them is a person who can push code to your
+    machine. nirdep finds the ones it can prove are replaceable, rewrites the imports, and gives you the
+    replacement as a file in your own repository. It has no dependencies itself, and it leaves none.</p>
+  <p class="lede" style="margin-bottom:.2rem"><b>What to do here, in order:</b></p>
+  <ol class="steps3">
+    <li><b>Watch a migration.</b> Seven stages, from a project that will not start to the same project
+      running. Every stage says what it is doing and why before it does it.</li>
+    <li><b>Rewrite your own file.</b> Paste real code in. The codemod in this page is the one from the
+      repository, so if it refuses, that is the refusal you would get.</li>
+    <li><b>Try the replacements.</b> Ask the semver replacement a range question, or the glob one a
+      pattern. Same modules the rewritten project imports.</li>
+  </ol>
+  <div class="row"><button class="go main" data-close="1">start the walkthrough</button>
+    <button class="go" data-tour="start">show me around first</button></div>
+</div>
+
+<div class="modal" id="modal-stage" role="dialog" aria-modal="true"><button class="close" data-close="1">&times;</button>
+  <h2 id="stage-title"></h2><div id="stage-body"></div>
+  <div class="row"><button class="go main" data-close="1">got it</button></div>
+</div>
+
+<div class="modal" id="modal-how-codemod" role="dialog" aria-modal="true"><button class="close" data-close="1">&times;</button>
+  <h2>What is actually running here</h2>
+  <p class="lede">Three of nirdep's layers, loaded into this page from source: the lexer that finds the
+    imports and works out what each binding is used for, the rule table that says which packages have a
+    replacement and which members of each are covered, and the byte-range patcher and diff printer that
+    turn a decision into a patch.</p>
+  <p class="lede">A rewrite only happens when the file's use of a package fits inside the replacement.
+    Reach for a member that is not there, or use the import as a value instead of a member access, and
+    it declines and names the line. That refusal is the feature: a codemod that cannot say no leaves you
+    reviewing everything by hand anyway.</p>
+  <div class="row"><button class="go main" data-close="1">got it</button></div>
+</div>
+
+<div class="modal" id="modal-how-modules" role="dialog" aria-modal="true"><button class="close" data-close="1">&times;</button>
+  <h2>These are the replacements, not descriptions of them</h2>
+  <p class="lede">Each panel imports the module the rewritten project would import and calls it with what
+    you typed. The version comparison is answered by the same code path the tests run half a million
+    comparisons through against the real semver package; the pattern matcher is the one with no regular
+    expression in it.</p>
+  <p class="lede">A browser has no disk, so the glob panel is given a directory tree made of objects.
+    That is the only substitution on this page, and it is six functions wide.</p>
+  <div class="row"><button class="go main" data-close="1">got it</button></div>
+</div>
+
+<div class="modal" id="modal-how-console" role="dialog" aria-modal="true"><button class="close" data-close="1">&times;</button>
+  <h2>Why this terminal is a replay and says so</h2>
+  <p class="lede">Running nirdep for real needs a filesystem, a process spawner and Node's own parser.
+    A browser has none of the three. There are two ways to deal with that. One is to write a
+    convincing imitation of the output and let you assume. The other is to run the real binary
+    once, keep every byte it printed, and label the result.</p>
+  <p class="lede">This is the second one. While <code>docs/index.html</code> was being generated,
+    <code>tools/playground.mjs</code> planted the demo project in a temporary directory and spawned
+    <code>bin/nirdep.mjs</code> fourteen times against it with colour forced on. Exit codes, colours,
+    counts, timings and the two intentional failures are all as printed. The temporary path is
+    swapped for a fixed one so two builds of this page agree byte for byte -- that is the only edit.</p>
+  <p class="lede">The parts of this page that <i>are</i> live say so too: tabs 5 and 6 load nirdep's own
+    modules into your browser and run them on your input.</p>
+  <div class="row"><button class="go main" data-close="1">fair enough</button></div>
+</div>
+
+<div class="modal" id="modal-term" role="dialog" aria-modal="true"><button class="close" data-close="1">&times;</button>
+  <h2 id="term-title"></h2><p class="lede" id="term-body"></p>
+  <div class="row"><button class="go main" data-close="1">got it</button></div>
+</div>
+
+<div class="spot" id="spot"></div>
+<div class="coach" id="coach"><p id="coach-text"></p>
+  <div class="row"><button class="go main" id="coach-next">next</button>
+    <button class="go" id="coach-skip">skip</button><span class="hint" id="coach-n"></span></div>
+</div>
+
+<footer><div class="wrap">
+  <p><b>nirdep</b> v{{VERSION}} &middot; Published by Nastik AI. Developed by Sai Ram Dash (Hardik). MIT licensed.
+    <a href="{{REPOSITORY}}" rel="noreferrer">Source, tests and documentation</a>.</p>
+  <p>This page is one file with no requests in it, generated by <code>node tools/playground.mjs</code>:
+    it runs the demo, captures the output, and embeds the modules the sandboxes load. Rebuild it and the
+    bytes come out the same.</p>
+</div></footer>
+
+<script type="application/json" id="nirdep-data">{{DATA}}</script>
+<script type="module">
+// The page's own code. It loads nirdep's modules and drives the panels; it does not
+// reimplement anything nirdep does, because a playground that reimplements the tool is a
+// playground that can agree with a broken tool.
+
+const DATA = JSON.parse(document.getElementById('nirdep-data').textContent);
+const $ = (id) => document.getElementById(id);
+const el = (tag, className, text) => {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+};
+
+// colour.mjs asks the process for a stream at load, the way it does in Node, so the answer
+// has to be there before the import runs. Empty on purpose: no isTTY, no FORCE_COLOR, so it
+// settles on level 0 and every panel that wants codes asks for them explicitly.
+globalThis.process = globalThis.process ?? { env: {}, stdout: {}, argv: [], platform: 'browser' };
+
+// Each module's relative specifiers are replaced with the blob URL of the module they
+// resolved to, at the offsets nirdep's own scanner found at build time. Back to front, so
+// an earlier edit cannot move a later one.
+const URLS = new Map();
+for (const path of DATA.order) {
+  const one = DATA.modules[path];
+  let text = one.text;
+  for (let n = one.edits.length - 1; n >= 0; n -= 1) {
+    const edit = one.edits[n];
+    text = text.slice(0, edit.index) + URLS.get(edit.to) + text.slice(edit.index + edit.length);
+  }
+  URLS.set(path, URL.createObjectURL(new Blob([text], { type: 'text/javascript' })));
+}
+const NIRDEP = {};
+for (const [name, path] of Object.entries(DATA.entries)) NIRDEP[name] = await import(URLS.get(path));
+const SHIM = await import(URLS.get('node'));
+
+/* ---------- modal, glossary popups, coach tour ---------- */
+
+const MODALS = ['welcome', 'stage', 'how-codemod', 'how-modules', 'how-console', 'term'];
+let openModal = null;
+
+function close() {
+  if (openModal !== null) $(`modal-${openModal}`).classList.remove('on');
+  openModal = null;
+  if (!touring) $('scrim').classList.remove('on');
+}
+function open(name) {
+  close();
+  openModal = name;
+  $('scrim').classList.add('on');
+  $(`modal-${name}`).classList.add('on');
+  $(`modal-${name}`).querySelector('.close')?.focus();
+}
+$('scrim').addEventListener('click', () => (touring ? stopTour() : close()));
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return;
+  if (touring) stopTour(); else close();
+});
+document.addEventListener('click', (event) => {
+  const target = event.target.closest('[data-open], [data-close], [data-term]');
+  if (target === null) return;
+  if (target.dataset.close !== undefined) return close();
+  if (target.dataset.term !== undefined) {
+    $('term-title').textContent = target.dataset.term;
+    $('term-body').textContent = DATA.glossary[target.dataset.term] ?? '';
+    return open('term');
+  }
+  return open(target.dataset.open);
+});
+// The tour points at things that are already on the page rather than describing them, so a
+// step that goes stale is a step that visibly points at nothing.
+const TOUR = [
+  { at: '#cli-chips', tab: 'console', say: 'Fourteen real runs of the real binary, in the order somebody '
+    + 'would type them. Click one and the output it printed comes back.' },
+  { at: '#cli-scroll', tab: 'console', say: 'The output, colours and exit code included. This terminal '
+    + 'replays; it does not execute. The chip in its title bar explains why, at length.' },
+  { at: '#story-list', tab: 'stories', say: 'Four stories, and every advisory row behind them. The build '
+    + 'refuses to write this page unless all forty rows are claimed by one of the four.' },
+  { at: '#deck', tab: 'bench', say: 'Measured figures, including three where nirdep is slower than the '
+    + 'package it replaces. Each pair is scaled to itself; the number on top is the ratio.' },
+  { at: '#steps', tab: 'walk', say: 'Seven stages, recorded from a real run. Each one names the command it '
+    + 'stands for, and the two red ones are meant to be red.' },
+  { at: '#guide', tab: 'walk', say: 'This card is the guide: what the stage does, why it is there, and what '
+    + 'you would type at this point in a project of your own. The dashed chips explain a word.' },
+  { at: '#src', tab: 'codemod', say: 'Now the live half. Paste your own file here -- the codemod that reads '
+    + 'it is the one from the repository, loaded into this page.' },
+  { at: '#verdict', tab: 'codemod', say: 'Refusals land here with a line number and a reason. A codemod that '
+    + 'cannot say no is one you have to review by hand anyway.' },
+  { at: '#panel-modules .card', tab: 'modules', say: 'The replacements themselves, running. Ask semver a range '
+    + 'question and the answer comes from the module the rewritten project imports.' },
+];
+let touring = false;
+let step = 0;
+
+function place(node) {
+  const box = node.getBoundingClientRect();
+  const pad = 6;
+  const spot = $('spot');
+  spot.style.top = `${box.top + window.scrollY - pad}px`;
+  spot.style.left = `${box.left + window.scrollX - pad}px`;
+  spot.style.width = `${box.width + pad * 2}px`;
+  spot.style.height = `${box.height + pad * 2}px`;
+  const coach = $('coach');
+  const below = box.bottom + window.scrollY + 14;
+  coach.style.top = `${below}px`;
+  coach.style.left = `${Math.max(12, Math.min(box.left + window.scrollX, window.innerWidth - 340))}px`;
+}
+function showStep() {
+  const one = TOUR[step];
+  const node = document.querySelector(one.at);
+  if (node === null) return stopTour();
+  if (one.tab) showTab(one.tab);
+  node.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  $('coach-text').textContent = one.say;
+  $('coach-n').textContent = `${step + 1} of ${TOUR.length}`;
+  $('coach-next').textContent = step === TOUR.length - 1 ? 'done' : 'next';
+  $('spot').classList.add('on');
+  $('coach').classList.add('on');
+  window.setTimeout(() => place(node), 260);
+  return undefined;
+}
+function startTour() {
+  close();
+  touring = true;
+  step = 0;
+  $('scrim').classList.add('on');
+  showStep();
+}
+function stopTour() {
+  touring = false;
+  $('spot').classList.remove('on');
+  $('coach').classList.remove('on');
+  $('scrim').classList.remove('on');
+  try { window.localStorage.setItem('nirdep-toured', '1'); } catch { /* private mode is not an error */ }
+}
+$('coach-next').addEventListener('click', () => {
+  step += 1;
+  if (step >= TOUR.length) stopTour(); else showStep();
+});
+$('coach-skip').addEventListener('click', stopTour);
+for (const node of document.querySelectorAll('[data-tour="start"]')) node.addEventListener('click', startTour);
+
+/* ---------- tabs ---------- */
+
+function showTab(name) {
+  for (const tab of document.querySelectorAll('.tab')) {
+    tab.setAttribute('aria-selected', String(tab.dataset.tab === name));
+  }
+  for (const panel of document.querySelectorAll('main .panel')) {
+    panel.classList.toggle('on', panel.id === `panel-${name}`);
+  }
+}
+for (const tab of document.querySelectorAll('.tab')) {
+  tab.addEventListener('click', () => showTab(tab.dataset.tab));
+}
+
+/* ---------- 1: the recorded walkthrough ---------- */
+
+let at = 0;
+
+/** A labelled paragraph, the same shape the terminal report prints. */
+function fieldRow(label, text) {
+  const row = el('div', 'field');
+  row.append(el('span', null, label), el('p', null, text));
+  return row;
+}
+
+function drawStages() {
+  const list = $('steps');
+  list.replaceChildren();
+  DATA.stages.forEach((one, index) => {
+    const item = document.createElement('li');
+    const button = el('button', null);
+    button.append(el('span', 'n', String(one.step)), el('span', null, one.title));
+    button.append(el('span', one.ok ? 'dot' : 'dot bad'));
+    button.addEventListener('click', () => goTo(index));
+    item.append(button);
+    list.append(item);
+  });
+}
+
+function goTo(index) {
+  at = Math.max(0, Math.min(DATA.stages.length - 1, index));
+  const one = DATA.stages[at];
+  for (const [n, button] of [...$('steps').querySelectorAll('button')].entries()) {
+    button.setAttribute('aria-current', String(n === at));
+  }
+  $('cmd').textContent = one.command;
+  $('out').innerHTML = one.html === '' ? '<span class="s-dim">(this stage prints nothing)</span>' : one.html;
+  $('progress').textContent = `stage ${one.step} of ${DATA.stages.length}`;
+  $('prev').disabled = at === 0;
+  $('next').disabled = at === DATA.stages.length - 1;
+
+  const card = $('guide');
+  card.replaceChildren();
+  card.append(el('h3', null, one.title));
+  if (one.guide === null) return;
+  card.append(fieldRow('what', one.guide.what), fieldRow('why', one.guide.why),
+    fieldRow('next', one.guide.next));
+  if (one.guide.terms.length > 0) {
+    const chips = el('div', 'chips');
+    for (const term of one.guide.terms) {
+      const chip = el('span', 'chip', term);
+      chip.dataset.term = term;
+      chip.title = 'what this means';
+      chips.append(chip);
+    }
+    card.append(chips);
+  }
+}
+
+$('prev').addEventListener('click', () => goTo(at - 1));
+$('next').addEventListener('click', () => goTo(at + 1));
+$('copy').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText($('cmd').textContent);
+    $('copy').textContent = 'copied';
+  } catch { $('copy').textContent = 'select it'; }
+  window.setTimeout(() => { $('copy').textContent = 'copy'; }, 1400);
+});
+drawStages();
+goTo(0);
+$('summary').innerHTML = `<pre class="out" style="border:0;background:none;padding:0">${DATA.summary}</pre>`;
+/* ---------- 2: the codemod, on your file ---------- */
+
+// A file the codemod refuses, kept as lines so no source text has to be escaped twice.
+const REFUSED = [
+  '// Two of these three cannot move, and the plan below says which and why.',
+  '',
+  "import chalk from 'chalk';",
+  "import glob from 'glob';",
+  "import { template } from 'lodash';",
+  '',
+  'export function banner(text, pattern) {',
+  '  const files = glob.sync(pattern);',
+  '  return chalk.underline(template(text)({ n: files.length }));',
+  '}',
+].join('\n');
+
+const PRESETS = [
+  ...Object.entries(DATA.before).filter(([path]) => path.endsWith('.mjs'))
+    .map(([path, text]) => ({ label: path, text })),
+  { label: 'one it refuses', text: `${REFUSED}\n` },
+];
+
+// The same rule the CLI uses with --runtime: a relative path from the file to the ejected
+// module, because `nirdep/runtime/colour` only resolves if nirdep is installed, and
+// installing a package to remove packages is not a migration.
+function resolveTarget(rule, file) {
+  const up = file.split('/').length - 1;
+  const leaf = `${rule.target.slice(rule.target.lastIndexOf('/') + 1)}.mjs`;
+  const path = `${DATA.project.runtimeDir}/${leaf}`;
+  return up === 0 ? `./${path}` : `${'../'.repeat(up)}${path}`;
+}
+
+const FILE = 'src/report.mjs';
+
+/** A unified diff, coloured the way the terminal colours one. */
+function paintDiff(text) {
+  const escape = (line) => line.split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;');
+  return text.split('\n').map((line) => {
+    const cls = line.startsWith('+') ? 'd-add' : line.startsWith('-') ? 'd-del'
+      : line.startsWith('@@') ? 'd-at' : line.startsWith('\\') ? 'd-head' : '';
+    return cls === '' ? escape(line) : `<span class="${cls}">${escape(line)}</span>`;
+  }).join('\n');
+}
+
+function planNow() {
+  const source = $('src').value;
+  let plan;
+  try {
+    plan = NIRDEP.rewrite.planFile(source, { file: FILE, resolve: resolveTarget });
+  } catch (error) {
+    $('diff').textContent = '';
+    $('verdict').innerHTML = `<p class="verdict"><span class="no">the codemod threw</span></p>`;
+    $('ran').textContent = error.message;
+    return;
+  }
+  const after = plan.patch === null ? source : plan.patch.apply().after;
+  const diff = NIRDEP.diff.unified(source, after, { fromFile: `a/${FILE}`, toFile: `b/${FILE}`, context: 2 });
+  $('diff').innerHTML = diff === ''
+    ? '<span class="s-dim">no change: nothing in this file has a replacement.</span>'
+    : paintDiff(diff);
+
+  const box = $('verdict');
+  box.replaceChildren();
+  const line = el('p', 'verdict');
+  const bits = [];
+  if (plan.changes.length > 0) bits.push(`<span class="yes">${plan.changes.length} rewritten</span>`);
+  if (plan.declined.length > 0) bits.push(`<span class="no">${plan.declined.length} left alone</span>`);
+  line.innerHTML = bits.length === 0 ? '<span class="s-dim">nothing to do</span>' : bits.join(' &middot; ');
+  box.append(line);
+
+  const table = el('table', 't');
+  const head = document.createElement('tr');
+  for (const label of ['line', 'package', 'what happened']) head.append(el('th', null, label));
+  table.append(head);
+  const rows = [
+    ...plan.changes.map((one) => ({ line: one.line, name: one.specifier, kind: 'rw', why: one.why })),
+    ...plan.declined.map((one) => ({
+      line: one.line, name: one.specifier ?? 'the file', kind: 'no', why: `${one.code}: ${one.detail}`,
+    })),
+  ].sort((a, b) => a.line - b.line);
+  for (const one of rows) {
+    const row = document.createElement('tr');
+    row.append(el('td', 'mono', String(one.line)));
+    const name = el('td', 'mono');
+    name.append(el('span', `pill ${one.kind}`, one.name));
+    row.append(name, el('td', null, one.why));
+    table.append(row);
+  }
+  if (rows.length > 0) box.append(table);
+  // The same scanner tools/verify.mjs uses to prove nirdep imports nothing third-party,
+  // pointed at whatever you pasted. It over-accepts on purpose: a name in a comment counts.
+  const tally = new Map();
+  for (const one of NIRDEP.imports.auditSource(source).specifiers) {
+    tally.set(one.category, (tally.get(one.category) ?? 0) + 1);
+  }
+  box.append(el('p', 'hint', `dependency lines in this file: ${[...tally]
+    .map(([kind, n]) => `${n} ${kind}`).join(', ') || 'none'}.`));
+  if (plan.readable === false) {
+    box.append(el('p', 'hint', 'The lexer could not account for every byte of that file, so no offset in '
+      + 'it can be trusted and nothing is planned. That is the refusal, not a crash.'));
+  }
+  $('ran').textContent = `planned ${source.split('\n').length} lines as ${FILE}`;
+}
+
+const presetBar = $('presets');
+PRESETS.forEach((one, index) => {
+  const button = el('button', 'go', one.label);
+  button.addEventListener('click', () => { $('src').value = one.text; planNow(); });
+  presetBar.append(button);
+  if (index === 0) $('src').value = one.text;
+});
+$('run').addEventListener('click', planNow);
+planNow();
+/* ---------- 3: the replacements ---------- */
+
+const show = (id, text, bad = false) => {
+  const node = $(id);
+  node.textContent = text;
+  node.style.color = bad ? 'var(--no)' : '';
+};
+
+// semver: the questions a version check actually asks, all answered by the one module.
+$('sv-go').addEventListener('click', () => {
+  const version = $('sv-v').value.trim();
+  const range = $('sv-r').value.trim();
+  const sv = NIRDEP.semver;
+  try {
+    const lines = [
+      `valid(${version})            ${sv.valid(version) ?? 'null'}`,
+      `validRange(${range})         ${sv.validRange(range) ?? 'null'}`,
+      `satisfies(${version}, ${range})  ${sv.satisfies(version, range)}`,
+      `minVersion(${range})         ${sv.minVersion(range)?.version ?? 'null'}`,
+      `toComparators(${range})      ${JSON.stringify(sv.toComparators(range))}`,
+      `gtr / ltr                    ${sv.gtr(version, range)} / ${sv.ltr(version, range)}`,
+      `coerce(${version})           ${sv.coerce(version)?.version ?? 'null'}`,
+    ];
+    show('sv-out', lines.join('\n'));
+  } catch (error) {
+    show('sv-out', `${error.name}: ${error.message}`, true);
+  }
+});
+
+// glob: the fake disk is mounted once, and the walk over it is the real one.
+SHIM.mount(DATA.tree);
+$('gl-go').addEventListener('click', () => {
+  const pattern = $('gl-p').value.trim();
+  try {
+    const found = NIRDEP.glob.globSync(pattern, { cwd: '.', dot: true });
+    const head = `${found.length} of ${DATA.tree.length} paths match`;
+    const expanded = NIRDEP.glob.braceExpand(pattern);
+    const braces = expanded.length > 1 ? `\nbraces expand to: ${expanded.join('  ')}` : '';
+    show('gl-out', `${head}${braces}\n\n${found.join('\n') || '(nothing)'}`);
+  } catch (error) {
+    show('gl-out', `${error.name}: ${error.message}`, true);
+  }
+});
+$('gl-out').textContent = `the tree this walks:\n\n${DATA.tree.join('\n')}`;
+
+// collect: one call, arguments read off the text. A page arguing against lodash.template
+// does not get to build a function out of a string, so this is a parser, not an evaluator.
+const COLLECT_SEED = {
+  rows: [
+    { id: 1, meta: { kind: 'bug' }, hours: 3 },
+    { id: 2, meta: { kind: 'feature' }, hours: 8 },
+    { id: 3, meta: { kind: 'bug' }, hours: 1 },
+  ],
+  config: { retries: 2, log: { level: 'warn' } },
+  patch: { log: { level: 'debug' }, colour: true },
+};
+$('co-j').value = JSON.stringify(COLLECT_SEED, null, 2);
+
+const CALLABLE = new Set(['get', 'has', 'groupBy', 'keyBy', 'sortBy', 'uniqBy', 'chunk',
+  'isEqual', 'cloneDeep', 'merge', 'pick', 'omit', 'toPath']);
+
+/** Split on commas that are not inside a string, a bracket or a brace. */
+function splitArgs(text) {
+  const out = [];
+  let depth = 0;
+  let quote = null;
+  let start = 0;
+  for (let n = 0; n < text.length; n += 1) {
+    const ch = text[n];
+    if (quote !== null) { if (ch === quote) quote = null; continue; }
+    if (ch === '"' || ch === "'") quote = ch;
+    else if (ch === '[' || ch === '{') depth += 1;
+    else if (ch === ']' || ch === '}') depth -= 1;
+    else if (ch === ',' && depth === 0) { out.push(text.slice(start, n)); start = n + 1; }
+  }
+  const last = text.slice(start).trim();
+  if (last !== '' || out.length > 0) out.push(last);
+  return out.map((one) => one.trim()).filter((one) => one !== '');
+}
+
+$('co-go').addEventListener('click', () => {
+  const collect = NIRDEP.collect;
+  let scope;
+  try { scope = JSON.parse($('co-j').value); } catch (error) { return show('co-out', `the data is not JSON: ${error.message}`, true); }
+  const text = $('co-p').value.trim();
+  const cut = text.indexOf('(');
+  const name = cut === -1 ? text : text.slice(0, cut).trim();
+  if (!CALLABLE.has(name)) {
+    return show('co-out', `${name || 'that'} is not one of: ${[...CALLABLE].join(', ')}`, true);
+  }
+  if (cut === -1 || !text.endsWith(')')) return show('co-out', 'write it as a call: name(argument, ...)', true);
+  const args = splitArgs(text.slice(cut + 1, -1)).map((piece) => {
+    const first = piece[0];
+    if (first === "'" ) return piece.slice(1, -1);
+    if (first === '"' || first === '[' || first === '{' || first === '-' || (first >= '0' && first <= '9')) {
+      return JSON.parse(piece.split("'").join('"'));
+    }
+    if (piece === 'true' || piece === 'false' || piece === 'null') return JSON.parse(piece);
+    if (piece === 'data') return scope;
+    return collect.get(scope, piece);
+  });
+  try {
+    const answer = collect[name](...args);
+    show('co-out', answer === undefined ? 'undefined' : JSON.stringify(answer, null, 2));
+  } catch (error) {
+    show('co-out', `${error.name}: ${error.message}`, true);
+  }
+  return undefined;
+});
+
+// colour: the point is the bytes, so they are printed as names rather than applied.
+const STYLE_NAMES = ['bold', 'dim', 'italic', 'underline', 'inverse', 'red', 'green', 'yellow',
+  'cyan', 'magenta', 'bgRed', 'bgCyan'];
+const chosen = new Set(['red', 'bold']);
+const styleBar = $('cl-styles');
+for (const name of STYLE_NAMES) {
+  const button = el('button', 'go', name);
+  const sync = () => { button.style.borderColor = chosen.has(name) ? 'var(--hot)' : ''; };
+  button.addEventListener('click', () => {
+    if (chosen.has(name)) chosen.delete(name); else chosen.add(name);
+    sync();
+    paint();
+  });
+  sync();
+  styleBar.append(button);
+}
+function paint() {
+  const colour = NIRDEP.colour.createColour({ level: 3 });
+  let builder = colour;
+  for (const name of chosen) builder = builder[name];
+  const painted = typeof builder === 'function' ? builder($('cl-t').value) : $('cl-t').value;
+  const readable = painted.split(String.fromCharCode(27)).join('ESC');
+  show('cl-out', [
+    `chalk.${[...chosen].join('.')}(...)`,
+    '',
+    `bytes   ${readable}`,
+    `length  ${painted.length} written, ${NIRDEP.colour.visibleLength(painted)} visible`,
+    `strip   ${NIRDEP.colour.strip(painted)}`,
+    '',
+    'level 0 -- a pipe, or this page with nothing forced -- returns the text untouched:',
+    `        ${NIRDEP.colour.createColour({ level: 0 }).red.bold($('cl-t').value)}`,
+  ].join('\n'));
+}
+$('cl-go').addEventListener('click', paint);
+paint();
+
+/* ---------- 4: the story panel's tables ---------- */
+
+{
+  const table = el('table', 't');
+  const head = document.createElement('tr');
+  for (const label of ['run this', 'and it does']) head.append(el('th', null, label));
+  table.append(head);
+  for (const one of DATA.next) {
+    const row = document.createElement('tr');
+    row.append(el('td', 'mono', one.command), el('td', null, one.why));
+    table.append(row);
+  }
+  $('steps-own').append(table);
+
+  const list = $('glossary-all');
+  for (const [term, meaning] of Object.entries(DATA.glossary)) {
+    list.append(el('dt', null, term), el('dd', null, meaning));
+  }
+
+  // The figures come from src/rules/registry.mjs, so a number on this page is a number the
+  // tool cites when it explains itself. A package whose weekly count could not be verified
+  // is printed as a dash rather than guessed at.
+  for (const card of document.querySelectorAll('[data-module]')) {
+    const name = card.dataset.module;
+    const mine = DATA.rules.filter((rule) => rule.module === name);
+    card.querySelector('.pill').textContent = `replaces ${mine.map((one) => one.package).join(', ')}`;
+    card.querySelector('.wk').textContent = `weekly installs: ${mine
+      .map((one) => `${one.package} ${one.weekly}`).join(' | ')}`;
+  }
+}
+
+/* ---------- header numbers, all read off the data ---------- */
+
+{
+  const modules = new Set(DATA.rules.map((one) => one.module));
+  const figures = [
+    ['0', 'third-party dependencies, proved by tools/verify.mjs'],
+    [String(DATA.rules.length), 'packages this replaces or refuses, by name'],
+    [String(modules.size), 'runtime modules you own after ejecting'],
+    [String(DATA.coverage.rows), 'advisories behind the argument'],
+    ['0', 'network requests made by this page'],
+  ];
+  for (const [big, small] of figures) {
+    const card = el('div', 'stat');
+    card.append(el('b', null, big), el('span', null, small));
+    $('stats').append(card);
+  }
+}
+
+/* ---------- 1: the console, replaying real runs ---------- */
+
+const BEATS = { orient: 'look around', before: 'before', move: 'the migration', after: 'after' };
+const RUNS = new Map(DATA.console.map((one) => [one.line, one]));
+const scroll = $('cli-scroll');
+
+/** One command and its output, appended the way a terminal appends. */
+function echo(line, run) {
+  scroll.append(el('p', 'cli-echo', line));
+  if (run === null) {
+    scroll.append(el('p', 'cli-note', 'Not one of the recorded runs. This page replays commands that '
+      + 'were really executed while it was built; it cannot invent another one. Try one of the '
+      + 'buttons on the left, or clone the repository and run it for real.'));
+  } else {
+    const pre = el('pre');
+    pre.innerHTML = run.html === '' ? '<span class="s-dim">(this one prints nothing)</span>' : run.html;
+    scroll.append(pre);
+    const code = el('p', 'cli-code');
+    code.innerHTML = `exit <b class="${run.code === 0 ? '' : 'bad'}">${run.code}</b>`
+      + ` &middot; ${run.lines} lines printed`;
+    scroll.append(code, el('p', 'cli-note', run.note));
+  }
+  scroll.scrollTop = scroll.scrollHeight;
+}
+
+function runLine(text) {
+  const line = text.trim().split(/\s+/).join(' ');
+  if (line === '') return;
+  if (line === 'clear') { scroll.replaceChildren(); return; }
+  const full = line.startsWith('nirdep') ? line : `nirdep ${line}`;
+  const run = RUNS.get(full) ?? null;
+  echo(full, run);
+  for (const chip of $('cli-chips').querySelectorAll('button')) {
+    chip.setAttribute('aria-current', String(chip.dataset.line === full));
+  }
+}
+
+{
+  const chips = $('cli-chips');
+  let beat = null;
+  for (const one of DATA.console) {
+    if (one.beat !== beat) {
+      beat = one.beat;
+      chips.append(el('p', 'beat', BEATS[beat] ?? beat));
+    }
+    const button = el('button', 'go', one.line.replace('nirdep ', ''));
+    button.dataset.line = one.line;
+    button.title = one.note;
+    button.addEventListener('click', () => runLine(one.line));
+    chips.append(button);
+  }
+  $('cli-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    runLine($('cli-in').value);
+    $('cli-in').value = '';
+  });
+  runLine('nirdep scan .');
+}
+
+/* ---------- 3: the stories, and the rows under them ---------- */
+
+{
+  $('story-rows').textContent = String(DATA.coverage.rows);
+  $('story-when').textContent = DATA.coverage.reviewed;
+  const list = $('story-list');
+  for (const story of DATA.stories) {
+    const box = el('details', 'story');
+    if (story.number === 1) box.open = true;
+    const head = document.createElement('summary');
+    head.append(el('span', 'no', String(story.number)), el('span', 'ttl', story.title),
+      el('span', 'hk', story.hook));
+    const body = el('div', 'body');
+    body.append(fieldRow('what went wrong', story.plain), fieldRow('what nirdep does', story.answer),
+      fieldRow('and the proof', story.proof));
+    if (story.ceiling !== null) body.append(fieldRow('the honest bit', story.ceiling));
+
+    const rows = el('div', 'rows');
+    for (const row of story.rows) {
+      const tag = el('span', `rowtag ${row.replaced ? 'gone' : row.severity}`);
+      const name = row.id === '-' ? row.package : `${row.package} ${row.id}`;
+      tag.append(document.createTextNode(name), el('b', null, ` ${row.when}`));
+      tag.title = `${row.what}${row.range === null ? '' : ` -- affects ${row.range}`}`
+        + `${row.fixed === null ? '' : `, fixed in ${row.fixed}`}`
+        + `${row.replaced ? '. nirdep replaces this package outright.' : ''}`;
+      rows.append(tag);
+    }
+    body.append(rows);
+    const gone = story.rows.filter((one) => one.replaced).length;
+    body.append(el('p', 'hint', `${story.rows.length} rows, ${gone} of them against a package nirdep `
+      + 'replaces outright -- those are green, and they are the ones that stop being your problem. '
+      + 'Hover a tag for what it was.'));
+    box.append(head, body);
+    list.append(box);
+  }
+}
+
+/* ---------- 4: the benchmark, read from bench.json ---------- */
+
+{
+  const B = DATA.bench;
+  const num = (value) => (value === null ? 'not measured' : value.toLocaleString('en-US'));
+  $('bench-meta').innerHTML = `<h3>Where these numbers came from</h3>`;
+  const meta = [
+    ['measured', B.measured], ['node', B.node], ['cpu', B.cpu ?? 'not reported'],
+    ['platform', B.platform],
+    ['compared against', B.referenceDir ?? 'nothing: no reference packages were on that machine, so '
+      + 'every grey bar below is left out rather than estimated'],
+  ];
+  for (const [label, value] of meta) $('bench-meta').append(fieldRow(label, String(value)));
+
+  /** One bar. Height is a share of the taller bar in its own pair, never of the chart. */
+  const bar = (share, kind) => {
+    const node = el('div', `bar ${kind}`);
+    node.style.setProperty('--h', `${Math.max(0.4, share * 11).toFixed(2)}rem`);
+    node.append(el('i', 'f'), el('i', 'f r'), el('i', 'f t'));
+    return node;
+  };
+
+  /** Short enough to sit under a bar. 1,240,000 is not a label, 1.2M is. */
+  const short = (value) => (value >= 1e6 ? `${(value / 1e6).toFixed(1)}M/s`
+    : value >= 1e3 ? `${Math.round(value / 1e3)}K/s` : `${value}/s`);
+
+  function drawOps(only) {
+    const deck = $('deck');
+    deck.replaceChildren();
+    const rows = B.operations.filter((one) => only === null || one.name.startsWith(only));
+    for (const one of rows) {
+      const mine = one.ours.opsPerSecond;
+      const theirs = one.reference?.opsPerSecond ?? null;
+      const top = Math.max(mine, theirs ?? 0);
+      const col = el('div', 'col');
+      const cap = el('div', one.ratio === null ? 'cap' : `cap ${one.ratio >= 1 ? 'faster' : 'slower'}`,
+        one.ratio === null ? short(mine) : `${one.ratio}x`);
+      const pair = el('div', 'pair');
+      pair.append(bar(mine / top, 'ours'));
+      if (theirs !== null) pair.append(bar(theirs / top, 'theirs'));
+      // The module on its own line, because `collect.cloneDeep` in one line under a
+      // bar this wide is either three characters tall or somebody else's column.
+      const at = one.name.indexOf('.');
+      const foot = el('div', 'foot');
+      foot.append(el('b', null, one.name.slice(0, at)), document.createTextNode(one.name.slice(at)),
+        el('b', null, short(mine)));
+      col.append(cap, pair, foot);
+      deck.append(col);
+    }
+    $('bench-which').textContent = `${rows.length} operations, ${num(rows[0]?.ours.iterations ?? 0)} `
+      + `iterations each, median of ${rows[0]?.ours.rounds ?? 0} rounds. `
+      + 'A number over 1x means nirdep is faster.';
+  }
+
+  const groups = [['everything', null], ['semver', 'semver'], ['glob', 'glob'], ['collect', 'collect'],
+    ['colour', 'colour']];
+  for (const [label, prefix] of groups) {
+    const button = el('button', 'go', label);
+    button.addEventListener('click', () => {
+      for (const other of $('bench-tabs').querySelectorAll('button')) other.setAttribute('aria-current', 'false');
+      button.setAttribute('aria-current', 'true');
+      drawOps(prefix);
+    });
+    if (prefix === null) button.setAttribute('aria-current', 'true');
+    $('bench-tabs').append(button);
+  }
+  drawOps(null);
+
+  const rowsInto = (id, head, body) => {
+    const table = el('table', 't');
+    const top = document.createElement('tr');
+    for (const label of head) top.append(el('th', null, label));
+    table.append(top);
+    for (const cells of body) {
+      const row = document.createElement('tr');
+      for (const [n, cell] of cells.entries()) row.append(el('td', n === 0 ? 'mono' : null, String(cell)));
+      table.append(row);
+    }
+    $(id).append(table);
+  };
+
+  rowsInto('bench-modules', ['module', 'bytes', 'lines', 'cold import', 'replaces'],
+    B.modules.map((one) => [one.module, num(one.bytes), num(one.lines), `${one.coldStartMs} ms`,
+      one.replaces.join(', ')]));
+  rowsInto('bench-pipeline', ['stage', 'time', 'files/second', 'what it did'],
+    B.pipeline.map((one) => [one.name, `${one.ms} ms`, num(one.filesPerSecond), one.note ?? '']));
+  if (B.install.length === 0) {
+    $('bench-install').append(el('p', 'hint', 'Not measured: the reference packages were not installed '
+      + 'on the machine that ran this, so there is nothing honest to put here.'));
+  } else {
+    const total = B.install.reduce((sum, one) => sum + one.bytes, 0);
+    const totalFiles = B.install.reduce((sum, one) => sum + one.files, 0);
+    const big = el('p', null);
+    big.append(el('span', 'bigfig', `${(total / 1024).toFixed(0)} KiB`),
+      document.createTextNode(` across ${num(totalFiles)} files, for the four packages the five `
+        + 'runtime modules answer. Those five files come to '
+        + `${(B.modules.reduce((sum, one) => sum + one.bytes, 0) / 1024).toFixed(0)} KiB, and you can read them.`));
+    $('bench-install').append(big);
+    rowsInto('bench-install', ['package', 'version', 'bytes on disk', 'files'],
+      B.install.map((one) => [one.package, one.version, num(one.bytes), num(one.files)]));
+  }
+}
+
+try {
+  if (window.localStorage.getItem('nirdep-toured') === null) open('welcome');
+} catch { open('welcome'); }
+</script>
+
+
+
+

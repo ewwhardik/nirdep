@@ -1,0 +1,305 @@
+{
+  "version": "0.1.0",
+  "measured": "2026-08-31",
+  "node": "v22.23.2",
+  "cpu": "12th Gen Intel(R) Core(TM) i5-12400F",
+  "platform": "linux x64",
+  "referenceDir": "an npm install outside this repository",
+  "modules": [
+    {
+      "module": "args",
+      "file": "src/runtime/args.mjs",
+      "bytes": 40779,
+      "lines": 990,
+      "replaces": [
+        "minimist",
+        "commander",
+        "yargs"
+      ],
+      "weekly": [
+        "110.8M",
+        "138.5M",
+        "89.6M"
+      ],
+      "coldStartMs": 3.607
+    },
+    {
+      "module": "collect",
+      "file": "src/runtime/collect.mjs",
+      "bytes": 42479,
+      "lines": 994,
+      "replaces": [
+        "lodash"
+      ],
+      "weekly": [
+        "—"
+      ],
+      "coldStartMs": 4.828
+    },
+    {
+      "module": "colour",
+      "file": "src/runtime/colour.mjs",
+      "bytes": 22199,
+      "lines": 552,
+      "replaces": [
+        "chalk",
+        "strip-ansi",
+        "supports-color",
+        "ansi-styles"
+      ],
+      "weekly": [
+        "319.8M",
+        "294.1M",
+        "317.5M",
+        "318.9M"
+      ],
+      "coldStartMs": 4.676
+    },
+    {
+      "module": "glob",
+      "file": "src/runtime/glob.mjs",
+      "bytes": 45138,
+      "lines": 1149,
+      "replaces": [
+        "minimatch",
+        "glob"
+      ],
+      "weekly": [
+        "348.9M",
+        "—"
+      ],
+      "coldStartMs": 4.465
+    },
+    {
+      "module": "semver",
+      "file": "src/runtime/semver.mjs",
+      "bytes": 72429,
+      "lines": 1760,
+      "replaces": [
+        "semver"
+      ],
+      "weekly": [
+        "188.4M"
+      ],
+      "coldStartMs": 4.762
+    }
+  ],
+  "operations": [
+    {
+      "name": "semver.satisfies",
+      "ours": {
+        "name": "semver.satisfies",
+        "iterations": 20000,
+        "rounds": 7,
+        "ms": 66.841,
+        "opsPerSecond": 299218,
+        "nsPerOp": 3342
+      },
+      "reference": {
+        "name": "semver.satisfies",
+        "iterations": 20000,
+        "rounds": 7,
+        "ms": 17.25,
+        "opsPerSecond": 1159422,
+        "nsPerOp": 862.5
+      },
+      "ratio": 0.26
+    },
+    {
+      "name": "semver.parse",
+      "ours": {
+        "name": "semver.parse",
+        "iterations": 20000,
+        "rounds": 7,
+        "ms": 7.261,
+        "opsPerSecond": 2754424,
+        "nsPerOp": 363.1
+      },
+      "reference": {
+        "name": "semver.parse",
+        "iterations": 20000,
+        "rounds": 7,
+        "ms": 3.291,
+        "opsPerSecond": 6077742,
+        "nsPerOp": 164.5
+      },
+      "ratio": 0.45
+    },
+    {
+      "name": "glob.minimatch",
+      "ours": {
+        "name": "glob.minimatch",
+        "iterations": 20000,
+        "rounds": 7,
+        "ms": 90.273,
+        "opsPerSecond": 221551,
+        "nsPerOp": 4513.6
+      },
+      "reference": {
+        "name": "glob.minimatch",
+        "iterations": 20000,
+        "rounds": 7,
+        "ms": 123.571,
+        "opsPerSecond": 161850,
+        "nsPerOp": 6178.6
+      },
+      "ratio": 1.37
+    },
+    {
+      "name": "collect.get",
+      "ours": {
+        "name": "collect.get",
+        "iterations": 20000,
+        "rounds": 7,
+        "ms": 5,
+        "opsPerSecond": 3999986,
+        "nsPerOp": 250
+      },
+      "reference": {
+        "name": "collect.get",
+        "iterations": 20000,
+        "rounds": 7,
+        "ms": 2.131,
+        "opsPerSecond": 9385010,
+        "nsPerOp": 106.6
+      },
+      "ratio": 0.43
+    },
+    {
+      "name": "collect.cloneDeep",
+      "ours": {
+        "name": "collect.cloneDeep",
+        "iterations": 5000,
+        "rounds": 7,
+        "ms": 4.539,
+        "opsPerSecond": 1101551,
+        "nsPerOp": 907.8
+      },
+      "reference": {
+        "name": "collect.cloneDeep",
+        "iterations": 5000,
+        "rounds": 7,
+        "ms": 6.339,
+        "opsPerSecond": 788791,
+        "nsPerOp": 1267.8
+      },
+      "ratio": 1.4
+    },
+    {
+      "name": "collect.isEqual",
+      "ours": {
+        "name": "collect.isEqual",
+        "iterations": 20000,
+        "rounds": 7,
+        "ms": 4.465,
+        "opsPerSecond": 4479289,
+        "nsPerOp": 223.2
+      },
+      "reference": {
+        "name": "collect.isEqual",
+        "iterations": 20000,
+        "rounds": 7,
+        "ms": 6.069,
+        "opsPerSecond": 3295516,
+        "nsPerOp": 303.4
+      },
+      "ratio": 1.36
+    },
+    {
+      "name": "collect.groupBy",
+      "ours": {
+        "name": "collect.groupBy",
+        "iterations": 2000,
+        "rounds": 7,
+        "ms": 30.063,
+        "opsPerSecond": 66528,
+        "nsPerOp": 15031.3
+      },
+      "reference": {
+        "name": "collect.groupBy",
+        "iterations": 2000,
+        "rounds": 7,
+        "ms": 12.917,
+        "opsPerSecond": 154831,
+        "nsPerOp": 6458.6
+      },
+      "ratio": 0.43
+    },
+    {
+      "name": "colour.red.bold",
+      "ours": {
+        "name": "colour.red.bold",
+        "iterations": 20000,
+        "rounds": 7,
+        "ms": 0.62,
+        "opsPerSecond": 32259469,
+        "nsPerOp": 31
+      },
+      "reference": {
+        "name": "colour.red.bold",
+        "iterations": 20000,
+        "rounds": 7,
+        "ms": 0.597,
+        "opsPerSecond": 33496629,
+        "nsPerOp": 29.9
+      },
+      "ratio": 0.96
+    }
+  ],
+  "pipeline": [
+    {
+      "name": "scan",
+      "files": 300,
+      "ms": 10.12,
+      "filesPerSecond": 29633,
+      "note": "every file lexed, every import resolved, the lockfile read"
+    },
+    {
+      "name": "plan",
+      "files": 300,
+      "ms": 11.07,
+      "filesPerSecond": 27106,
+      "note": "bindings resolved and the byte ranges worked out, nothing written"
+    },
+    {
+      "name": "apply, real syntax gate",
+      "files": 300,
+      "ms": 4094.66,
+      "filesPerSecond": 73,
+      "note": "each rewritten file goes to Node's own parser, which is a process spawn per file"
+    },
+    {
+      "name": "apply, lexer gate only",
+      "files": 300,
+      "ms": 8.11,
+      "filesPerSecond": 36980,
+      "note": "the same run with the browser's weaker check, so the gate's price is visible"
+    }
+  ],
+  "install": [
+    {
+      "package": "chalk",
+      "version": "4.1.2",
+      "bytes": 35047,
+      "files": 7
+    },
+    {
+      "package": "semver",
+      "version": "7.8.5",
+      "bytes": 101065,
+      "files": 53
+    },
+    {
+      "package": "minimatch",
+      "version": "10.2.6",
+      "bytes": 536122,
+      "files": 53
+    },
+    {
+      "package": "lodash",
+      "version": "4.18.1",
+      "bytes": 1413741,
+      "files": 1051
+    }
+  ]
+}

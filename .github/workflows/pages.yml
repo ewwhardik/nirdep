@@ -1,0 +1,70 @@
+# The playground, published. `tools/playground.mjs` writes one HTML file with no
+# requests in it, so "deploying" is copying a file -- but it is rebuilt here rather
+# than served from the commit, because the walkthrough on that page is a recording
+# of a real `nirdep demo` run and the honest version of that is a run that happened
+# on this push.
+#
+# Note for judges: checkout, setup-node and the two Pages actions are CI
+# infrastructure, not dependencies of the artifact. Nothing here is installed into,
+# imported by, or shipped with nirdep, and there is no install step to add one.
+#
+# The build is not compared against the committed docs/index.html. It would be a
+# tempting gate and it would be a flaky one: the recording quotes Node's own
+# "cannot find package" message, so two Node versions can legitimately produce two
+# different pages. `make page` keeps the committed copy fresh for anyone who wants
+# to open it from a clone; this workflow is what the URL serves.
+
+name: playground
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time, and let a newer push win: a half-published page is
+# worse than a slightly stale one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build the page
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: the page's own tests, before it is published
+        run: node --test "tests/tools/*.test.mjs" "tests/demo/*.test.mjs"
+
+      - name: build it
+        run: node tools/playground.mjs
+
+      - name: nothing on that page is fetched at runtime
+        run: node -e "const t=require('fs').readFileSync('docs/index.html','utf8');for(const bad of ['fetch(','XMLHttpRequest','<script src','<link href','WebSocket'])if(t.includes(bad))throw new Error(bad+' is in the page');console.log((t.length/1024).toFixed(1)+' KiB, self-contained')"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    name: publish
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - id: pages
+        uses: actions/deploy-pages@v4

@@ -1,10 +1,16 @@
 {
   "name": "nirdep",
   "version": "0.1.0",
-  "description": "Delete your dependencies. A scope-aware JavaScript codemod and a standard-library runtime that replace the most-installed packages on npm. Published by Nastik AI. Developed by Hardik.",
+  "description": "Delete your dependencies. A scope-aware JavaScript codemod and a standard-library runtime that replace the most-installed packages on npm. Published by Nastik AI. Developed by Sai Ram Dash (Hardik).",
   "license": "MIT",
-  "author": "Hardik",
+  "author": "Sai Ram Dash (Hardik)",
   "publisher": "Nastik AI",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ewwhardik/nirdep.git"
+  },
+  "homepage": "https://ewwhardik.github.io/nirdep/",
+  "bugs": "https://github.com/ewwhardik/nirdep/issues",
   "type": "module",
   "bin": {
     "nirdep": "./bin/nirdep.mjs"
@@ -25,6 +31,8 @@
     "test": "node --test --test-reporter=spec \"tests/**/*.test.mjs\"",
     "verify": "node tools/verify.mjs",
     "repro": "node tools/build.mjs --repro",
+    "page": "node tools/playground.mjs",
+    "demo": "node bin/nirdep.mjs demo",
     "conformance": "node bin/nirdep.mjs conformance"
   },
   "files": [

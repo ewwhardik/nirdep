@@ -16,7 +16,7 @@ function harness(overrides = {}) {
     name: 'nirdep',
     version: '0.1.0',
     tagline: 'delete your dependencies',
-    footer: 'Published by Nastik AI. Developed by Hardik.',
+    footer: 'Published by Nastik AI. Developed by Sai Ram Dash (Hardik).',
     out: (text) => { written.out += text; },
     err: (text) => { written.err += text; },
     options: {
@@ -68,7 +68,7 @@ test('the command list marks what is not built yet', () => {
   assert.match(written.out, /scan\s+report replaceable dependencies/);
   assert.match(written.out, /plan \(pending\)\s+show the rewrite as a diff/);
   assert.ok(!written.out.includes('not in the help'), 'a hidden command stays hidden');
-  assert.ok(written.out.endsWith('Published by Nastik AI. Developed by Hardik.\n'));
+  assert.ok(written.out.endsWith('Published by Nastik AI. Developed by Sai Ram Dash (Hardik).\n'));
 });
 
 test('a hidden command still runs', () => {

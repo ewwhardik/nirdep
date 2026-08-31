@@ -92,7 +92,7 @@ function banner(module) {
     '// lockfile. Edit it, rename it, delete the half you do not use. The line below is',
     '// the only string attached, and it is attached by the licence rather than by us.',
     '//',
-    '// MIT. Copyright (c) 2026 Hardik (Nastik AI).',
+    '// MIT. Copyright (c) 2026 Sai Ram Dash (Hardik), Nastik AI.',
     '',
     '',
   ].join('\n');

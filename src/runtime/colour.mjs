@@ -21,7 +21,7 @@
 // One file on purpose: `nirdep eject colour` copies it in and you are done. Its
 // only import is `node:util`, for the one part of this Node already got right.
 //
-// Published by Nastik AI. Developed by Hardik. MIT.
+// Published by Nastik AI. Developed by Sai Ram Dash (Hardik). MIT.
 
 import { stripVTControlCharacters } from 'node:util';
 

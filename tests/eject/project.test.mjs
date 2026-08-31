@@ -76,7 +76,7 @@ test('the banner names where the file came from and keeps the licence line', () 
   const head = text.split('\n').slice(0, 8);
   assert.match(head[0], /^\/\/ colour\.mjs -- vendored from nirdep\/runtime\/colour, version \d/);
   assert.match(head[1], /^\/\/ Replaces chalk, strip-ansi, supports-color, ansi-styles\.$/);
-  assert.match(text, /^\/\/ MIT\. Copyright \(c\) 2026 Hardik \(Nastik AI\)\.$/m);
+  assert.match(text, /^\/\/ MIT\. Copyright \(c\) 2026 Sai Ram Dash \(Hardik\), Nastik AI\.$/m);
   // The module's own header survives underneath it: the banner explains the file, the
   // header explains the code, and neither is a substitute for the other.
   assert.match(text, /\n\/\/ nirdep\/runtime\/colour -- terminal styling on the standard library\./);

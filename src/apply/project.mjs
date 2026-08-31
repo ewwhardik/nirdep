@@ -193,7 +193,7 @@ export function planProject(root, options = {}) {
  * somebody else's broken file is not a reason to refuse to migrate a repository.
  *
  * @param {ReturnType<typeof planProject>} plan
- * @param {{ write?: boolean, save?: (file: string, text: string) => void }} [options]
+ * @param {{ write?: boolean, save?: (file: string, text: string) => void, check?: Function }} [options]
  */
 export function applyProject(plan, options = {}) {
   const save = options.save ?? ((file, text) => writeFileSync(file, text, 'utf8'));
@@ -206,7 +206,7 @@ export function applyProject(plan, options = {}) {
       continue;
     }
     const after = entry.plan.patch.apply().after;
-    const verdict = gate(entry.source, after, { kind: entry.kind, filename: entry.path });
+    const verdict = gate(entry.source, after, { kind: entry.kind, filename: entry.path, check: options.check });
     if (!verdict.ok) {
       const ours = verdict.blame === 'patch';
       results.push(Object.freeze({

@@ -1,6 +1,6 @@
 # nirdep guard, as a step in somebody else's build.
 #
-# Published by Nastik AI. Developed by Hardik.
+# Published by Nastik AI. Developed by Sai Ram Dash (Hardik).
 #
 # There is no install step in this action, and that is the whole point: the thing it runs is
 # the JavaScript in this repository, executed by the Node the runner already has. An action

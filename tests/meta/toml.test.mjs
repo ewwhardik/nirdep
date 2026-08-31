@@ -128,6 +128,6 @@ test('the shipped .zero-dep.toml parses', async () => {
   const doc = parseToml(readFileSync(path, 'utf8'));
   assert.equal(doc.track, 'A');
   assert.equal(doc.team.solo, true);
-  assert.deepEqual(doc.team.members, ['Hardik']);
+  assert.deepEqual(doc.team.members, ['Sai Ram Dash (Hardik)']);
   assert.equal(doc.bonuses.single_file, false);
 });

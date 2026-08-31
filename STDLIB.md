@@ -1,6 +1,6 @@
 # STDLIB.md — where the standard library was enough, and where it stopped
 
-Published by Nastik AI. Developed by Hardik.
+Published by Nastik AI. Developed by Sai Ram Dash (Hardik).
 
 This is the log the Zero Dependency Hackathon asks for: a running note of what
 we reached for in `node:*`, what it gave us, and what it would not give us.
@@ -938,6 +938,90 @@ anything, and only one of those two may claim the credit. A generated document t
 invents one claim is a document nobody should believe about the others, so the
 no-dependencies case is now its own branch, it counts the replacements it can see in
 the imports instead, and a test asserts that the false sentence is absent.
+
+### Showing it: `src/demo/` and `tools/playground.mjs` — evidence, not a screenshot
+
+Every other command reports on a tree somebody else owns, which makes all of them
+awkward to show: a reader with no project to hand has nothing to point them at, and
+a screenshot of a report proves nothing about a report. `nirdep demo` brings its own
+project — six declared dependencies, a lockfile naming versions that were installed
+once, four source files importing them, no `node_modules` — and makes exactly one
+claim, which is a claim you watch being tested: this file cannot load, and then the
+same file runs, with nothing installed in between.
+
+The fixture is `src/demo/project.json` rather than a `.mjs` file, and the reason is
+`tools/verify.mjs`. That scanner reads the literal word `import` followed by a quote
+as a dependency of this project anywhere under `bin/`, `src/`, `tools/` or `tests/`,
+deliberately, because over-accepting is the right bias for a proof of absence. A
+fixture whose whole purpose is to contain `import chalk from 'chalk'` therefore
+cannot be source; it is data, and the dependency proof stays honest about it.
+
+Nothing in `src/demo/script.mjs` re-implements anything. Each stage calls the
+function the matching command calls — `scanProject`, `planProject`, `ejectApply`,
+`applyProject` — so a green demo beside a broken command is not a reachable state.
+Three seams keep it testable without a disk or a registry: `save` for planting,
+`emit` for stages as they finish, and `load` for the two imports that matter. The
+`load` seam also buys the one honesty check the demo needs. If the "before" import
+unexpectedly *succeeds*, something is installed and the premise is gone, so the
+stage fails and says so — `it loaded, so something is installed after all` — instead
+of narrating a failure that did not happen. Two tests provoke exactly that.
+
+`node:module`'s cache is why the fixture is planted twice. A rejected import is
+cached by its URL, so the copy Node refused can never be the copy the rewrite is
+demonstrated on; the demo plants a throwaway tree for the refusal and works on a
+second one that has never been imported. The transcript says this out loud, because
+a reader who knows the ESM cache would otherwise be right to suspect the trick.
+
+The closing count is where a lie was available and declined. Five advisories are in
+that lockfile; four are against packages the rewrite removes, one is against
+`minimist`, which nirdep refuses to rewrite and which is still in there afterwards.
+"Five advisories fixed" would have been the easy sentence. What it prints instead is
+that four were against a package the rewrite removed — not patched, not waived,
+nothing left for them to be about — and that one stays, named, against something
+this tool does not pretend to have handled.
+
+**The browser page.** `tools/playground.mjs` writes `docs/index.html`: one file,
+no requests, no build step, byte-identical across runs. It carries three different
+kinds of thing and labels which is which, because a page arguing for honest tooling
+cannot be vague about what a visitor is looking at.
+
+The console is a *replay*. Fourteen commands are run for real at build time by
+spawning `bin/nirdep.mjs` against a freshly planted demo project with `FORCE_COLOR=3`,
+in the order a person would type them, against one tree so state carries forward —
+the `scan` at the end is quiet only because the `apply` above it genuinely ran. The
+bytes those runs printed are translated to spans and stored with their exit codes.
+Typing in it executes nothing, it says so beside the prompt, and a modal explains
+why: a terminal that pretends to execute is the thing this project exists to argue
+against. The walkthrough is the same idea one layer up, a recorded `runDemo`.
+
+The sandboxes are not recordings. Thirteen of nirdep's own modules are embedded
+verbatim and loaded as ES modules through blob URLs, so the diff a visitor produces
+comes from `src/rules` and the version comparison is answered by
+`src/runtime/semver`, in their browser. Each module's relative specifiers are located
+at build time by nirdep's own `findSpecifiers` and stored as `{index, length, to}`
+byte ranges, then spliced back-to-front so an earlier substitution cannot move a
+later one, in topological order. Underneath sits one shim module standing in for six
+specifiers — `node:fs`, `node:path`, `node:util`, `node:module`, `node:url`,
+`node:vm` — carrying a real in-memory filesystem rather than a stub, so the glob
+panel walks a tree with `readdirSync` and `statSync` the way the CLI does.
+
+The syntax gate is the one thing the browser cannot honestly do. `src/patch/gate.mjs`
+reaches for `node:vm` and no browser has one; `new Function` would compile, but this
+page argues against `lodash.template` and does not get to build a function out of a
+string. So `apply` takes an injected `check`, the page passes `checkByLexer`, and the
+panel labels its verdict as the weaker lexer check rather than claiming the gate ran.
+`tools/bench.mjs` prices that honestly: 300 files through the real gate is a process
+spawn each, about 4.1 seconds; the same run through the lexer is 8 milliseconds.
+
+Three rules on that page are worth stating because breaking any of them would be
+self-defeating. Every download figure is read from the rule registry at build time,
+never typed into the prose. Every benchmark figure is read from `bench.json`, which
+`make bench` writes and the page never runs — a number that moved on its own each
+build would be a number nobody could check, and the file carries the date, the Node
+version and the machine's own claim about its CPU so it can be doubted properly. And
+the four narrative stories select their rows out of `src/scan/advisories.mjs`: the
+build throws unless every row is claimed by exactly one story, because four stories
+that quietly stop covering the table are four stories nobody notices going stale.
 
 ### Underneath all of them: `src/text/` and `src/fs/` — one answer each
 

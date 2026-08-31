@@ -24,7 +24,7 @@ const CATALOGUE = ['args', 'colour', 'semver'].map((name) => ({
 
 /** The banner eject writes, which is the only provenance a vendored copy carries. */
 const banner = (name) => `// ${name}.mjs -- vendored from nirdep/runtime/${name}, version 0.1.0.\n`
-  + '// Replaces chalk.\n//\n// MIT. Copyright (c) 2026 Hardik (Nastik AI).\n\n';
+  + '// Replaces chalk.\n//\n// MIT. Copyright (c) 2026 Sai Ram Dash (Hardik), Nastik AI.\n\n';
 
 /**
  * Adoption over a tree that only exists as an object. Keys are absolute paths; the ones that

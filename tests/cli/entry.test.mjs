@@ -42,7 +42,7 @@ test('--version prints just the version, and nothing else', () => {
 test('--about carries the attribution and the true dependency count', () => {
   const { code, stdout } = run(['--about']);
   assert.equal(code, 0);
-  assert.match(stdout, /Published by Nastik AI\. Developed by Hardik\./);
+  assert.match(stdout, /Published by Nastik AI\. Developed by Sai Ram Dash \(Hardik\)\./);
   assert.match(stdout, /Runtime dependencies: 0/);
   assert.match(stdout, /track A/);
 });
@@ -97,7 +97,7 @@ test('FORCE_COLOR styles a pipe, and the sequences close correctly', () => {
   // The yellow marker was asserted here, on the (pending) rows. There are none left to paint,
   // so the dim footer stands in as the third sequence; yellow itself is still covered, against
   // a table with an unfinished row in it, in tests/runtime/args.test.mjs.
-  assert.ok(stdout.includes(`${ESC}[2mPublished by Nastik AI. Developed by Hardik.${ESC}[22m`),
+  assert.ok(stdout.includes(`${ESC}[2mPublished by Nastik AI. Developed by Sai Ram Dash (Hardik).${ESC}[22m`),
     'the attribution is dim and dim closes with 22');
 });
 

@@ -375,7 +375,7 @@ test('generated help states every fact a reader needs', () => {
     version: '0.1.0',
     tagline: 'delete your dependencies',
     describe: 'Report replaceable dependencies and their blast radius.',
-    footer: 'Published by Nastik AI. Developed by Hardik.',
+    footer: 'Published by Nastik AI. Developed by Sai Ram Dash (Hardik).',
     spec: {
       options: {
         output: { type: 'string', short: 'o', describe: 'where to write', env: 'NIRDEP_OUT' },
@@ -394,7 +394,7 @@ test('generated help states every fact a reader needs', () => {
   assert.match(text, /--level <number>\s+how deep to look \[one of 0, 1, 2; default 1\]/);
   assert.match(text, /--mode <string>\s+how to run \[required\]/);
   assert.ok(!text.includes('never shown'), 'a hidden option is hidden');
-  assert.ok(text.endsWith('Published by Nastik AI. Developed by Hardik.\n'), 'the footer is last');
+  assert.ok(text.endsWith('Published by Nastik AI. Developed by Sai Ram Dash (Hardik).\n'), 'the footer is last');
   assert.ok(!text.includes(ESC), 'unstyled by default: this file passes no style hooks');
   assert.ok(!text.includes('\n\n\n'), 'no run of blank lines');
 });

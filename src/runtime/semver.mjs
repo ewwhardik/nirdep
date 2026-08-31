@@ -1,6 +1,6 @@
 // nirdep/runtime/semver -- version arithmetic, with no regular expressions.
 //
-// Published by Nastik AI. Developed by Hardik.
+// Published by Nastik AI. Developed by Sai Ram Dash (Hardik).
 //
 // The package this replaces is installed roughly 250 million times a week, and
 // unlike colour or argument parsing there is no partial answer in the standard

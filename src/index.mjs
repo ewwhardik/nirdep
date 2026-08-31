@@ -24,7 +24,7 @@ export { default as collectDefault } from './runtime/collect.mjs';
 export const ABOUT = Object.freeze({
   name: 'nirdep',
   publisher: 'Nastik AI',
-  developer: 'Hardik',
+  developer: 'Sai Ram Dash (Hardik)',
   licence: 'MIT',
   runtime: Object.freeze(['runtime/colour', 'runtime/args', 'runtime/semver', 'runtime/glob',
     'runtime/collect']),

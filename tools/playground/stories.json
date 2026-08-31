@@ -1,0 +1,46 @@
+[
+  {
+    "id": "backtracking",
+    "number": 1,
+    "title": "One string, the whole CPU",
+    "hook": "Five packages, seven advisories, one bug.",
+    "plain": "A pattern like a glob or a version range gets turned into a regular expression. Regular expressions can be made to try every possibility before giving up, so somebody who chooses the input chooses how long your server thinks about it. Nobody attacked these packages cleverly. They just sent a long string.",
+    "answer": "runtime/semver and runtime/glob contain no regular expression at all -- not a literal, not the constructor. Ranges are read one character at a time; globs match one path segment at a time and never go back. There is no pathological input because there is nothing to make backtrack.",
+    "proof": "tests/repo/no-regex.test.mjs lexes both files with our own lexer and fails on a single regexp token. A comment claiming a property of the source is worth nothing without a test underneath it.",
+    "ceiling": "Size still gets a ceiling with an error code rather than a hang: 65,536 characters of pattern, 8,192 brace results, 16 levels of extglob, then a GlobError you can catch.",
+    "pick": { "ids": ["CVE-2021-3807", "CVE-2022-3517", "CVE-2020-28469", "CVE-2022-25883", "CVE-2024-4068", "CVE-2024-4067", "CVE-2020-28500"] }
+  },
+  {
+    "id": "prototype",
+    "number": 2,
+    "title": "A key called __proto__",
+    "hook": "Three fixes for one lodash feature. Two for one minimist feature.",
+    "plain": "Deep-merge helpers walk a path like a.b.c and write at the end of it. Send them a path that starts with __proto__ and the write lands on every object in the program. Both packages fixed it by adding that name to a blocklist -- which is a list of the routes somebody has already found.",
+    "answer": "runtime/collect writes own properties only. A path stops at the first key the object does not own itself, so there is no route to a prototype to blocklist. __proto__, constructor and prototype raise CollectError with code ERR_UNSAFE_KEY, because a key skipped in silence is a behaviour difference nobody notices and a throw is a bug report.",
+    "proof": "runtime/args has no dot notation at all. Both minimist advisories were that one feature, and nesting a command line is a config file's job -- so the feature is gone rather than guarded, and the divergence is written down in STDLIB.md.",
+    "ceiling": null,
+    "pick": { "ids": ["CVE-2018-3721", "CVE-2019-10744", "CVE-2020-7598", "CVE-2020-8203", "CVE-2021-44906"] }
+  },
+  {
+    "id": "compiled",
+    "number": 3,
+    "title": "The feature was the vulnerability",
+    "hook": "One advisory, and no clean fix was possible.",
+    "plain": "lodash.template compiled the string you gave it into a function. Hand it something a user typed and you have run what the user typed. This was not a mistake in the implementation; it was the implementation.",
+    "answer": "There is no template surface here. runtime/collect is sixteen functions and not one of them compiles anything.",
+    "proof": "nirdep does reach a parser, so it is worth being exact about how: src/patch/gate.mjs puts every rewritten file in front of Node's own parser before it touches the disk, through vm.Script, vm.SourceTextModule, or node --check over stdin. All three compile and none evaluate. A codemod that ran the code it was editing would be worse than the bug it was fixing.",
+    "ceiling": "This page keeps the same rule: the expression box in the replacements tab is hand-parsed against a list of allowed calls. There is no eval and no new Function anywhere in these bytes.",
+    "pick": { "ids": ["CVE-2021-23337"] }
+  },
+  {
+    "id": "account",
+    "number": 4,
+    "title": "The account, not the code",
+    "hook": "Twenty-seven rows. Not one of them is a bug you could have reviewed.",
+    "plain": "A maintainer gets phished, or hands publish rights to a helpful stranger, or is simply done being unpaid. The next release is malicious and it installs cleanly, because your lockfile pins a version and trusts whoever can publish the next one. In September 2025 that reached eighteen packages nobody chose -- the smallest, dullest leaves in the tree.",
+    "answer": "There is no account to compromise when there is no package. Four of the eighteen are packages nirdep replaces -- chalk, strip-ansi, supports-color and ansi-styles, about 1.25 billion weekly downloads between them -- answered by one file that calls node:util.",
+    "proof": "node tools/verify.mjs walks every import in src/, bin/ and tools/ and reports 12 builtin modules and 0 packages. nirdep guard keeps it that way in CI, and draws one line it will not cross: an allow list can waive a package you decided to keep, and it cannot waive a version this table names.",
+    "ceiling": "Two of these were published by the author, not an attacker -- colors, faker and node-ipc. No amount of code review catches that, because the code was signed by the person you were already trusting. The table records whose hand it was for exactly that reason.",
+    "pick": { "kind": "incident" }
+  }
+]

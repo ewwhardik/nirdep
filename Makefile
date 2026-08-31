@@ -5,13 +5,31 @@
 NODE ?= node
 DIST ?= dist
 
-.PHONY: all build test verify repro conformance stdlibmd clean help
+.PHONY: all build test verify repro conformance stdlibmd page demo bench clean help
 
 all: verify test build
 
 ## build: produce the runnable artifact in dist/
 build:
 	@$(NODE) tools/build.mjs
+
+## page: rebuild docs/index.html -- the recorded demo plus the live sandboxes
+# The recording is a real run of the real pipeline, so this target is also a
+# smoke test: if any stage of `demo` fails, the page does not get written.
+page:
+	@$(NODE) tools/playground.mjs
+
+## demo: plant a broken project, migrate it, and run it
+demo:
+	@$(NODE) bin/nirdep.mjs demo
+
+## bench: measure, rewrite bench.json, print the table
+# Committed as data on purpose. The page reads bench.json and never runs this,
+# so two builds of the page agree byte for byte even though two runs of a
+# benchmark never do. Add --against <node_modules> to compare on disk against
+# the real packages; without it every reference figure stays null.
+bench:
+	@$(NODE) tools/bench.mjs
 
 ## test: run the whole suite on the stdlib test runner
 test:

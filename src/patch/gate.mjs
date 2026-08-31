@@ -75,6 +75,21 @@ function fromCheckOutput(text) {
   return problem(message ?? 'the file did not parse', line, caret ? caret.indexOf('^') + 1 : 0);
 }
 
+/**
+ * The free filter on its own, for a host with no parser to reach.
+ *
+ * The browser playground runs `applyProject` for real, and a browser has no way to compile
+ * JavaScript without also running it -- `new Function` would be exactly the hole this project
+ * criticises `lodash.template` for. So it passes this as the check and the verdict says `lex`,
+ * which is a weaker claim than `node --check` and an accurate one. It catches an unterminated
+ * string, comment, template or bracket run; it does not catch `let let = 1`.
+ */
+export function checkByLexer(source, options = {}) {
+  if (typeof source !== 'string') return verdict(false, METHOD.LEX, problem('a syntax check needs source text'));
+  void options;
+  return preGate(source) ?? verdict(true, METHOD.LEX);
+}
+
 /** The free filter. Returns a verdict only when the lexer already knows it is broken. */
 function preGate(source) {
   let result;
@@ -146,13 +161,18 @@ export function checkSyntax(source, options = {}) {
  * bug in the wrong place. Both sides are checked even when the first one fails, because
  * a second 20ms is cheaper than a wrong accusation.
  *
+ * `check` is a seam, not a switch: it defaults to the real thing, and the one caller that
+ * overrides it is a host where the real thing does not exist. Whoever passes it owns the
+ * claim, which is why the verdict carries the method that made it.
+ *
  * @param {string} before
  * @param {string} after
- * @param {{ kind?: string, filename?: string }} [options]
+ * @param {{ kind?: string, filename?: string, check?: typeof checkSyntax }} [options]
  */
 export function gate(before, after, options = {}) {
-  const first = checkSyntax(before, options);
-  const second = checkSyntax(after, options);
+  const check = options.check ?? checkSyntax;
+  const first = check(before, options);
+  const second = check(after, options);
   let blame = null;
   if (!second.ok) blame = first.ok ? 'patch' : 'source';
   return Object.freeze({

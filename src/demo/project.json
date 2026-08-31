@@ -1,0 +1,36 @@
+{
+  "note": "The demo project, kept as data for the reason tests/vectors does: a .mjs file in src/ that said `import chalk from 'chalk'` would be counted as a dependency of this repository by tools/verify.mjs, and it would be right to count it.",
+  "name": "acme-release-notes",
+  "runtimeDir": "vendor/nirdep",
+  "project": {
+    "package.json": "{\n  \"name\": \"acme-release-notes\",\n  \"version\": \"1.4.0\",\n  \"type\": \"module\",\n  \"bin\": { \"notes\": \"bin/cli.mjs\" },\n  \"dependencies\": {\n    \"chalk\": \"^5.3.0\",\n    \"semver\": \"^7.5.0\",\n    \"minimatch\": \"^3.0.4\",\n    \"lodash\": \"^4.17.20\",\n    \"glob\": \"^10.3.10\",\n    \"minimist\": \"^1.2.5\"\n  }\n}\n",
+    "package-lock.json": "{\n  \"name\": \"acme-release-notes\",\n  \"version\": \"1.4.0\",\n  \"lockfileVersion\": 3,\n  \"packages\": {\n    \"\": { \"name\": \"acme-release-notes\", \"version\": \"1.4.0\" },\n    \"node_modules/ansi-styles\": { \"version\": \"6.2.1\" },\n    \"node_modules/balanced-match\": { \"version\": \"1.0.2\" },\n    \"node_modules/brace-expansion\": { \"version\": \"1.1.11\" },\n    \"node_modules/chalk\": { \"version\": \"5.3.0\" },\n    \"node_modules/glob\": { \"version\": \"10.3.10\" },\n    \"node_modules/lodash\": { \"version\": \"4.17.20\" },\n    \"node_modules/minimatch\": { \"version\": \"3.0.4\" },\n    \"node_modules/minimist\": { \"version\": \"1.2.5\" },\n    \"node_modules/semver\": { \"version\": \"7.5.0\" }\n  }\n}\n",
+    "src/report.mjs": "// The file this demo ends on: it cannot load at the start and it runs at the end.\n\nimport chalk from 'chalk';\nimport { satisfies } from 'semver';\n\n/** Green when the installed release satisfies what we asked for, red when it does not. */\nexport function verdict(version, range) {\n  return satisfies(version, range) ? chalk.green.bold('ok') : chalk.red('too old');\n}\n",
+    "src/group.mjs": "// Two lodash calls, which between them are most of what lodash is used for.\n\nimport { groupBy, get } from 'lodash';\n\nexport const byKind = (rows) => groupBy(rows, (row) => get(row, 'meta.kind', 'unknown'));\n\nexport const kinds = (rows) => Object.keys(byKind(rows)).sort().join(', ');\n",
+    "src/files.mjs": "// One package a machine may replace and one it may not, in the same file on purpose.\n\nimport { minimatch } from 'minimatch';\nimport { glob } from 'glob';\n\nexport async function sources(root) {\n  const found = await glob('**/*.mjs', { cwd: root });\n  return found.filter((file) => minimatch(file, 'src/**'));\n}\n",
+    "bin/cli.mjs": "#!/usr/bin/env node\n// The flag parser is a rewrite nobody should do for you: the shapes differ.\n\nimport minimist from 'minimist';\nimport { kinds } from '../src/group.mjs';\n\nconst argv = minimist(process.argv.slice(2));\nconsole.log(kinds(argv._.map((id) => ({ id, meta: { kind: 'feat' } }))));\n"
+  },
+  "demonstrate": [
+    {
+      "module": "src/report.mjs",
+      "export": "verdict",
+      "arguments": ["7.5.0", "^7.0.0"],
+      "expect": "ok",
+      "why": "chalk and semver, in one expression, on the standard library"
+    },
+    {
+      "module": "src/report.mjs",
+      "export": "verdict",
+      "arguments": ["6.3.0", "^7.0.0"],
+      "expect": "too old",
+      "why": "and the comparator is the real one, not a string compare"
+    },
+    {
+      "module": "src/group.mjs",
+      "export": "kinds",
+      "arguments": [[{ "id": 1, "meta": { "kind": "feat" } }, { "id": 2, "meta": { "kind": "fix" } }, { "id": 3 }]],
+      "expect": "feat, fix, unknown",
+      "why": "lodash groupBy over a path lookup with a default"
+    }
+  ]
+}

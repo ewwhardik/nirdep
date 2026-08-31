@@ -47,7 +47,7 @@ test('the entry point re-exports the runtime, namespaced, with no work at import
   assert.equal(entry.globDefault, entry.glob.default);
   assert.equal(entry.collectDefault, entry.collect.default);
   assert.equal(entry.ABOUT.publisher, 'Nastik AI');
-  assert.equal(entry.ABOUT.developer, 'Hardik');
+  assert.equal(entry.ABOUT.developer, 'Sai Ram Dash (Hardik)');
   assert.equal(Object.isFrozen(entry.ABOUT), true);
   assert.deepEqual([...entry.ABOUT.runtime], Object.keys(manifest.exports).filter((one) => one !== '.')
     .map((one) => one.slice(2)));

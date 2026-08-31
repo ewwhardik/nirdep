@@ -110,9 +110,9 @@ test('every JSON file in the repository parses', () => {
 
 test('the attribution the hackathon requires is where it is claimed to be', () => {
   const manifest = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
-  assert.equal(manifest.author, 'Hardik');
+  assert.equal(manifest.author, 'Sai Ram Dash (Hardik)');
   assert.equal(manifest.publisher, 'Nastik AI');
-  assert.match(manifest.description, /Published by Nastik AI\. Developed by Hardik\./);
+  assert.match(manifest.description, /Published by Nastik AI\. Developed by Sai Ram Dash \(Hardik\)\./);
   for (const file of ['README.md', 'STDLIB.md', 'SECURITY.md', 'src/runtime/args.mjs', 'src/runtime/colour.mjs']) {
     const text = readFileSync(join(ROOT, file), 'utf8');
     assert.match(text, /Nastik AI/, `${file} names the publisher`);

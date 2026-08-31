@@ -11,7 +11,7 @@ pitch = "Deletes your dependencies: a scope-aware JS codemod plus a stdlib runti
 
 [team]
 name = "Nastik AI"
-members = ["Hardik"]
+members = ["Sai Ram Dash (Hardik)"]
 solo = true
 
 [artifact]
