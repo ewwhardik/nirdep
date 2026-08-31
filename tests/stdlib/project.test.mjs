@@ -15,6 +15,7 @@ import assert from 'node:assert/strict';
 import {
   RESULT, STDLIB_FILE, stdlibAdoption, stdlibApply, stdlibPlan,
 } from '../../src/stdlib/project.mjs';
+import { fixtureKey } from '../paths.mjs';
 
 /** Our own runtime, as the exports map would report it, without reading package.json. */
 const CATALOGUE = ['args', 'colour', 'semver'].map((name) => ({
@@ -30,7 +31,8 @@ const banner = (name) => `// ${name}.mjs -- vendored from nirdep/runtime/${name}
  * are walked are the source files, and the rest are there to be resolved into.
  */
 function adoptionOf(files, options = {}) {
-  const read = (file) => {
+  const read = (given) => {
+    const file = fixtureKey(given);
     if (!(file in files)) throw Object.assign(new Error(`ENOENT: ${file}`), { code: 'ENOENT' });
     // A null entry is a file that is there and will not open, which is a different failure
     // from one that is not there and has to be tolerated just as quietly.
@@ -155,7 +157,9 @@ test('the five things that can happen to the file, and which of them is the user
   assert.equal(first.result, RESULT.WRITTEN);
   assert.equal(first.reason, null);
   assert.equal(first.replaced, false);
-  assert.deepEqual(written.at(-1), ['/p/STDLIB.md', document.markdown]);
+  // The path is whatever `resolve` made of it, which is spelt differently on Windows; the
+  // key is what a fixture would have written.
+  assert.deepEqual([fixtureKey(written.at(-1)[0]), written.at(-1)[1]], ['/p/STDLIB.md', document.markdown]);
 
   // Re-running is free, which is what makes it safe to put in a script.
   assert.equal(run(document.markdown).result, RESULT.SAME);
@@ -188,7 +192,7 @@ test('the file the command writes is where the flag defaults point', () => {
     file: 'docs/STDLIB.md',
     read: () => { throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' }); },
   });
-  assert.equal(plan.path, '/p/docs/STDLIB.md');
+  assert.equal(fixtureKey(plan.path), '/p/docs/STDLIB.md');
   assert.equal(plan.display, 'docs/STDLIB.md');
   assert.equal(STDLIB_FILE, 'STDLIB.md');
 });
