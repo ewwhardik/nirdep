@@ -34,6 +34,10 @@ git clone <this repo> && cd nirdep
 node tools/verify.mjs
 ```
 
+<p align="center">
+  <img src="/zero-p.png" alt="nirdep" width="750">
+</p>
+
 There is no install step, because there is nothing to install. `verify` does not
 trust `package.json` — it reads every `.mjs` file under `bin/`, `src/`, `tools/`
 and `tests/`, extracts every import specifier by six different syntaxes
