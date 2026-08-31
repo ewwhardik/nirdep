@@ -52,6 +52,29 @@ builtin. It writes what it found to `deps-proof.txt`.
 That is a stronger statement than an empty manifest. An empty manifest says
 nobody declared a dependency. This says nobody imported one.
 
+## The numbers
+
+| Number | What it counts | Printed by |
+| ------ | -------------- | ---------- |
+| **0** | third-party packages in this repository's import graph | `node tools/verify.mjs` |
+| **12** | builtins that graph resolves to, each confirmed by `module.isBuiltin` | `node tools/verify.mjs` |
+| **634** | tests, in 55 files, on `node:test`, with no test dependency | `node --test "tests/**/*.test.mjs"` |
+| **3,593** | conformance cases across the 11 packages replaced | `nirdep conformance` |
+| **856,168** | differential checks against the packages being replaced | [STDLIB.md](STDLIB.md), per module |
+| **11** | commands, every one implemented | `nirdep help` |
+| **40** | advisory rows over 34 packages, dated, offline, no `npm audit` | `nirdep scan .` |
+| **2** | builds, byte-identical, both hashes published | `make repro` |
+
+Under that: 14,287 lines in 42 files under `src/`, 25 tables of test vectors kept
+as JSON data rather than as code, and five runtime modules.
+
+The trade, in both directions. The four reference packages measured in
+`bench.json` install 2,085,975 bytes across 1,164 files. The five modules that
+replace them are 223,069 bytes in five files, and after `nirdep eject` they are
+files in your repository with your name on the commit. Less code, and all of it
+yours to maintain. That second half is the price, and it is not hidden anywhere
+in this document.
+
 ## Watch it happen
 
 ```
